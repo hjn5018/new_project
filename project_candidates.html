@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>프로젝트 후보군 & 와이어프레임 (Project Candidates & Wireframes)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-emerald: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1280px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 2.5rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(192, 132, 252, 0.2));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    header p { color: var(--text-muted); font-size: 1.1rem; }
+
+    .nav-links {
+      display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;
+    }
+
+    .nav-link {
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      padding: 0.5rem 1rem; background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover { background: rgba(56, 189, 248, 0.25); transform: translateY(-2px); }
+
+    /* Candidates Tab Bar */
+    .candidate-tabs {
+      display: flex; gap: 1rem; margin-bottom: 2rem;
+    }
+
+    .cand-btn {
+      flex: 1; padding: 1.25rem; border-radius: 14px;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      color: var(--text-muted); cursor: pointer; text-align: left;
+      transition: all 0.25s ease;
+    }
+
+    .cand-btn:hover { border-color: rgba(56, 189, 248, 0.4); }
+
+    .cand-btn.active {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1.5px solid var(--accent-blue);
+      box-shadow: 0 8px 20px -4px rgba(56, 189, 248, 0.25);
+    }
+
+    .cand-btn .cand-tag {
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      color: var(--accent-blue); margin-bottom: 0.35rem; display: block;
+    }
+
+    .cand-btn .cand-name {
+      font-size: 1.1rem; font-weight: 700; color: #fff;
+    }
+
+    /* Candidate Detail Section */
+    .cand-detail {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border); border-radius: 20px;
+      padding: 2rem; margin-bottom: 2.5rem;
+    }
+
+    .detail-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.25rem;
+    }
+
+    .detail-title { font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .detail-desc { color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; }
+
+    .must-have-list {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;
+    }
+
+    .stack-chip {
+      padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+      background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3);
+      color: var(--accent-emerald);
+    }
+
+    /* Wireframe UI Mockup Preview */
+    .wireframe-container {
+      margin-top: 2rem; background: #0f172a; border-radius: 14px;
+      border: 1px solid var(--card-border); overflow: hidden;
+    }
+
+    .wireframe-bar {
+      background: #1e293b; padding: 0.75rem 1.25rem; display: flex;
+      align-items: center; gap: 0.6rem; border-bottom: 1px solid var(--card-border);
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .red { background: #ef4444; } .yellow { background: #f59e0b; } .green { background: #10b981; }
+
+    .url-bar {
+      background: rgba(15, 23, 42, 0.8); padding: 0.3rem 1rem; border-radius: 6px;
+      color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem; flex-grow: 1; margin-left: 0.5rem;
+    }
+
+    .mockup-body {
+      padding: 1.5rem; display: grid; grid-template-columns: 240px 1fr; gap: 1.5rem;
+      min-height: 400px;
+    }
+
+    .mockup-sidebar {
+      background: rgba(30, 41, 59, 0.6); border-radius: 10px; padding: 1rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+
+    .side-item {
+      padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .side-item.active, .side-item:hover {
+      background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); font-weight: 600;
+    }
+
+    .mockup-content {
+      background: rgba(30, 41, 59, 0.4); border-radius: 10px; padding: 1.25rem;
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+
+    .mockup-card-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+    }
+
+    .m-card {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border);
+      border-radius: 8px; padding: 1rem;
+    }
+
+    .m-card-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .m-card-val { font-size: 1.4rem; font-weight: 700; color: #fff; }
+
+    .m-table {
+      width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem;
+    }
+
+    .m-table th, .m-table td {
+      padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--card-border);
+    }
+    .m-table th { color: var(--text-muted); font-weight: 600; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .candidate-tabs { flex-direction: column; }
+      .mockup-body { grid-template-columns: 1fr; }
+      .mockup-card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Project Selection & Wireframes</span>
+      <h1>프로젝트 후보군 & UI 와이어프레임</h1>
+      <p>JD 필수 기술스택(NoSQL, VectorDB, Kafka, RabbitMQ, PortOne, Redis)이 포함된 후보 3종</p>
+      <div class="nav-links">
+        <a href="README.md" class="nav-link">📂 README 대문</a>
+        <a href="jargons.html" class="nav-link">📚 용어 사전 & PoC 가이드</a>
+        <a href="selected_project_details.md" class="nav-link">🎯 최종 프로젝트 설계</a>
+      </div>
+    </header>
+
+    <!-- Candidate Selector Tabs -->
+    <div class="candidate-tabs">
+      <button class="cand-btn active" onclick="selectCandidate(0)">
+        <span class="cand-tag">Candidate 01 [최종 추천]</span>
+        <div class="cand-name">대용량 선착순 결제/정산 & AI 트랜잭션 관제</div>
+      </button>
+      <button class="cand-btn" onclick="selectCandidate(1)">
+        <span class="cand-tag">Candidate 02</span>
+        <div class="cand-name">EDA 기반 AI 멀티 에이전트 커머스</div>
+      </button>
+      <button class="cand-btn" onclick="selectCandidate(2)">
+        <span class="cand-tag">Candidate 03</span>
+        <div class="cand-name">실시간 금융 거래 관제 & 장애 격리 핀테크</div>
+      </button>
+    </div>
+
+    <!-- Active Candidate View -->
+    <div class="cand-detail" id="candidateView">
+      <!-- Dynamic render via JS -->
+    </div>
+  </div>
+
+  <script>
+    const candidates = [
+      {
+        id: 1,
+        title: "🏆 대용량 선착순 결제/정산 & AI 트랜잭션 관제 플랫폼 (Flash-Pay & AI Analytics)",
+        desc: "초당 수천 건의 이벤트 구매/예약 요청을 Redis ZSET 대기열 및 Redisson 분산락으로 정합성을 보장하고, Kafka/RabbitMQ 이원화 메시징 파이프라인으로 결제, 정산, 알림, AI 분석을 처리하는 백엔드 플랫폼.",
+        mustHaves: ["NoSQL (MongoDB)", "VectorDB (pgvector)", "컨테이너 (Docker/GCP)", "메시지 큐 (Kafka & RabbitMQ)", "TDD (JUnit 5)", "결제 시스템 (PortOne)", "Redis (ZSET & Lock)"],
+        wireframeUrl: "https://flashpay.internal/admin/dashboard",
+        sidebarItems: ["📊 트랜잭션 실시간 관제", "🎟️ 선착순 대기열 현황", "💳 PortOne 결제 & Webhook", "🤖 AI CS & 상품 추천", "🌙 Spring Batch 정산"],
+        cards: [
+          { label: "실시간 TPS", val: "2,450 req/s" },
+          { label: "대기열 처리 인원 (Redis ZSET)", val: "14,890 명" },
+          { label: "Kafka 이벤트 처리율", val: "99.98%" }
+        ],
+        tableRows: [
+          ["TX-98201", "PortOne 웹훅 승인", "SUCCESS", "Kafka Stream", "12ms"],
+          ["TX-98202", "Redisson Lock 잔액 차감", "SUCCESS", "Redis Engine", "3ms"],
+          ["TX-98203", "RabbitMQ 알림 발송", "QUEUED", "RabbitMQ Queue", "5ms"],
+          ["TX-98204", "MongoDB 이벤트 로그 적재", "SAVED", "MongoDB Cluster", "8ms"]
+        ]
+      },
+      {
+        id: 2,
+        title: "💡 EDA 기반 AI 멀티 에이전트 커머스 & 자동 정산 오케스트레이터",
+        desc: "LangGraph 기반 AI 에이전트가 자연어 명령을 해석하여 백엔드 REST/gRPC API를 호출하고, VectorDB 시맨틱 검색과 비동기 이벤트 파이프라인을 구동하는 플랫폼.",
+        mustHaves: ["NoSQL (MongoDB)", "VectorDB (ChromaDB)", "컨테이너 (Docker/GKE)", "Kafka & RabbitMQ", "TDD", "PortOne 결제", "Redis Pub/Sub"],
+        wireframeUrl: "https://ai-commerce.internal/agent/console",
+        sidebarItems: ["💬 AI Agent 멀티턴 대화", "🔍 VectorDB 시맨틱 검색", "📦 주문 & 이벤트 파이프라인", "📊 Token & Latency 관제"],
+        cards: [
+          { label: "AI Agent 응답 속도", val: "420 ms" },
+          { label: "VectorDB 검색 정확도", val: "94.2%" },
+          { label: "월간 자동 처리 건수", val: "128,400 건" }
+        ],
+        tableRows: [
+          ["AGENT-01", "자연어 상품 검색 & 추천", "COMPLETED", "pgvector / LLM", "310ms"],
+          ["AGENT-02", "PortOne 결제 링킹 호출", "COMPLETED", "Spring Boot API", "85ms"],
+          ["AGENT-03", "RabbitMQ 작업 분배", "RUNNING", "RabbitMQ Task", "14ms"]
+        ]
+      },
+      {
+        id: 3,
+        title: "💡 실시간 금융 거래 관제 & 장애 격리 핀테크 플랫폼",
+        desc: "금융 계좌 이체 및 펌뱅킹 이력을 Kafka/RabbitMQ 스트리밍으로 감시하고, 이상 거래(FDS) 발생 시 서킷 브레이커 작동 및 WebSocket STOMP 대시보드에 관제 정보를 전달하는 시스템.",
+        mustHaves: ["NoSQL (MongoDB)", "VectorDB (pgvector)", "컨테이너 (Docker/GCP)", "Kafka & RabbitMQ", "TDD", "PortOne/가상결제", "Redis ZSET"],
+        wireframeUrl: "https://fintech-control.internal/fds/dashboard",
+        sidebarItems: ["🛡️ FDS 이상거래 관제", "⚡ Resilience4j Circuit Status", "📡 WebSocket/STOMP 스트림", "📋 FDS DLQ 수동 재처리"],
+        cards: [
+          { label: "서킷 브레이커 상태", val: "CLOSED (정상)" },
+          { label: "FDS 감지 지연 시간", val: "< 15 ms" },
+          { label: "DLQ 격리 건수", val: "2 건" }
+        ],
+        tableRows: [
+          ["FDS-401", "이상 고액 거래 검출", "ALERT", "Kafka FDS Processor", "7ms"],
+          ["FDS-402", "서킷 브레이커 헬스체크", "HEALTHY", "Resilience4j", "2ms"],
+          ["FDS-403", "DLQ 실패 메시지 이관", "ISOLATED", "RabbitMQ DLX", "4ms"]
+        ]
+      }
+    ];
+
+    function selectCandidate(index) {
+      document.querySelectorAll('.cand-btn').forEach((btn, idx) => {
+        if(idx === index) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      const cand = candidates[index];
+      const view = document.getElementById('candidateView');
+
+      view.innerHTML = `
+        <div class="detail-header">
+          <div>
+            <div class="detail-title">${cand.title}</div>
+            <div class="detail-desc">${cand.desc}</div>
+            <div class="must-have-list">
+              ${cand.mustHaves.map(stack => `<span class="stack-chip">✓ ${stack}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Wireframe Preview -->
+        <h3 style="color: var(--accent-blue); margin-bottom: 0.75rem; font-size: 1.1rem;">🖥️ UI/UX 와이어프레임 & 시스템 대시보드 미리보기</h3>
+        <div class="wireframe-container">
+          <div class="wireframe-bar">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <div class="url-bar">${cand.wireframeUrl}</div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-sidebar">
+              ${cand.sidebarItems.map((item, i) => `<div class="side-item ${i===0?'active':''}">${item}</div>`).join('')}
+            </div>
+            <div class="mockup-content">
+              <div class="mockup-card-grid">
+                ${cand.cards.map(c => `
+                  <div class="m-card">
+                    <div class="m-card-title">${c.label}</div>
+                    <div class="m-card-val">${c.val}</div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <table class="m-table">
+                <thead>
+                  <tr>
+                    <th>이벤트 ID</th>
+                    <th>작업 내용</th>
+                    <th>상태</th>
+                    <th>처리 모듈</th>
+                    <th>지연시간</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${cand.tableRows.map(r => `
+                    <tr>
+                      <td style="font-family: 'JetBrains Mono'; color: var(--accent-blue);">${r[0]}</td>
+                      <td>${r[1]}</td>
+                      <td><span style="padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(52, 211, 153, 0.2); color: var(--accent-emerald); font-size: 0.75rem; font-weight: 600;">${r[2]}</span></td>
+                      <td>${r[3]}</td>
+                      <td style="font-family: 'JetBrains Mono';">${r[4]}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Initial load
+    selectCandidate(0);
+  </script>
+</body>
+</html>
