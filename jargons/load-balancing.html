@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로드밸런싱 & 수평 확장 (Scale-Out) 시뮬레이터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-green: #34d399; --accent-purple: #c084fc; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .sim-panel { background: #0f172a; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); }
+    .controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .btn { padding: 0.6rem 1.2rem; border-radius: 8px; border: 1px solid var(--accent-blue); background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); font-weight: 600; cursor: pointer; }
+    .btn:hover { background: rgba(56, 189, 248, 0.3); }
+    .server-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .server-node { background: rgba(30, 41, 59, 0.7); border: 2px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; }
+    .server-node.active { border-color: var(--accent-green); }
+    .progress-bar { height: 10px; background: #1e293b; border-radius: 5px; overflow: hidden; margin-top: 0.75rem; }
+    .progress-fill { height: 100%; width: 0%; background: var(--accent-green); transition: width 0.3s; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>⚖️ 로드밸런싱 & 수평 확장 (Scale-Out) 서버 그룹</h1>
+      <p class="subtitle">단일 고성능 서버(Scale-Up) 대신 동일한 스펙의 소형 서버를 동적으로 늘려 트래픽을 분산하는 현대적 백엔드 아키텍처</p>
+    </div>
+
+    <div class="card">
+      <h2>🕹️ Round-Robin 트래픽 분산 & Scale-Out 시뮬레이터</h2>
+      <div class="sim-panel">
+        <div class="controls">
+          <button class="btn" onclick="sendTraffic()">🚀 트래픽 요청 100건 전송</button>
+          <button class="btn" onclick="addServer()">➕ 서버 수평 확장 (Scale-Out +1)</button>
+          <button class="btn" onclick="resetSim()">🔄 시뮬레이터 초기화</button>
+        </div>
+
+        <div style="color: var(--accent-blue); font-weight: 600;" id="trafficLog">현재 서버 개수: 2개 | 총 처리 요청: 0건</div>
+
+        <div class="server-grid" id="serverGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💡 Scale-Up vs Scale-Out 핵심 개념 비교</h2>
+      <table style="width:100%; border-collapse: collapse; margin-top:1rem;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border); text-align:left;">
+            <th style="padding:0.75rem; color:var(--text-muted);">구분</th>
+            <th style="padding:0.75rem; color:var(--accent-blue);">Scale-Up (수직 확장)</th>
+            <th style="padding:0.75rem; color:var(--accent-green);">Scale-Out (수평 확장) [권장]</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.75rem; font-weight:600;">확장 방식</td>
+            <td style="padding:0.75rem;">CPU, RAM, Disk 장비를 물리적으로 고사양 교체</td>
+            <td style="padding:0.75rem;">동일한 스펙의 인스턴스를 무한히 수평 추가</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.75rem; font-weight:600;">가용성 (HA)</td>
+            <td style="padding:0.75rem; color:var(--accent-purple);">장비 다운 시 SPOF 장애 발생</td>
+            <td style="padding:0.75rem; color:var(--accent-green);">일부 서버 장애 시에도 타 서버가 대치(무장애)</td>
+          </tr>
+          <tr>
+            <td style="padding:0.75rem; font-weight:600;">세션 관리</td>
+            <td style="padding:0.75rem;">단일 서버 메모리에 세션 저장</td>
+            <td style="padding:0.75rem;">Redis 중앙 분산 세션 스토어 필수 사용</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let servers = [ { id: 1, reqCount: 0 }, { id: 2, reqCount: 0 } ];
+    let totalReq = 0;
+
+    function renderServers() {
+      const grid = document.getElementById('serverGrid');
+      grid.innerHTML = '';
+      servers.forEach(s => {
+        const pct = Math.min(100, Math.round((s.reqCount / (totalReq || 1)) * 100));
+        grid.innerHTML += `
+          <div class="server-node active">
+            <h4 style="color:#fff;">Server #${s.id}</h4>
+            <div style="color:var(--accent-green); font-size:1.2rem; font-weight:700; margin:0.4rem 0;">${s.reqCount} req</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>
+        `;
+      });
+      document.getElementById('trafficLog').innerText = `현재 서버 개수: ${servers.length}개 | 총 처리 요청: ${totalReq}건`;
+    }
+
+    function sendTraffic() {
+      for(let i=0; i<100; i++) {
+        const targetIdx = totalReq % servers.length;
+        servers[targetIdx].reqCount++;
+        totalReq++;
+      }
+      renderServers();
+    }
+
+    function addServer() {
+      servers.push({ id: servers.length + 1, reqCount: 0 });
+      renderServers();
+    }
+
+    function resetSim() {
+      servers = [ { id: 1, reqCount: 0 }, { id: 2, reqCount: 0 } ];
+      totalReq = 0;
+      renderServers();
+    }
+
+    renderServers();
+  </script>
+</body>
+</html>

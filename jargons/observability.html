@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELK vs OpenTelemetry vs LGTM 관제 풀스택 비교</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-orange: #fb923c; --accent-emerald: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🔭 ELK vs OpenTelemetry vs LGTM 관제 비교</h1>
+      <p class="subtitle">로그 중심(ELK), 표준 트레이싱 API(OpenTelemetry), 오픈소스 메트릭/로그/트레이싱 풀스택(LGTM) 비교</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 관제 솔루션 3대 패러다임 비교표</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th style="color:#f59e0b;">ELK Stack</th>
+            <th style="color:var(--accent-blue);">OpenTelemetry (OTel)</th>
+            <th style="color:var(--accent-orange);">LGTM (Grafana Stack)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">포커스 영역</td>
+            <td>로그(Log) 수집 및 전문 검색</td>
+            <td>메트릭, 로그, 트레이스 통합 표준 수집 SDK/에이전트</td>
+            <td>Grafana 시각화 기반 Loki(로그), Tempo(트레이스), Mimir(메트릭)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">저장 비용</td>
+            <td style="color:#f87171;">Elasticsearch 인덱싱 리소스 사용량 큼</td>
+            <td>벤더 독립적 (수집 전용 벤더 어그노스틱)</td>
+            <td style="color:var(--accent-emerald);">인덱싱 없이 레이블 기반 저장으로 리소스 대폭 절감</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">MSA 트레이싱</td>
+            <td>APM 라이브러리 연동 필요</td>
+            <td style="color:var(--accent-blue);">Trace ID 기반 분산 트레이싱 글로벌 표준</td>
+            <td>Tempo와 Grafana를 통한 앤드투앤드 추적</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

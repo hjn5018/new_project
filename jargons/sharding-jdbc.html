@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sharding-JDBC 데이터 분산 샤딩 실습 & 라우터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-amber: #fbbf24; --accent-green: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    pre { background: #0f172a; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🗄️ Sharding-JDBC 데이터 분산 샤딩 실습 & 라우터</h1>
+      <p class="subtitle">애플리케이션 레이어에서 단일 쿼리를 여러 물리적 DB 디비전(ds_0, ds_1) 및 테이블(t_order_0, t_order_1)로 분산 라우팅하는 기술</p>
+    </div>
+
+    <div class="card">
+      <h2>🕹️ Sharding Key 기반 라우터 시뮬레이터</h2>
+      <div style="background:#0f172a; padding:1.25rem; border-radius:10px; border:1px solid var(--border); margin-bottom:1.5rem;">
+        <label style="color:var(--text-muted); font-size:0.9rem;">[ user_id 입력 (Sharding Key: user_id % 2) ]</label>
+        <input type="number" id="userIdInput" value="105" style="padding:0.6rem; border-radius:6px; border:1px solid var(--border); background:rgba(15,23,42,0.8); color:#fff; font-size:1rem; margin-left:0.5rem;" oninput="calcRoute()">
+
+        <div style="margin-top:1rem; padding:0.8rem; background:rgba(30,41,59,0.7); border-radius:8px; font-weight:600; color:var(--accent-green);" id="routeResult">
+          🎯 라우팅 결과: ds_1.t_order_1 테이블로 직접 타겟팅 쿼리 전송! (Scatter-Gather 비용 무)
+        </div>
+      </div>
+
+      <h2>📘 Spring Boot application.yml 샤딩 설정 예시</h2>
+      <pre><code>spring:
+  shardingsphere:
+    datasource:
+      names: ds_0, ds_1
+    rules:
+      sharding:
+        tables:
+          t_order:
+            actual-data-nodes: ds_$->{0..1}.t_order_$->{0..1}
+            table-strategy:
+              standard:
+                sharding-column: user_id
+                sharding-algorithm-name: inline-order-algorithm
+        sharding-algorithms:
+          inline-order-algorithm:
+            type: INLINE
+            props:
+              algorithm-expression: t_order_$->{user_id % 2}</code></pre>
+    </div>
+  </div>
+
+  <script>
+    function calcRoute() {
+      const uid = parseInt(document.getElementById('userIdInput').value) || 0;
+      const dbIdx = uid % 2;
+      const tblIdx = uid % 2;
+      document.getElementById('routeResult').innerText = `🎯 라우팅 결과: ds_${dbIdx}.t_order_${tblIdx} 테이블로 직접 타겟팅 쿼리 전송! (단일 샤드 조회)`;
+    }
+    calcRoute();
+  </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Node.js vs NestJS vs Next.js 역할 및 차이점</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-green: #34d399; --accent-red: #f87171; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .eco-box { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    @media (max-width: 800px) { .eco-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🟩 Node.js vs NestJS vs Next.js 역할 완벽 비교</h1>
+      <p class="subtitle">자바스크립트 생태계의 실행 환경(Runtime), 순수 백엔드 프레임워크, 풀스택/SSR 프레임워크의 명확한 경계</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 3개 기술 포지셔닝 지도</h2>
+      <div class="eco-grid">
+        <div class="eco-box" style="border-top:3px solid var(--accent-green);">
+          <h3 style="color:var(--accent-green);">Node.js</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
+            - <strong>정의</strong>: Chrome V8 엔진 기반의 JavaScript 실행 런타임 환경 (Runtime).<br>
+            - <strong>역할</strong>: 서버 측에서 JS 코드를 구동시키는 엔진 그 자체.<br>
+            - <strong>비유</strong>: 자동차의 '엔진'.
+          </p>
+        </div>
+        <div class="eco-box" style="border-top:3px solid var(--accent-red);">
+          <h3 style="color:var(--accent-red);">NestJS</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
+            - <strong>정의</strong>: Node.js 위에서 동작하는 TypeScript 기반 순수 백엔드 아키텍처 프레임워크.<br>
+            - <strong>역할</strong>: Angular 스타일의 모듈, Controller, Service, DI 엔터프라이즈 구조 제공.<br>
+            - <strong>비유</strong>: Spring Boot의 JS/TS 버전.
+          </p>
+        </div>
+        <div class="eco-box" style="border-top:3px solid var(--accent-blue);">
+          <h3 style="color:var(--accent-blue);">Next.js</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
+            - <strong>정의</strong>: React 기반의 풀스택 웹 프레임워크 (SSR/SSG).<br>
+            - <strong>역할</strong>: 서버 사이드 렌더링(SSR), SEO 최적화 및 간단한 API Route 백엔드 기능 제공.<br>
+            - <strong>비유</strong>: 모던 웹 앱의 완결형 풀스택 플랫폼.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

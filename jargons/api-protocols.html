@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REST vs GraphQL vs gRPC 프로토콜 비교</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-pink: #f472b6; --accent-emerald: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .proto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .proto-box { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    @media (max-width: 800px) { .proto-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🌐 REST API vs GraphQL vs gRPC 프로토콜 비교</h1>
+      <p class="subtitle">웹/모바일 프론트엔드 연동 및 MSA 백엔드 서비스 간 통신 프로토콜의 장단점 비교</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 3대 API 통신 프로토콜 한눈에 비교</h2>
+      <div class="proto-grid">
+        <div class="proto-box" style="border-top:3px solid var(--accent-blue);">
+          <h3 style="color:var(--accent-blue);">REST API</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
+            - <strong>전송</strong>: HTTP/1.1 + JSON 텍스트<br>
+            - <strong>특징</strong>: 리소스(URI) 중심 설계. 오버패칭(Overfetching) 가능성 존재.<br>
+            - <strong>용도</strong>: 가장 범용적인 공공 API & 모바일 백엔드.
+          </p>
+        </div>
+        <div class="proto-box" style="border-top:3px solid var(--accent-pink);">
+          <h3 style="color:var(--accent-pink);">GraphQL</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
+            - <strong>전송</strong>: HTTP POST 단일 엔드포인트 + JSON<br>
+            - <strong>특징</strong>: 클라이언트가 원하는 필드만 지칭하여 수신. Over/Underfetching 해결.<br>
+            - <strong>용도</strong>: 복잡한 프론트엔드 UI/클라이언트 요청 대시보드.
+          </p>
+        </div>
+        <div class="proto-box" style="border-top:3px solid var(--accent-emerald);">
+          <h3 style="color:var(--accent-emerald);">gRPC</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
+            - <strong>전송</strong>: HTTP/2 + Protobuf 바이너리<br>
+            - <strong>특징</strong>: 초고속 직렬화 & 멀티플렉싱 스트리밍. 타입안전 코드 자동생성.<br>
+            - <strong>용도</strong>: MSA 백엔드 내부 고성능 통신.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

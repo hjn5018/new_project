@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DLQ (Dead Letter Queue) 실패 격리 시뮬레이터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-red: #f87171; --accent-amber: #fbbf24; --accent-green: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .sim-panel { background: #0f172a; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); }
+    .btn { padding: 0.75rem 1.25rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-amber { background: rgba(251, 191, 36, 0.2); border: 1px solid var(--accent-amber); color: var(--accent-amber); }
+    .btn-green { background: rgba(52, 211, 153, 0.2); border: 1px solid var(--accent-green); color: var(--accent-green); }
+    .btn:hover { transform: translateY(-2px); }
+    .queue-box { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .q-node { background: rgba(30, 41, 59, 0.8); border: 2px solid var(--accent-blue); border-radius: 12px; padding: 1.25rem; text-align: center; flex: 1; min-width: 200px; }
+    .q-node.dlq { border-color: var(--accent-red); background: rgba(248, 113, 113, 0.15); }
+    .msg-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 99px; background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); font-weight: 700; margin-top: 0.5rem; }
+    .msg-badge.red { background: rgba(248, 113, 113, 0.3); color: var(--accent-red); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>💀 DLQ (Dead Letter Queue) 예외 처리 프로세스</h1>
+      <p class="subtitle">소비(Consume)에 실패한 비동기 메시지를 별도 격리 보관하고 관리자 수동 재처리(Redrive)를 지원하는 파이프라인</p>
+    </div>
+
+    <div class="card">
+      <h2>🕹️ 메시지 처리 실패 및 DLQ 격리 시뮬레이터</h2>
+      <div class="sim-panel">
+        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+          <button class="btn btn-amber" onclick="processMessage(false)">⚠️ 메시지 처리 예외 발생 (Retry +1)</button>
+          <button class="btn btn-green" onclick="redriveDlq()">🔄 DLQ 수동 재처리 (Redrive)</button>
+        </div>
+
+        <div class="queue-box">
+          <div class="q-node">
+            <h4 style="color:#fff;">메인 메세지 큐 (Main Queue)</h4>
+            <div class="msg-badge" id="mainCount">메시지 1건 보관 중 (재시도: 0/3)</div>
+          </div>
+          <div style="font-size:1.5rem; color:var(--accent-amber);">➔ 실패 3회 ➔</div>
+          <div class="q-node dlq">
+            <h4 style="color:var(--accent-red);">Dead Letter Queue (DLQ)</h4>
+            <div class="msg-badge red" id="dlqCount">격리 메시지: 0건</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.25rem; padding:0.75rem; background:rgba(15,23,42,0.8); border-radius:8px; font-family:'JetBrains Mono'; font-size:0.85rem; color:var(--text-muted);" id="dlqLog">
+          [System Log] 메시지 수신 대기 중...
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📘 DLQ 핵심 프로세스 4단계</h2>
+      <ol style="padding-left:1.2rem; color:var(--text-muted); line-height:1.8;">
+        <li><strong>1단계 (소비 시도 & 예외)</strong>: Consumer가 메시지를 수신하여 로직 처리 중 DB 타임아웃/외부 API 장애로 Exception 발생.</li>
+        <li><strong>2단계 (지연 재시도 Retry Backoff)</strong>: 1초, 2초, 4초 등 지수 백오프(Exponential Backoff)를 적용하여 최대 N회(예: 3회) 재시도.</li>
+        <li><strong>3단계 (DLX 라우팅 및 격리)</strong>: 최대 재시도 횟수 초과 시 메인 큐에서 제거 후 Dead Letter Exchange(DLX)를 통해 <code style="color:var(--accent-red);">order-dlq</code>로 자동 전송.</li>
+        <li><strong>4단계 (수동 재처리 Redrive & 관제)</strong>: 장애 복구 후 개발자가 DLQ에 쌓인 메시지의 원인을 분석하고 메인 큐로 Re-push(Redrive)하여 유실 방지.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    let retries = 0;
+    let mainMsg = 1;
+    let dlqMsg = 0;
+
+    function processMessage(success) {
+      const log = document.getElementById('dlqLog');
+      if(mainMsg > 0) {
+        retries++;
+        if(retries >= 3) {
+          mainMsg = 0;
+          dlqMsg++;
+          retries = 0;
+          log.innerText = "🚨 [Max Retries Exceeded] 3회 연속 실패! 메시지가 Dead Letter Queue(DLQ)로 자동 격리되었습니다.";
+        } else {
+          log.innerText = `⚠️ [Retry ${retries}/3] 메시지 소비 실패 (Exception 발생). 지수 백오프 후 재시도합니다...`;
+        }
+      } else {
+        log.innerText = "ℹ️ 메인 큐에 남아있는 메시지가 없습니다.";
+      }
+      updateUI();
+    }
+
+    function redriveDlq() {
+      const log = document.getElementById('dlqLog');
+      if(dlqMsg > 0) {
+        dlqMsg--;
+        mainMsg++;
+        retries = 0;
+        log.innerText = "🔄 [Redrive Completed] DLQ에 격리되었던 메시지를 원인 해결 후 메인 큐로 재전송하였습니다.";
+      } else {
+        log.innerText = "ℹ️ DLQ에 재처리할 격리 메시지가 없습니다.";
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById('mainCount').innerText = `메시지 ${mainMsg}건 보관 중 (재시도: ${retries}/3)`;
+      document.getElementById('dlqCount').innerText = `격리 메시지: ${dlqMsg}건`;
+    }
+  </script>
+</body>
+</html>

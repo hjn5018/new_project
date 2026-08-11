@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MSA 서비스 간 통신 (REST vs gRPC vs Kafka) 비교</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-purple: #c084fc; --accent-green: #34d399; --accent-amber: #fbbf24;
+      --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1050px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .tab-btn { padding: 0.6rem 1.2rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; font-weight: 600; }
+    .tab-btn.active { background: var(--accent-blue); color: #090d16; border-color: var(--accent-blue); }
+    .seq-diagram { background: #0f172a; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+    .seq-step { padding: 0.75rem; border-left: 3px solid var(--accent-blue); background: rgba(30, 41, 59, 0.5); margin-bottom: 0.75rem; border-radius: 0 8px 8px 0; }
+    pre { background: #090d16; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🔄 MSA 서비스 간 통신 방식 패턴 비교</h1>
+      <p class="subtitle">동기식 (REST API, gRPC) vs 비동기 이벤트 스트리밍 (Kafka) 통신 구조와 사용 예시</p>
+    </div>
+
+    <div class="card">
+      <h2>통신 프로토콜 방식 선택 시각화</h2>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="showMode('rest')">1. REST API (동기 HTTP/JSON)</button>
+        <button class="tab-btn" onclick="showMode('grpc')">2. gRPC (동기 HTTP/2 Protobuf)</button>
+        <button class="tab-btn" onclick="showMode('kafka')">3. Kafka (비동기 Event-Driven)</button>
+      </div>
+
+      <div id="modeContent">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modes = {
+      rest: {
+        title: "REST API (Representational State Transfer)",
+        desc: "HTTP/1.1 프로토콜 기반 JSON 텍스트 서식 동기 호출. 가장 가독성이 높고 범용적이나 헤더 오버헤드가 크고 동기 대기(Blocking) 발생.",
+        seq: [
+          "[Order Service] ➔ (HTTP POST /api/v1/payments) ➔ [Payment Service]",
+          "[Payment Service] ➔ 카드 승인 처리 (동기 대기 200ms)",
+          "[Payment Service] ➔ (HTTP 200 OK Response) ➔ [Order Service]"
+        ],
+        code: `// Spring RestTemplate / WebClient 예시
+PaymentResponse response = webClient.post()
+    .uri("http://payment-service/api/v1/payments")
+    .bodyValue(new PaymentRequest(orderId, amount))
+    .retrieve()
+    .bodyToMono(PaymentResponse.class)
+    .block(); // 동기 차단 대기`
+      },
+      grpc: {
+        title: "gRPC (Google Remote Procedure Call)",
+        desc: "HTTP/2 기반 Protocol Buffers(Protobuf) 바이너리 통신. 멀티플렉싱과 직렬화 성능이 뛰어나 MSA 내부 microservice 간 고성능 동기 통신에 최적화.",
+        seq: [
+          "[Order Service] ➔ (gRPC Call: PayOrder(PaymentRequest)) ➔ [Payment Service]",
+          "[Payment Service] ➔ HTTP/2 바이너리 스트림 고속 연산 (15ms)",
+          "[Payment Service] ➔ (gRPC Response: PaymentReply) ➔ [Order Service]"
+        ],
+        code: `// Protocol Buffer 정의 (payment.proto)
+service PaymentService {
+  rpc ProcessPayment (PaymentRequest) returns (PaymentReply);
+}
+// Java gRPC Stub 호출
+PaymentReply reply = paymentStub.processPayment(PaymentRequest.newBuilder()
+    .setOrderId("ORD-101")
+    .setAmount(50000)
+    .build());`
+      },
+      kafka: {
+        title: "Kafka (Distributed Event Streaming)",
+        desc: "발행/구독(Publish/Subscribe) 기반 비동기 이벤트 버스. 주문 서비스는 결제 완료 이벤트를 발행만 하고, 수신 서비스들은 개별 속도로 느슨하게 결합되어 처리.",
+        seq: [
+          "[Order Service] ➔ (Publish: OrderCreatedEvent) ➔ [Kafka Topic: order-events]",
+          "[Kafka Topic] ➔ (Subscribe Async) ➔ [Payment Service], [Notification Service], [Analytics Service]",
+          "※ Order Service는 결제 완료를 기다리지 않고 사용자에게 빠른 응답 반환!"
+        ],
+        code: `// Kafka Producer 이벤트 발행
+kafkaTemplate.send("order-events", orderId, new OrderCreatedEvent(orderId, userId, price));
+
+// Payment Service Consumer 이벤트 소비
+@KafkaListener(topics = "order-events", groupId = "payment-group")
+public void handleOrderEvent(OrderCreatedEvent event) {
+    paymentService.process(event.getOrderId());
+}`
+      }
+    };
+
+    function showMode(key) {
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', (key==='rest'&&idx===0)||(key==='grpc'&&idx===1)||(key==='kafka'&&idx===2));
+      });
+      const m = modes[key];
+      document.getElementById('modeContent').innerHTML = `
+        <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">${m.title}</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.25rem;">${m.desc}</p>
+        <div class="seq-diagram">
+          <h5 style="color: var(--accent-amber); margin-bottom: 0.75rem;">[ 통신 시퀀스 흐름 ]</h5>
+          ${m.seq.map(s => `<div class="seq-step">${s}</div>`).join('')}
+        </div>
+        <h5 style="color: var(--accent-green); margin: 1.25rem 0 0.5rem 0;">[ 실제 구현 코드 샘플 ]</h5>
+        <pre><code>${m.code}</code></pre>
+      `;
+    }
+
+    showMode('rest');
+  </script>
+</body>
+</html>

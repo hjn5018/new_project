@@ -20,11 +20,7 @@
       --text-muted: #94a3b8;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -38,261 +34,91 @@
       min-height: 100vh;
     }
 
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 2.5rem;
-    }
+    .container { max-width: 1280px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2.5rem; }
 
     .badge {
-      display: inline-block;
-      padding: 0.35rem 0.85rem;
-      border-radius: 9999px;
+      display: inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px;
       background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: var(--accent-blue);
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
+      border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue);
+      font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem;
     }
 
     h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
+      font-size: 2.5rem; font-weight: 700;
       background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.75rem;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.75rem;
     }
 
-    header p {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      max-width: 700px;
-      margin: 0 auto;
-    }
+    header p { color: var(--text-muted); font-size: 1.1rem; max-width: 700px; margin: 0 auto; }
 
-    .nav-links {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
+    .nav-links { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
 
     .nav-link {
-      color: var(--accent-blue);
-      text-decoration: none;
-      font-weight: 500;
-      padding: 0.5rem 1rem;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 8px;
-      transition: all 0.2s ease;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      padding: 0.5rem 1rem; background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; transition: all 0.2s ease;
     }
+    .nav-link:hover { background: rgba(56, 189, 248, 0.25); transform: translateY(-2px); }
 
-    .nav-link:hover {
-      background: rgba(56, 189, 248, 0.25);
-      transform: translateY(-2px);
+    /* Dedicated Topics Highlight Bar */
+    .topics-highlight {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+      border: 1px solid var(--accent-blue); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;
     }
+    .topics-title { font-size: 1.25rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; }
+    .topic-btn {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0.9rem; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border);
+      border-radius: 10px; color: var(--text-main); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;
+    }
+    .topic-btn:hover { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.15); transform: translateY(-2px); }
 
     /* Controls Bar */
     .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      padding: 1.25rem;
-      border-radius: 16px;
-      border: 1px solid var(--card-border);
+      display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;
+      background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.25rem;
+      border-radius: 16px; border: 1px solid var(--card-border);
     }
-
-    .search-box {
-      position: relative;
-      width: 100%;
-    }
-
     .search-box input {
-      width: 100%;
-      padding: 0.85rem 1.25rem;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      color: var(--text-main);
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.2s ease;
+      width: 100%; padding: 0.85rem 1.25rem; background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border); border-radius: 10px; color: var(--text-main); font-size: 1rem; outline: none;
     }
+    .search-box input:focus { border-color: var(--accent-blue); }
 
-    .search-box input:focus {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-    }
-
-    .category-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
+    .category-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .tab-btn {
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--card-border);
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
+      padding: 0.5rem 1rem; border-radius: 8px; background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--card-border); color: var(--text-muted); cursor: pointer; font-size: 0.875rem; font-weight: 500;
     }
-
-    .tab-btn:hover, .tab-btn.active {
-      background: var(--accent-blue);
-      color: #0f172a;
-      font-weight: 600;
-      border-color: var(--accent-blue);
-    }
-
-    /* Section: PoC Highlight */
-    .poc-section {
-      margin-bottom: 3rem;
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
-      border: 1px solid rgba(168, 85, 247, 0.3);
-      border-radius: 16px;
-      padding: 1.75rem;
-    }
-
-    .poc-title {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 1.4rem;
-      color: var(--accent-purple);
-      margin-bottom: 1.25rem;
-    }
-
-    .poc-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-    }
-
-    .poc-card {
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1rem;
-      transition: transform 0.2s ease;
-    }
-
-    .poc-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--accent-purple);
-    }
-
-    .poc-card h4 {
-      color: var(--accent-green);
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .poc-card p {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
+    .tab-btn.active { background: var(--accent-blue); color: #0f172a; font-weight: 600; }
 
     /* Grid of Jargon Cards */
-    .jargon-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.25rem;
-    }
-
+    .jargon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.25rem; }
     .jargon-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: all 0.25 ease;
+      background: var(--card-bg); backdrop-filter: blur(8px); border: 1px solid var(--card-border);
+      border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;
     }
-
-    .jargon-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-      transform: translateY(-2px);
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+    .term-title { font-size: 1.15rem; font-weight: 600; color: #fff; }
+    .cat-tag { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); font-weight: 500; }
+    .term-def { color: #cbd5e1; font-size: 0.925rem; line-height: 1.5; margin-bottom: 1rem; }
+    .term-usage { background: rgba(15, 23, 42, 0.6); border-left: 3px solid var(--accent-amber); padding: 0.6rem 0.8rem; border-radius: 0 6px 6px 0; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem; }
+    .deep-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+      padding: 0.5rem; border-radius: 8px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3);
+      color: var(--accent-purple); text-decoration: none; font-size: 0.825rem; font-weight: 600; transition: all 0.2s;
     }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-
-    .term-title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .cat-tag {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent-blue);
-      font-weight: 500;
-    }
-
-    .term-def {
-      color: #cbd5e1;
-      font-size: 0.925rem;
-      line-height: 1.5;
-      margin-bottom: 1rem;
-    }
-
-    .term-usage {
-      background: rgba(15, 23, 42, 0.6);
-      border-left: 3px solid var(--accent-amber);
-      padding: 0.6rem 0.8rem;
-      border-radius: 0 6px 6px 0;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .term-usage span {
-      color: var(--accent-amber);
-      font-weight: 600;
-      display: block;
-      margin-bottom: 0.2rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .jargon-grid {
-        grid-template-columns: 1fr;
-      }
-      h1 { font-size: 2rem; }
-    }
+    .deep-btn:hover { background: rgba(168, 85, 247, 0.3); }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <span class="badge">Enterprise Backend Knowledge Base</span>
-      <h1>백엔드 기술 용어 사전 & PoC 가이드</h1>
-      <p>JD 주요 요구 역량 기반 83+ 백엔드 용어 체계화 및 실습 micro-project 가이드</p>
+      <h1>백엔드 기술 용어 사전 & 19대 개별 주제 심층 탐색</h1>
+      <p>JD 주요 요구 역량 기반 83+ 백엔드 용어 체계화 및 19대 인터랙티브 개별 주제 웹 페이지</p>
       <div class="nav-links">
         <a href="README.md" class="nav-link">📂 README 대문</a>
         <a href="project_candidates.html" class="nav-link">💡 프로젝트 후보군 (Wireframes)</a>
@@ -300,40 +126,39 @@
       </div>
     </header>
 
-    <!-- PoC Highlight Section -->
-    <section class="poc-section">
-      <div class="poc-title">
-        <span>🧪</span>
-        <h3>사전 기술 검증: 5대 소규모 micro-project / PoC</h3>
+    <!-- 19 Dedicated Pages Highlight -->
+    <div class="topics-highlight">
+      <div class="topics-title">
+        <span>🚀</span>
+        <span>19대 백엔드 핵심 주제 개별 인터랙티브 탐색 페이지</span>
       </div>
-      <div class="poc-grid">
-        <div class="poc-card">
-          <h4>PoC 1: Redis 분산락 & ZSET</h4>
-          <p>Redisson 분산락 기반 동시성 제어 및 timestamp 기반 순서 보장 대기열 구현 검증</p>
-        </div>
-        <div class="poc-card">
-          <h4>PoC 2: Kafka vs RabbitMQ DLQ</h4>
-          <p>이벤트 스트리밍 대용량 수집 vs AMQP ACK 라우팅 및 실패 메시지 DLQ 격리 처리</p>
-        </div>
-        <div class="poc-card">
-          <h4>PoC 3: NoSQL + VectorDB</h4>
-          <p>MongoDB 가변 로그 적재 + PostgreSQL pgvector 확장 임베딩 유사도 검색</p>
-        </div>
-        <div class="poc-card">
-          <h4>PoC 4: PortOne & Batch</h4>
-          <p>PortOne Webhook 멱등성 처리 + Spring Batch chunk 기반 자정 결제 정산 일괄 실행</p>
-        </div>
-        <div class="poc-card">
-          <h4>PoC 5: Docker & Observability</h4>
-          <p>Docker Compose 기반 ELK Stack + OpenTelemetry + Grafana 분산 트레이싱 관제</p>
-        </div>
+      <div class="topics-grid">
+        <a href="jargons/spof.html" class="topic-btn">💥 SPOF & Failover <span>➔</span></a>
+        <a href="jargons/msa-communication.html" class="topic-btn">🔄 MSA 통신 (REST/gRPC/Kafka) <span>➔</span></a>
+        <a href="jargons/load-balancing.html" class="topic-btn">⚖️ 로드밸런싱 & Scale-Out <span>➔</span></a>
+        <a href="jargons/eda-mqtt.html" class="topic-btn">📡 EDA & MQTT 비교 <span>➔</span></a>
+        <a href="jargons/kafka-cdc.html" class="topic-btn">🔄 Kafka CDC & Debezium <span>➔</span></a>
+        <a href="jargons/dlq.html" class="topic-btn">💀 DLQ 예외 처리 시뮬레이터 <span>➔</span></a>
+        <a href="jargons/nosql-mongodb.html" class="topic-btn">🍃 NoSQL 4대 구조 비교 <span>➔</span></a>
+        <a href="jargons/mongodb-usage.html" class="topic-btn">🍃 MongoDB 실무 사용 사례 <span>➔</span></a>
+        <a href="jargons/vectordb.html" class="topic-btn">📐 VectorDB & RAG Visualizer <span>➔</span></a>
+        <a href="jargons/sharding-jdbc.html" class="topic-btn">🗄️ Sharding-JDBC 라우터 <span>➔</span></a>
+        <a href="jargons/jpa-querydsl.html" class="topic-btn">⚔️ JPA vs QueryDSL 비교 <span>➔</span></a>
+        <a href="jargons/pg-van.html" class="topic-btn">💳 PG vs VAN 결제 다이어그램 <span>➔</span></a>
+        <a href="jargons/firmbanking.html" class="topic-btn">🏦 펌뱅킹 정산 프로세스 <span>➔</span></a>
+        <a href="jargons/elk.html" class="topic-btn">📊 ELK 스택 파이프라인 <span>➔</span></a>
+        <a href="jargons/observability.html" class="topic-btn">🔭 ELK vs OTel vs LGTM <span>➔</span></a>
+        <a href="jargons/api-protocols.html" class="topic-btn">🌐 REST vs GraphQL vs gRPC <span>➔</span></a>
+        <a href="jargons/websocket-stomp.html" class="topic-btn">🔌 WebSocket vs STOMP <span>➔</span></a>
+        <a href="jargons/js-ecosystem.html" class="topic-btn">🟩 Node vs Nest vs Next.js <span>➔</span></a>
+        <a href="jargons/tdd-cases.html" class="topic-btn">🧪 TDD 사례 & 워크플로우 <span>➔</span></a>
       </div>
-    </section>
+    </div>
 
     <!-- Controls Bar -->
     <div class="controls">
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="용어명, 설명 또는 키워드로 검색 (예: Kafka, 동시성, PortOne, Redis, TDD)..." oninput="filterCards()">
+        <input type="text" id="searchInput" placeholder="용어명, 설명 또는 키워드로 검색 (예: SPOF, Kafka, NoSQL, JPA, PG, TDD)..." oninput="filterCards()">
       </div>
       <div class="category-tabs" id="categoryTabs">
         <button class="tab-btn active" onclick="setCategory('ALL')">전체 (83+)</button>
@@ -350,64 +175,32 @@
 
     <!-- Jargon Cards Grid -->
     <div class="jargon-grid" id="jargonGrid">
-      <!-- Dynamically generated by JS -->
+      <!-- Dynamically generated -->
     </div>
   </div>
 
   <script>
     const jargons = [
-      // 아키텍처
-      { term: "Application Server", cat: "아키텍처", def: "비즈니스 로직 실행, DB 연동, 트랜잭션을 처리하는 서버 엔진(Tomcat, Netty 등).", usage: "Nginx 뒤에서 백엔드 앱(Spring Boot, Django)을 구동." },
-      { term: "MSA (Microservices)", cat: "아키텍처", def: "독립적으로 배포 가능한 소규모 서비스로 분할하여 구축하는 시스템 구조.", usage: "회원, 주문, 결제, 정산 서비스를 분리하고 REST/gRPC/Kafka로 통신." },
-      { term: "SPOF (단일 장애점)", cat: "아키텍처", def: "해당 요소 고장 시 전체 시스템이 정지되는 단일 취약 지점.", usage: "DB Master 단일화를 피하기 위해 다중화 및 Failover 설정 적용." },
-      { term: "로드밸런싱", cat: "아키텍처", def: "트래픽을 다수의 서버로 분산시켜 과부하를 방지하고 가용성을 높이는 기술.", usage: "Nginx / ALB를 통한 L7 요청 분산." },
-      { term: "서킷 브레이커", cat: "아키텍처", def: "연관 서비스 장애 시 호출을 빠르게 차단하여 연쇄 장애를 방지하는 패턴.", usage: "Resilience4j를 이용해 결제 PG 장애 시 Fallback 응답 반환." },
-      { term: "EDA (Event-Driven)", cat: "아키텍처", def: "상태 변화 이벤트를 발행/구독 방식으로 전달하여 결합도를 낮추는 구조.", usage: "주문 생성 시 Kafka 이벤트 발행 후 결제/알림 비동기 처리." },
-      { term: "직교성 (Orthogonality)", cat: "아키텍처", def: "한 모듈의 수정이 다른 모듈에 영향을 주지 않는 저결합 특성.", usage: "결제 모듈 변경이 회원/검색 모듈에 영향을 주지 않도록 설계." },
-
-      // 동시성 & 메시징
-      { term: "동시성 이슈", cat: "동시성", def: "다수 쓰레드가 동일 공유 자원에 접근하여 데이터 정합성이 깨지는 현상.", usage: "선착순 쿠폰, 티켓 예매 시 발생. 분산락으로 해결." },
-      { term: "DB 분산 Lock", cat: "동시성", def: "분산 환경에서 공통 자원에 대한 접근 순서를 제어하는 락 메커니즘.", usage: "Redis Redisson Pub/Sub 락으로 DB 부하 최소화하며 잔액 차감." },
-      { term: "CAP 이론", cat: "동시성", def: "일관성(C), 가용성(A), 분할견딤(P) 중 최대 2가지만 보장 가능하다는 법칙.", usage: "금융 결제는 C(일관성) 중심, 대용량 로그는 A(가용성) 중심 선택." },
-      { term: "메시지 큐", cat: "동시성", def: "서비스 간 비동기 데이터 전달을 위한 버퍼 형태의 큐.", usage: "이메일 발송, 리포트 생성 등 비동기 작업 오프로드." },
-      { term: "Kafka", cat: "동시성", def: "고성능 순차 I/O 및 대용량 분산 로그를 제공하는 이벤트 스트리밍 플랫폼.", usage: "대용량 결제 데이터 수집 및 CDC 분석 파이프라인 구축." },
-      { term: "RabbitMQ", cat: "동시성", def: "AMQP 기반으로 섬세한 라우팅과 메시지 승인(ACK)을 보장하는 메시지 브로커.", usage: "트랜잭션 라우팅 및 실패 메시지 DLQ 보관." },
-      { term: "Redis ZSET & Pub/Sub", cat: "동시성", def: "Score 기반 순서 정렬 집합(ZSET) 및 메모리 기반 실시간 채널 구독(Pub/Sub).", usage: "선착순 대기열 순차 보장 및 실시간 알림 전송." },
-      { term: "DLQ (Dead Letter Queue)", cat: "동시성", def: "처리 실패/예외가 발생한 메시지를 격리 보관하는 전용 큐.", usage: "소비 실패한 결제 이벤트를 DLQ로 이동 후 재처리." },
-
-      // DB & 데이터
-      { term: "NoSQL (MongoDB)", cat: "DB", def: "가변 스키마와 뛰어난 수평 확장성을 제공하는 비관계형 데이터베이스.", usage: "AI 대화 로그 및 가변 이벤트 페이로드 보관." },
-      { term: "VectorDB (pgvector/Chroma)", cat: "DB", def: "고차원 임베딩 벡터 간 유사도를 고속으로 검색하는 전용 DB.", usage: "LLM RAG 기반 상품 및 FAQ 시맨틱 탐색." },
-      { term: "Sharding JDBC", cat: "DB", def: "데이터를 여러 DB 노드에 수평 분할 저장/조회하는 샤딩 프레임워크.", usage: "대규모 주문 내역 테이블 수평 분할." },
-      { term: "JPA & QueryDSL", cat: "DB", def: "Java ORM 표준 및 자바 코드로 타입 안전한 쿼리를 작성하는 도구.", usage: "동적 검색 조건 쿼리를 안전하게 컴파일 타임 검증." },
-      { term: "AirFlow & Data Lake", cat: "DB", def: "대용량 원천 데이터 저수지(Data Lake) 및 ETL 워크플로우 오케스트레이터.", usage: "일별 매출 데이터를 GCP BigQuery로 적재하는 파이프라인." },
-
-      // 금융 & 결제
-      { term: "PG (Payment Gateway)", cat: "금융", def: "온라인 카드 결제 승인 중계를 담당하는 대행사(PortOne 등).", usage: "주문 승인 요청 및 결제 완료 웹훅 처리." },
-      { term: "펌뱅킹", cat: "금융", def: "기업 시스템과 은행 전산망을 연결하여 계좌이체/정산을 자동화하는 시스템.", usage: "판매자 일괄 자동 정산 이체." },
-      { term: "멱등성 (Idempotency)", cat: "금융", def: "동일 연산을 여러 번 실행해도 결과가 달라지지 않는 성질.", usage: "PortOne 중복 Webhook 호출 시 중복 결제/정산 방지." },
-      { term: "보안 컴플라이언스 (ISMS-P/AML)", cat: "금융", def: "정보보호 체계 인증(ISMS-P) 및 자금세탁방지(AML)/고객확인(KYC) 법적 규제.", usage: "금융 거래 로그 암호화 및 이상거래 감지 배치." },
-
-      // AI & 자동화
-      { term: "LangGraph & RAG", cat: "AI", def: "상태 기반 AI Agent 프레임워크 및 외부 검색 결합 답변 생성 기법.", usage: "주문 내역을 조회해 자동으로 응답하는 CS 챗봇." },
-      { term: "Azure OpenAI & LangFuse", cat: "AI", def: "기업용 보안 LLM 모델 플랫폼 및 프롬프트 관제/비용 모니터링 도구.", usage: "AI 응답 지연 시간 및 토큰 비용 모니터링." },
-      { term: "n8n / Zapier", cat: "AI", def: "노코드 워크플로우 자동화 도구.", usage: "결제 장애 발생 시 Slack 채널 자동 알림." },
-
-      // 모니터링 & DevOps
-      { term: "ELK 스택", cat: "모니터링", def: "Elasticsearch(검색), Logstash(수집), Kibana(시각화) 분산 로깅 솔루션.", usage: "실시간 서버 에러 로그 수집 및 탐색." },
-      { term: "OpenTelemetry & LGTM", cat: "모니터링", def: "분산 트레이싱 표준 및 Loki, Grafana, Tempo, Mimir 관제 풀스택.", usage: "MSA 환경 단일 요청 앤드투앤드 지연 추적." },
-      { term: "k6 부하 테스트 & TPS/SLO", cat: "모니터링", def: "부하 시뮬레이션 도구(k6) 및 초당 처리량(TPS), 목표 성능 지표(SLO).", usage: "동시 접속 1,000명 한계 부하 측정." },
-
-      // 프로토콜 & API
-      { term: "REST vs GraphQL vs gRPC", cat: "API", def: "HTTP/JSON API vs 단일 엔드포인트 쿼리 vs HTTP/2 고성능 RPC.", usage: "외부 API는 REST, MSA 내부 서비스 통신은 gRPC." },
-      { term: "WebSocket & STOMP", cat: "API", def: "양방향 실시간 프로토콜 및 메시지 서식 규격.", usage: "실시간 대기열 순번 및 CS 챗봇 메시지 전송." },
-      { term: "Kong (API Gateway)", cat: "API", def: "인증, 라우팅, Rate Limiting을 일괄 관리하는 API Gateway.", usage: "JWT 인증 검증 및 DDoS IP 차단." },
-
-      // 프레임워크 & TDD
-      { term: "Spring Boot / NestJS", cat: "프레임워크", def: "Java 엔터프라이즈 프레임워크 및 TypeScript 아키텍처 프레임워크.", usage: "핵심 결제 백엔드 시스템 구축." },
-      { term: "Spring Batch", cat: "프레임워크", def: "Chunk 기반 대용량 일괄 데이터 처리 배치 프레임워크.", usage: "매일 자정 가맹점 정산 및 통계 계산." },
-      { term: "TDD & JUnit", cat: "프레임워크", def: "테스트 주도 개발 방법론 및 Java 단위/통합 테스트 프레임워크.", usage: "결제/동시성 로직 단위 테스트 작성으로 품질 확보." },
-      { term: "RBAC (Role-Based Control)", cat: "프레임워크", def: "사용자 역할(Admin/User)에 따른 권한 제어 모델.", usage: "관리자 전용 정산/관제 API 접근 제한." }
+      { term: "Application Server", cat: "아키텍처", def: "비즈니스 로직 실행, DB 연동, 트랜잭션을 처리하는 서버 엔진.", usage: "Nginx 뒤에서 백엔드 앱 구동." },
+      { term: "MSA (Microservices)", cat: "아키텍처", def: "독립적으로 배포 가능한 소규모 서비스로 분할하여 구축하는 시스템 구조.", usage: "서비스 분리 및 REST/gRPC/Kafka 통신.", link: "jargons/msa-communication.html" },
+      { term: "SPOF (단일 장애점)", cat: "아키텍처", def: "해당 요소 고장 시 전체 시스템이 정지되는 단일 취약 지점.", usage: "Multi-AZ Failover 설정.", link: "jargons/spof.html" },
+      { term: "로드밸런싱", cat: "아키텍처", def: "트래픽을 다수의 서버로 분산시켜 과부하를 방지하는 기술.", usage: "Scale-Out 서버 그룹 분산 처리.", link: "jargons/load-balancing.html" },
+      { term: "EDA (Event-Driven)", cat: "아키텍처", def: "이벤트를 발행/구독 방식으로 전달하여 결합도를 낮추는 구조.", usage: "Kafka 이벤트 수집 및 MQTT 비교.", link: "jargons/eda-mqtt.html" },
+      { term: "Kafka CDC", cat: "DB", def: "DB 트랜잭션 로그를 실시간 감지하여 타겟 시스템에 동기화.", usage: "Debezium 파이프라인.", link: "jargons/kafka-cdc.html" },
+      { term: "DLQ (Dead Letter Queue)", cat: "동시성", def: "처리 실패 메시지를 격리 보관하는 전용 큐.", usage: "재시도 및 Redrive 수동 재처리.", link: "jargons/dlq.html" },
+      { term: "NoSQL & MongoDB", cat: "DB", def: "가변 스키마와 수평 확장성을 제공하는 비관계형 데이터베이스.", usage: "JSON 페이로드 및 4대 구조 비교.", link: "jargons/nosql-mongodb.html" },
+      { term: "MongoDB 실무 사례", cat: "DB", def: "비정형 결제 웹훅 및 AI 대화 이력 적재.", usage: "Aggregation Pipeline 연산.", link: "jargons/mongodb-usage.html" },
+      { term: "VectorDB (pgvector)", cat: "DB", def: "임베딩 벡터 간 유사도를 고속 검색하는 전용 DB.", usage: "LLM RAG 시맨틱 검색.", link: "jargons/vectordb.html" },
+      { term: "Sharding JDBC", cat: "DB", def: "데이터를 여러 DB 노드에 수평 분할 저장/조회.", usage: "Sharding Key 기반 쿼리 라우팅.", link: "jargons/sharding-jdbc.html" },
+      { term: "JPA vs QueryDSL", cat: "DB", def: "Java ORM 표준 및 타입 안전 컴파일 타임 쿼리 빌더.", usage: "동적 쿼리 나란히 코드 비교.", link: "jargons/jpa-querydsl.html" },
+      { term: "PG vs VAN", cat: "금융", def: "온라인 결제대행(PG) 및 카드망 중계(VAN) 구조.", usage: "결제 승인 흐름 다이어그램.", link: "jargons/pg-van.html" },
+      { term: "펌뱅킹 (Firm Banking)", cat: "금융", def: "기업 시스템과 은행 전산망 직접 연동 자동 이체.", usage: "가맹점 일괄 자동 정산.", link: "jargons/firmbanking.html" },
+      { term: "ELK 스택", cat: "모니터링", def: "Elasticsearch, Logstash, Kibana 로깅 솔루션.", usage: "실시간 로그 수집 파이프라인.", link: "jargons/elk.html" },
+      { term: "ELK vs OTel vs LGTM", cat: "모니터링", def: "로그(ELK), 트레이스 표준(Otel), Grafana(LGTM) 관제 비교.", usage: "관제 풀스택 비교표.", link: "jargons/observability.html" },
+      { term: "REST vs GraphQL vs gRPC", cat: "API", def: "HTTP/JSON vs 단일 엔드포인트 쿼리 vs HTTP/2 Protobuf.", usage: "API 프로토콜 비교.", link: "jargons/api-protocols.html" },
+      { term: "WebSocket vs STOMP", cat: "API", def: "양방향 실시간 프로토콜 및 Pub/Sub 프레임 규격.", usage: "STOMP 헤더 프레임 구조.", link: "jargons/websocket-stomp.html" },
+      { term: "Node vs Nest vs Next.js", cat: "프레임워크", def: "JS 런타임, 백엔드 프레임워크, 풀스택 SSR.", usage: "생태계 역할 구분.", link: "jargons/js-ecosystem.html" },
+      { term: "TDD & JUnit 5", cat: "프레임워크", def: "테스트 주도 개발 방법론 및 단위 테스트 스위트.", usage: "Red-Green-Refactor 사례.", link: "jargons/tdd-cases.html" }
     ];
 
     let currentCategory = 'ALL';
@@ -415,10 +208,6 @@
     function renderCards(data) {
       const grid = document.getElementById('jargonGrid');
       grid.innerHTML = '';
-      if(data.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">검색 결과가 없습니다.</div>`;
-        return;
-      }
       data.forEach(item => {
         const card = document.createElement('div');
         card.className = 'jargon-card';
@@ -430,9 +219,12 @@
             </div>
             <p class="term-def">${item.def}</p>
           </div>
-          <div class="term-usage">
-            <span>💡 백엔드 적용 사례</span>
-            ${item.usage}
+          <div>
+            <div class="term-usage">
+              <span>💡 핵심 적용 사례</span>
+              ${item.usage}
+            </div>
+            ${item.link ? `<a href="${item.link}" class="deep-btn">📖 주제별 전용 심층 웹 페이지 보기 ➔</a>` : ''}
           </div>
         `;
         grid.appendChild(card);
@@ -443,9 +235,7 @@
       const query = document.getElementById('searchInput').value.toLowerCase();
       const filtered = jargons.filter(item => {
         const matchesCategory = (currentCategory === 'ALL' || item.cat === currentCategory);
-        const matchesQuery = item.term.toLowerCase().includes(query) || 
-                             item.def.toLowerCase().includes(query) || 
-                             item.usage.toLowerCase().includes(query);
+        const matchesQuery = item.term.toLowerCase().includes(query) || item.def.toLowerCase().includes(query);
         return matchesCategory && matchesQuery;
       });
       renderCards(filtered);
@@ -458,7 +248,6 @@
       filterCards();
     }
 
-    // Initial render
     renderCards(jargons);
   </script>
 </body>

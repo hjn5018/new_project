@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JPA vs QueryDSL 공통점과 차이점 완벽 비교</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-amber: #fbbf24; --accent-green: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+    pre { background: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0; }
+    @media (max-width: 800px) { .code-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>⚔️ JPA vs QueryDSL 공통점과 차이점 분석</h1>
+      <p class="subtitle">자바 ORM 표준(JPA/JPQL)의 단점을 보완하여 타입-세이프(Type-Safe) 컴파일 타임 동적 쿼리를 가능하게 하는 관계</p>
+    </div>
+
+    <div class="card">
+      <h2>💡 JPA(JPQL) vs QueryDSL 나란히 코드 비교</h2>
+      <div class="code-grid">
+        <div>
+          <h4 style="color:var(--accent-amber); margin-bottom:0.5rem;">JPA / JPQL (문자열 쿼리)</h4>
+          <pre><code>// ⚠️ 오타가 있어도 컴파일 통과 (런타임 에러)
+String jpql = "select m from Member m " +
+  "where m.username = :name and m.age > :age";
+
+List&lt;Member&gt; result = em.createQuery(jpql, Member.class)
+  .setParameter("name", "홍길동")
+  .setParameter("age", 20)
+  .getResultList();</code></pre>
+        </div>
+        <div>
+          <h4 style="color:var(--accent-green); margin-bottom:0.5rem;">QueryDSL (타입-세이프 자바 코드)</h4>
+          <pre><code>// ✅ 컴파일 타임 문법 검사 & 자동완성 지원
+QMember m = QMember.member;
+
+List&lt;Member&gt; result = queryFactory
+  .selectFrom(m)
+  .where(
+    m.username.eq("홍길동"),
+    m.age.gt(20)
+  )
+  .fetch();</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📊 핵심 공통점 및 차이점 비교표</h2>
+      <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border); text-align:left;">
+            <th style="padding:0.6rem; color:var(--text-muted);">항목</th>
+            <th style="padding:0.6rem; color:var(--accent-amber);">JPA (Spring Data JPA)</th>
+            <th style="padding:0.6rem; color:var(--accent-green);">QueryDSL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.6rem; font-weight:600;">관계</td>
+            <td style="padding:0.6rem;" colspan="2">QueryDSL은 JPA 위에서 동작하는 빌더 프레임워크 (대체재가 아닌 보완재)</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:0.6rem; font-weight:600;">동적 쿼리</td>
+            <td style="padding:0.6rem; color:var(--accent-amber);">문자열 더하기로 조합이 복잡함</td>
+            <td style="padding:0.6rem; color:var(--accent-green);">BooleanBuilder 및 BooleanExpression 메서드 재사용 가능</td>
+          </tr>
+          <tr>
+            <td style="padding:0.6rem; font-weight:600;">권장 사용처</td>
+            <td style="padding:0.6rem;">단순 CRUD (`findById`, `save`)</td>
+            <td style="padding:0.6rem;">복잡한 조건 검색, 다중 JOIN, 통계 쿼리</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

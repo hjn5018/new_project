@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoSQL 데이터베이스 데이터 모델 유형별 비교</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-green: #34d399; --accent-purple: #c084fc; --accent-amber: #fbbf24;
+      --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1050px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .nosql-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .type-card { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    .type-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🍃 NoSQL 데이터베이스 4대 데이터 모델 심층 비교</h1>
+      <p class="subtitle">엄격한 관계형 스키마(RDBMS)를 탈피하여 높은 가용성과 수평 확장을 제공하는 NoSQL의 종류별 특징</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 NoSQL 4대 구조별 특징 매트릭스</h2>
+      <div class="nosql-grid">
+        <div class="type-card" style="border-top:3px solid var(--accent-green);">
+          <span class="tag" style="background:rgba(52,211,153,0.2); color:var(--accent-green);">Document Store</span>
+          <h3 style="color:#fff;">MongoDB / Couchbase</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            JSON/BSON 형태의 가변 구조 문서를 저장. 중첩 객체 및 배열 지원이 뛰어나며 가장 넓은 범용성 보유.
+          </p>
+        </div>
+        <div class="type-card" style="border-top:3px solid var(--accent-blue);">
+          <span class="tag" style="background:rgba(56,189,248,0.2); color:var(--accent-blue);">Key-Value Store</span>
+          <h3 style="color:#fff;">Redis / DynamoDB</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            Unique Key와 Value를 1:1 매핑. 초고속 읽기/쓰기 성능을 제공하며 인메모리 캐싱 및 대기열에 특화.
+          </p>
+        </div>
+        <div class="type-card" style="border-top:3px solid var(--accent-purple);">
+          <span class="tag" style="background:rgba(192,132,252,0.2); color:var(--accent-purple);">Wide-Column</span>
+          <h3 style="color:#fff;">Cassandra / HBase</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            행마다 서로 다른 컬럼 집합을 저장. 대용량 분산 쓰기 성능이 매우 뛰어나 시계열 로그 적재에 활용.
+          </p>
+        </div>
+        <div class="type-card" style="border-top:3px solid var(--accent-amber);">
+          <span class="tag" style="background:rgba(251,191,36,0.2); color:var(--accent-amber);">Graph Database</span>
+          <h3 style="color:#fff;">Neo4j / Amazon Neptune</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            Node와 Edge(관계) 형태로 데이터를 저장. SNS 친구 관계망, 추천 알고리즘 복잡한 릴레이션 탐색 최적화.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

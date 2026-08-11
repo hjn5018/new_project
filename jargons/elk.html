@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELK 스택 로깅 파이프라인 & 다이어그램</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-pink: #f472b6; --accent-emerald: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .elk-pipeline { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); gap: 0.5rem; flex-wrap: wrap; }
+    .elk-box { background: rgba(30, 41, 59, 0.8); border: 2px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; flex: 1; min-width: 140px; }
+    .elk-box.e { border-color: #f59e0b; } .elk-box.l { border-color: #3b82f6; } .elk-box.k { border-color: #ec4899; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>📊 ELK 스택 (Elasticsearch, Logstash, Kibana) 파이프라인</h1>
+      <p class="subtitle">대규모 분산 서버 환경에서 실시간 로그 수집, 역색인 검색, 시각화 대시보드를 제공하는 표준 로깅 아키텍처</p>
+    </div>
+
+    <div class="card">
+      <h2>🖥️ ELK 파이프라인 시각화 흐름도</h2>
+      <div class="elk-pipeline">
+        <div class="elk-box">
+          <strong style="color:#fff;">Spring Boot App</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Filebeat / Logback</span>
+        </div>
+        <span style="color:var(--accent-blue); font-weight:700;">➔</span>
+        <div class="elk-box l">
+          <strong style="color:#3b82f6;">Logstash</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">로그 파싱 & 필터링</span>
+        </div>
+        <span style="color:var(--accent-blue); font-weight:700;">➔</span>
+        <div class="elk-box e">
+          <strong style="color:#f59e0b;">Elasticsearch</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">역색인 저장소 & 검색</span>
+        </div>
+        <span style="color:var(--accent-blue); font-weight:700;">➔</span>
+        <div class="elk-box k">
+          <strong style="color:#ec4899;">Kibana</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">모니터링 대시보드</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

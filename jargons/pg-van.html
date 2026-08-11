@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PG vs VAN 카드 결제 구조 다이어그램</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-purple: #c084fc; --accent-green: #34d399; --accent-amber: #fbbf24;
+      --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .flow-diagram { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); gap: 0.5rem; flex-wrap: wrap; }
+    .flow-step { background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; flex: 1; min-width: 130px; }
+    .arrow { color: var(--accent-amber); font-weight: 700; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>💳 PG (Payment Gateway) vs VAN 사 결제 다이어그램</h1>
+      <p class="subtitle">온라인 가맹점과 전용 카드망(VAN), 그리고 카드사 사이의 승인 및 정산 중계 구조</p>
+    </div>
+
+    <div class="card">
+      <h2>📊 온라인 카드 결제 승인 종합 흐름도</h2>
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <strong style="color:#fff;">1. 구매자 (User)</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">결제창 클릭</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step">
+          <strong style="color:var(--accent-blue);">2. 온라인 가맹점</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">PortOne 연동</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step" style="border-color:var(--accent-purple);">
+          <strong style="color:var(--accent-purple);">3. PG 사</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">토스/KG이니시스</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step" style="border-color:var(--accent-amber);">
+          <strong style="color:var(--accent-amber);">4. VAN 사</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">NICE/KICC (망 중계)</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step" style="border-color:var(--accent-green);">
+          <strong style="color:var(--accent-green);">5. 카드사</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">한도/승인 검증</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💡 PG사 vs VAN사 역할 차이 요약</h2>
+      <ul style="line-height:1.8; color:var(--text-muted); padding-left:1.2rem;">
+        <li><strong>PG (Payment Gateway)</strong>: 온라인 가맹점을 대표하여 여러 카드사와 계약을 대신하고, 온라인 웹/앱 결제창 및 대표 가맹점 정산 역할을 수행.</li>
+        <li><strong>VAN (Value Added Network)</strong>: 오프라인 결제 단말기 또는 PG사와 카드사 전산망 사이의 물리적 보안 통신망 중계 및 승인 데이터 전달을 담당.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

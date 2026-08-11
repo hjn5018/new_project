@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDD (테스트 주도 개발) 사례 & 워크플로우</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8; --accent-red: #f87171; --accent-green: #34d399; --accent-amber: #fbbf24;
+      --text: #f1f5f9; --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .tdd-cycle { display: flex; justify-content: space-around; align-items: center; background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); gap: 0.5rem; flex-wrap: wrap; }
+    .cycle-step { padding: 1rem 1.5rem; border-radius: 10px; text-align: center; flex: 1; min-width: 150px; font-weight: 700; }
+    .step-red { background: rgba(248, 113, 113, 0.2); border: 2px solid var(--accent-red); color: var(--accent-red); }
+    .step-green { background: rgba(52, 211, 153, 0.2); border: 2px solid var(--accent-green); color: var(--accent-green); }
+    .step-blue { background: rgba(56, 189, 248, 0.2); border: 2px solid var(--accent-blue); color: var(--accent-blue); }
+    pre { background: #0f172a; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🧪 TDD (Test-Driven Development) 사례 & 워크플로우</h1>
+      <p class="subtitle">Red ➔ Green ➔ Refactor 순환 사이클을 통한 결제/정산 도메인 비즈니스 로직 결함 사전 예방</p>
+    </div>
+
+    <div class="card">
+      <h2>🔄 TDD 3단계 순환 개발 사이클</h2>
+      <div class="tdd-cycle">
+        <div class="cycle-step step-red">
+          1. RED<br>
+          <span style="font-size:0.8rem; font-weight:400;">실패하는 단위 테스트 작성</span>
+        </div>
+        <span style="font-size:1.5rem; color:var(--accent-amber);">➔</span>
+        <div class="cycle-step step-green">
+          2. GREEN<br>
+          <span style="font-size:0.8rem; font-weight:400;">테스트 통과 최소 코드 작성</span>
+        </div>
+        <span style="font-size:1.5rem; color:var(--accent-amber);">➔</span>
+        <div class="cycle-step step-blue">
+          3. REFACTOR<br>
+          <span style="font-size:0.8rem; font-weight:400;">구조 개선 & 가독성 리팩토링</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💡 JUnit 5 단위 테스트 작성 실무 사례 (선착순 수량 검증)</h2>
+      <pre><code>@Test
+@DisplayName("재고가 0개일 때 주문 시 StockEmptyException 예외가 발생한다")
+void shouldThrowExceptionWhenStockIsEmpty() {
+    // Given
+    Product product = new Product("PROD-101", 0); // 재고 0개
+    
+    // When & Then
+    assertThatThrownBy(() -> orderService.placeOrder(product, 1))
+        .isInstanceOf(StockEmptyException.class)
+        .hasMessage("재고가 부족합니다.");
+}</code></pre>
+    </div>
+  </div>
+</body>
+</html>
