@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DLQ (Dead Letter Queue) 실패 격리 시뮬레이터 & 은행 점검 상세 시나리오</title>
+  <title>DLQ (Dead Letter Queue) 실패 격리 시뮬레이터 & 실무 시나리오 종합</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;&display=swap" rel="stylesheet">
@@ -22,6 +22,17 @@
     .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
     .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
 
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .scenario-card { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; }
+    .scenario-card h4 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+
+    .timeline-box {
+      background: #0f172a; border-radius: 12px; padding: 1.25rem; border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.65; color: #e2e8f0;
+      margin-top: 1rem;
+    }
+    .timeline-item { padding: 0.5rem 0; border-left: 3px solid var(--accent-amber); padding-left: 1rem; margin-bottom: 0.5rem; }
+
     .sim-panel { background: #0f172a; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); }
     .btn { padding: 0.75rem 1.25rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .btn-amber { background: rgba(251, 191, 36, 0.2); border: 1px solid var(--accent-amber); color: var(--accent-amber); }
@@ -32,26 +43,50 @@
     .q-node.dlq { border-color: var(--accent-red); background: rgba(248, 113, 113, 0.15); }
     .msg-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 99px; background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); font-weight: 700; margin-top: 0.5rem; }
     .msg-badge.red { background: rgba(248, 113, 113, 0.3); color: var(--accent-red); }
-
-    .timeline-box {
-      background: #0f172a; border-radius: 12px; padding: 1.25rem; border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.65; color: #e2e8f0;
-      margin-top: 1rem;
-    }
-    .timeline-item { padding: 0.5rem 0; border-left: 3px solid var(--accent-amber); padding-left: 1rem; margin-bottom: 0.5rem; }
+    @media (max-width: 800px) { .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>💀 DLQ (Dead Letter Queue) 예외 격리 & 외부 점검 실무 시나리오</h1>
-      <p class="subtitle">소비 실패 메시지의 안전 격리 및 시중은행 자정 정기점검 시의 1,200건 Redrive 일괄 복구 파이프라인</p>
+      <h1>💀 DLQ (Dead Letter Queue) 실패 격리 시뮬레이터 & 실무 시나리오 종합</h1>
+      <p class="subtitle">소비(Consume)에 실패한 비동기 메시지를 별도 격리하여 큐 블로킹을 방지하고 수동 재처리(Redrive)하는 파이프라인</p>
     </div>
 
-    <!-- 1. 외부 시스템(시중은행/PG) 자정 정기점검 상세 시나리오 (질문 피드백 보강) -->
+    <!-- 1. 실무에서 DLQ가 발생하는 3대 현실 시나리오 -->
     <div class="card">
-      <h2>🏦 1. [심층 실무 시나리오] 시중은행 새벽 정기점검(00:00~00:30)과 DLQ Redrive</h2>
+      <h2>🚨 1. 실무에서 DLQ 격리가 발생하는 3대 현실 시나리오</h2>
+      <div class="grid-3">
+        <div class="scenario-card" style="border-top:3px solid var(--accent-red);">
+          <h4 style="color:var(--accent-red);">1. 영구 결함 (Poison Pill)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong>상황</strong>: 이미 탈퇴한 회원 ID로 알림톡 발송 요청.<br>
+            <strong>결과</strong>: 1,000번 재시도해도 100% 영원히 실패합니다. 이 메시지가 큐 맨 앞을 막으면 뒤의 정상 고객 알림 10만 건이 모두 정지되므로 즉시 <strong>DLQ로 빼내어 격리</strong>합니다.
+          </p>
+        </div>
+
+        <div class="scenario-card" style="border-top:3px solid var(--accent-amber);">
+          <h4 style="color:var(--accent-amber);">2. 외부 시스템 일시 점검</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong>상황</strong>: 시중은행/PG사 새벽 정기점검(00:00~00:30)으로 타임아웃 발생.<br>
+            <strong>결과</strong>: 메시지가 유실되지 않도록 DLQ에 안전 보관해 둔 뒤, <strong>점검이 끝난 00:35에 관리자가 [Redrive] 버튼을 눌러 일괄 재처리</strong>합니다.
+          </p>
+        </div>
+
+        <div class="scenario-card" style="border-top:3px solid var(--accent-blue);">
+          <h4 style="color:var(--accent-blue);">3. 페이로드 파싱/스키마 불일치</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong>상황</strong>: 클라이언트 구버전 앱 버그로 깨진 JSON 전송.<br>
+            <strong>결과</strong>: 역직렬화(Deserialization) 에러로 스프링 리스너가 죽지 않도록 DLQ로 전송하고 개발팀 슬랙으로 에러 페이로드를 통보합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 외부 시스템(시중은행/PG) 자정 정기점검 상세 시나리오 -->
+    <div class="card">
+      <h2>🏦 2. [심층 실무 시나리오] 시중은행 새벽 정기점검(00:00~00:30)과 DLQ Redrive</h2>
       <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
         실제 이커머스/핀테크 서비스에서 매일 자정 발생하는 외부 금융사 점검 시간을 DLQ로 어떻게 완벽히 방어하는지 타임라인으로 확인합니다.
       </p>
@@ -81,9 +116,9 @@
       </div>
     </div>
 
-    <!-- 2. 인터랙티브 시뮬레이터 -->
+    <!-- 3. 인터랙티브 시뮬레이터 -->
     <div class="card">
-      <h2>🕹️ 2. 메시지 처리 실패 및 DLQ 격리 시뮬레이터</h2>
+      <h2>🕹️ 3. 메시지 처리 실패 및 DLQ 격리 시뮬레이터</h2>
       <div class="sim-panel">
         <div style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
           <button class="btn btn-amber" onclick="processMessage(false)">⚠️ 은행 타임아웃 예외 발생 (Retry +1)</button>
@@ -107,6 +142,17 @@
         </div>
       </div>
     </div>
+
+    <!-- 4. DLQ 핵심 프로세스 4단계 -->
+    <div class="card">
+      <h2>📘 4. DLQ 핵심 프로세스 4단계</h2>
+      <ol style="padding-left:1.2rem; color:var(--text-muted); line-height:1.8;">
+        <li><strong>1단계 (소비 시도 & 예외)</strong>: Consumer가 메시지를 수신하여 로직 처리 중 DB 타임아웃/외부 API 장애로 Exception 발생.</li>
+        <li><strong>2단계 (지연 재시도 Retry Backoff)</strong>: 1초, 2초, 4초 등 지수 백오프(Exponential Backoff)를 적용하여 최대 N회(예: 3회) 재시도.</li>
+        <li><strong>3단계 (DLX 라우팅 및 격리)</strong>: 최대 재시도 횟수 초과 시 메인 큐에서 제거 후 Dead Letter Exchange(DLX)를 통해 <code style="color:var(--accent-red);">order-dlq</code>로 자동 격리.</li>
+        <li><strong>4단계 (수동 재처리 Redrive & 관제)</strong>: 장애 복구 후 개발자가 DLQ에 쌓인 메시지의 원인을 분석하고 메인 큐로 Re-push(Redrive)하여 유실 방지.</li>
+      </ol>
+    </div>
   </div>
 
   <script>
@@ -122,9 +168,9 @@
           mainMsg = 0;
           dlqMsg++;
           retries = 0;
-          log.innerText = "🚨 [Max Retries Exceeded] 은행 점검 시간으로 3회 연속 실패! 메시지가 Dead Letter Queue(DLQ)로 안전 격리되어 유실 없이 보관됩니다.";
+          log.innerText = "🚨 [Max Retries Exceeded] 3회 연속 실패! 메시지가 Dead Letter Queue(DLQ)로 안전 격리되어 유실 없이 보관됩니다.";
         } else {
-          log.innerText = `⚠️ [Retry ${retries}/3] 은행 API 타임아웃 발생. 지수 백오프 후 재시도합니다...`;
+          log.innerText = `⚠️ [Retry ${retries}/3] 메시지 소비 실패 (은행 점검 타임아웃). 지수 백오프 후 재시도합니다...`;
         }
       } else {
         log.innerText = "ℹ️ 메인 큐에 남아있는 메시지가 없습니다.";

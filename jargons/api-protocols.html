@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>REST vs GraphQL vs gRPC 프로토콜 비교 & 실무 시나리오 다이어그램</title>
+  <title>REST vs GraphQL vs gRPC 실무 시나리오 다이어그램 & 심층 비교</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -48,32 +48,27 @@
     }
     .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
 
-    .scenario-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 1rem; }
     .scenario-card {
       background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.5rem;
+      border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
     }
     .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
     .scenario-title { font-size: 1.15rem; font-weight: 700; }
     
     .diag-box {
       background: #090d16; border-radius: 10px; padding: 1.25rem; border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.65; margin: 1rem 0;
     }
-    .diag-step { padding: 0.4rem 0.6rem; border-left: 3px solid var(--accent-blue); margin-bottom: 0.4rem; background: rgba(30,41,59,0.5); }
-
-    .proto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
-    .proto-box {
-      background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;
-    }
+    .diag-step { padding: 0.5rem 0.75rem; border-left: 4px solid var(--accent-blue); margin-bottom: 0.5rem; background: rgba(30,41,59,0.5); }
+    
     pre {
       background: #090d16; padding: 1rem; border-radius: 8px;
       border: 1px solid var(--border); overflow-x: auto;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;
-      margin-top: 0.75rem; line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
+      margin-top: 0.75rem; line-height: 1.55;
     }
-    @media (max-width: 800px) { .proto-grid { grid-template-columns: 1fr; } }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 0.75rem; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -81,104 +76,98 @@
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
       <h1>🌐 REST vs GraphQL vs gRPC 실무 시나리오 다이어그램 & 비교</h1>
-      <p class="subtitle">외부 오픈 API(REST), 모바일 종합 대시보드(GraphQL), MSA 내부 초고속 통신(gRPC)의 최적 활용 아키텍처</p>
+      <p class="subtitle">외부 오픈 API 결제 승인(REST), 모바일 종합 대시보드(GraphQL), MSA 내부 초고속 RPC(gRPC)의 최적 활용 아키텍처</p>
     </div>
 
-    <!-- 1. 프로토콜별 3대 실무 사용 시나리오 다이어그램 (질문 피드백 신규 추가) -->
+    <!-- 1. 프로토콜별 3대 실무 사용 시나리오 상세화 (피드백 전격 보강) -->
     <div class="card">
-      <h2>🎯 1. 3대 프로토콜 실무 적용 시나리오 다이어그램</h2>
+      <h2>🎯 1. 3대 프로토콜 구체적 실무 적용 시나리오 & 페이로드 분석</h2>
       
-      <div class="scenario-grid">
-        <!-- 시나리오 1: REST API -->
-        <div class="scenario-card" style="border-top:3px solid var(--accent-blue);">
-          <div class="scenario-header">
-            <span class="scenario-title" style="color:var(--accent-blue);">1. REST API 시나리오 : 공공 오픈 API & 외부 서드파티 결제 연동</span>
-            <span style="font-size:0.75rem; background:rgba(56,189,248,0.2); color:var(--accent-blue); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">범용성 / 캐싱 최우선</span>
+      <!-- 시나리오 1: REST API (외부 결제 연동) -->
+      <div class="scenario-card" style="border-top:3px solid var(--accent-blue);">
+        <div class="scenario-header">
+          <span class="scenario-title" style="color:var(--accent-blue);">1. REST API 시나리오 : 쇼핑몰 ➔ 토스페이먼츠/PortOne 외부 결제 승인 연동</span>
+          <span style="font-size:0.75rem; background:rgba(56,189,248,0.2); color:var(--accent-blue); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">범용성 / 방화벽 호환 / 표준 HTTP</span>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
+          <strong>배경</strong>: 전 세계 수만 개의 쇼핑몰 백엔드가 토스페이먼츠 결제 서버와 통신할 때, 별도의 전용 바이너리 라이브러리 설치 없이 표준 HTTP 클라이언트(WebClient, cURL, axios)만으로 즉시 연동되어야 합니다.
+        </p>
+
+        <div class="diag-box">
+          <div class="diag-step" style="border-color:var(--accent-blue);">
+            <strong>1. 쇼핑몰 서버</strong> ➔ <code>POST https://api.tosspayments.com/v1/payments/confirm</code><br>
+            • Header: <code>Authorization: Basic dGVzdF9za18...</code>, <code>Content-Type: application/json</code><br>
+            • Body: <code>{"paymentKey": "pk_99x81a", "orderId": "ORD-2026-0818", "amount": 50000}</code>
           </div>
-          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            전 세계 모든 개발자가 별도 SDK 없이 <code>curl</code>이나 브라우저로 손쉽게 호출할 수 있어야 하는 외부 연동에 가장 적합합니다.
-          </p>
-          <div class="diag-box">
-            <div class="diag-step" style="border-color:var(--accent-blue);">[쇼핑몰 웹/앱] ➔ HTTP POST /api/v1/payments (JSON 바디) ➔ [PortOne / 카카오페이 PG 서버]</div>
-            <div class="diag-step" style="border-color:var(--accent-blue);">[PG 서버] ➔ 카드사 통신 승인 후 ➔ HTTP 200 OK (표준 JSON 응답) 반환</div>
-            <div style="color:var(--accent-blue); font-size:0.78rem; margin-top:0.4rem;">💡 장점: CDN 캐싱 지원, 방화벽 친화적, 전 세계 모든 언어와 호환</div>
+          <div class="diag-step" style="border-color:var(--accent-blue);">
+            <strong>2. 토스 결제 서버</strong> ➔ 카드사 전산 승인 처리 후 ➔ <code>HTTP 200 OK</code> JSON 응답<br>
+            • Response: <code>{"status": "DONE", "approvedAt": "2026-08-18T16:50:00+09:00", "method": "CARD"}</code>
           </div>
         </div>
-
-        <!-- 시나리오 2: GraphQL -->
-        <div class="scenario-card" style="border-top:3px solid var(--accent-pink);">
-          <div class="scenario-header">
-            <span class="scenario-title" style="color:var(--accent-pink);">2. GraphQL 시나리오 : 모바일 앱 홈 화면 (복합 리소스 단일 호출)</span>
-            <span style="font-size:0.75rem; background:rgba(244,114,182,0.2); color:var(--accent-pink); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">오버패칭 제거 / 단일 엔드포인트</span>
-          </div>
-          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            모바일 메인 화면에 <code>1) 사용자 닉네임</code>, <code>2) 장바구니 개수</code>, <code>3) 최근 주문 1건</code>이 필요한 경우, REST로는 3번 요청해야 하지만 GraphQL은 단 1번의 쿼리로 필요한 필드만 정확히 가져옵니다.
-          </p>
-          <div class="diag-box">
-            <div class="diag-step" style="border-color:var(--accent-pink);">[모바일 앱] ➔ POST /graphql (query { user { name }, cart { count }, latestOrder { id } }) ➔ [BFF 서버]</div>
-            <div class="diag-step" style="border-color:var(--accent-pink);">[BFF 서버] ➔ 클라이언트가 지정한 필드만 정확히 묶어서 단일 JSON 응답 ➔ [모바일 앱 렌더링]</div>
-            <div style="color:var(--accent-pink); font-size:0.78rem; margin-top:0.4rem;">💡 장점: 모바일 무선망 트래픽 절감, 프론트엔드가 필요한 데이터를 주도적으로 제어</div>
-          </div>
-        </div>
-
-        <!-- 시나리오 3: gRPC -->
-        <div class="scenario-card" style="border-top:3px solid var(--accent-emerald);">
-          <div class="scenario-header">
-            <span class="scenario-title" style="color:var(--accent-emerald);">3. gRPC 시나리오 : MSA 백엔드 마이크로서비스 간 초저지연 내부 RPC 통신</span>
-            <span style="font-size:0.75rem; background:rgba(52,211,153,0.2); color:var(--accent-emerald); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">초고속 / 초저지연 / 타입 세이프</span>
-          </div>
-          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            주문 서버, 재고 서버, 결제 서버 간에 초당 수만 건의 API가 오갈 때, 텍스트 JSON 파싱 비용을 없애고 초소형 Protobuf 바이너리로 통신합니다.
-          </p>
-          <div class="diag-box">
-            <div class="diag-step" style="border-color:var(--accent-emerald);">[주문 마이크로서비스] ➔ checkStock(itemId: 101) ➔ [재고 마이크로서비스] (HTTP/2 단 7Byte 바이너리, 2ms)</div>
-            <div class="diag-step" style="border-color:var(--accent-emerald);">[주문 마이크로서비스] ➔ processPayment(amount: 50000) ➔ [결제 마이크로서비스] (동일 TCP 파이프 멀티플렉싱)</div>
-            <div style="color:var(--accent-emerald); font-size:0.78rem; margin-top:0.4rem;">💡 장점: 직렬화/역직렬화 CPU 낭비 0%, 엄격한 Proto 계약으로 컴파일 타임 에러 검증</div>
-          </div>
+        <div style="font-size:0.85rem; color:var(--accent-blue); line-height:1.5;">
+          💡 <strong>왜 REST인가?</strong>: 표준 HTTP 상태 코드(200 OK, 400 Bad Request, 401 Unauthorized), 방화벽 통과 용이성, 그리고 누구나 학습 비용 없이 즉시 연동 가능한 압도적 범용성을 제공합니다.
         </div>
       </div>
-    </div>
 
-    <!-- 2. 프로토콜별 실제 페이로드 비교 -->
-    <div class="card">
-      <h2>📊 2. 3대 API 프로토콜 실제 요청 & 응답 코드 비교</h2>
-      <div class="proto-grid">
-        <div class="proto-box" style="border-top:3px solid var(--accent-blue);">
+      <!-- 시나리오 2: GraphQL (모바일 종합 대시보드) -->
+      <div class="scenario-card" style="border-top:3px solid var(--accent-pink);">
+        <div class="scenario-header">
+          <span class="scenario-title" style="color:var(--accent-pink);">2. GraphQL 시나리오 : 배달의민족/인스타그램 모바일 홈 화면 (복합 도메인 단일 쿼리)</span>
+          <span style="font-size:0.75rem; background:rgba(244,114,182,0.2); color:var(--accent-pink); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">네트워크 RTT 4배 절약 / 오버패칭 제거</span>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
+          <strong>배경</strong>: 모바일 앱 메인 홈 화면에 <code>1) 내 닉네임</code>, <code>2) 장바구니 수량</code>, <code>3) 최근 배달 1건 상태</code>, <code>4) 이벤트 배너</code>를 표시해야 합니다. REST로는 4번의 네트워크 왕복(RTT)이 발생하지만, GraphQL은 <strong>단 1번의 쿼리로 필요한 필드만 조립</strong>하여 가져옵니다.
+        </p>
+
+        <div class="grid-2">
           <div>
-            <h3 style="color:var(--accent-blue);">REST API (HTTP/1.1 JSON)</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.4rem;">모든 필드가 다 내려오는 Overfetching</p>
-          </div>
-          <pre><code>// GET /api/v1/users/101
-{
-  "id": 101,
-  "name": "홍길동",
-  "email": "hong@test.com",
-  "addr": "서울시...",
-  "zip": "06012"
+            <h4 style="color:var(--accent-pink); font-size:0.9rem; margin-bottom:0.3rem;">[클라이언트 전송 쿼리 : POST /graphql]</h4>
+            <pre><code>query {
+  user { nickname, grade }
+  cart { totalItemsCount }
+  recentOrder(limit: 1) { restaurantName, status }
+  banners { imageUrl }
 }</code></pre>
-        </div>
-
-        <div class="proto-box" style="border-top:3px solid var(--accent-pink);">
-          <div>
-            <h3 style="color:var(--accent-pink);">GraphQL (정밀 쿼리)</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.4rem;">원하는 name 필드만 요청 및 수신</p>
           </div>
-          <pre><code>query { user(id: 101) { name } }
-
-// [응답]
-{ "data": { "user": { "name": "홍길동" } } }</code></pre>
-        </div>
-
-        <div class="proto-box" style="border-top:3px solid var(--accent-emerald);">
           <div>
-            <h3 style="color:var(--accent-emerald);">gRPC (Protobuf Binary)</h3>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.4rem;">초소형 7바이트 바이너리 프레임</p>
+            <h4 style="color:var(--accent-pink); font-size:0.9rem; margin-bottom:0.3rem;">[서버의 맞춤형 단일 응답 JSON]</h4>
+            <pre><code>{
+  "data": {
+    "user": { "nickname": "홍길동", "grade": "VIP" },
+    "cart": { "totalItemsCount": 3 },
+    "recentOrder": { "restaurantName": "맛있는치킨", "status": "배달중" },
+    "banners": [{ "imageUrl": "https://cdn.shop.com/b1.jpg" }]
+  }
+}</code></pre>
           </div>
-          <pre><code>// IDL: user.proto
-service UserService {
-  rpc GetUser (UserReq) returns (UserReply);
-}
-// [네트워크 전송: 0A 07 EA B8...]</code></pre>
+        </div>
+        <div style="font-size:0.85rem; color:var(--accent-pink); line-height:1.5; margin-top:0.75rem;">
+          💡 <strong>왜 GraphQL인가?</strong>: 모바일 LTE/5G 무선망 트래픽을 60% 이상 절감하고, 화면 렌더링에 필요한 모든 데이터를 1번의 HTTP 왕복으로 해결합니다.
+        </div>
+      </div>
+
+      <!-- 시나리오 3: gRPC (대규모 MSA 백엔드 내부 통신) -->
+      <div class="scenario-card" style="border-top:3px solid var(--accent-emerald);">
+        <div class="scenario-header">
+          <span class="scenario-title" style="color:var(--accent-emerald);">3. gRPC 시나리오 : 쿠팡/배민 MSA 백엔드 간 초저지연 내부 RPC 통신</span>
+          <span style="font-size:0.75rem; background:rgba(52,211,153,0.2); color:var(--accent-emerald); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">초저지연 2ms / Protobuf 바이너리 / HTTP/2</span>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
+          <strong>배경</strong>: 주문 서비스 ➔ 재고 서비스 ➔ 쿠폰 서비스 ➔ 결제 서비스 간에 초당 50,000건의 마이크로서비스 호출이 오갈 때, 텍스트 JSON 파싱 CPU 낭비를 없애고 초소형 Protobuf 바이너리로 초고속 통신합니다.
+        </p>
+
+        <div class="diag-box">
+          <div class="diag-step" style="border-color:var(--accent-emerald);">
+            <strong>1. Order Service</strong> ➔ <code>InventoryGrpc.deductStock(itemId: 101, qty: 1)</code> 호출<br>
+            • HTTP/2 단일 TCP 연결 멀티플렉싱, <strong>단 7 Byte 바이너리 스트림</strong> 전송 (2ms 응답)
+          </div>
+          <div class="diag-step" style="border-color:var(--accent-emerald);">
+            <strong>2. Order Service</strong> ➔ <code>PaymentGrpc.approvePayment(orderId: "ORD-101", amount: 50000)</code> 호출<br>
+            • Proto 계약 기반 엄격한 컴파일 타임 타입 검증 (오타로 인한 런타임 에러 0%)
+          </div>
+        </div>
+        <div style="font-size:0.85rem; color:var(--accent-emerald); line-height:1.5;">
+          💡 <strong>왜 gRPC인가?</strong>: 직렬화/역직렬화 속도가 JSON 대비 10배 빠르며, 서버 CPU 리소스를 극적으로 절약하여 초당 수만 건의 대규모 트래픽을 처리합니다.
         </div>
       </div>
     </div>

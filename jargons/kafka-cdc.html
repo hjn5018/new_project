@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kafka CDC (Change Data Capture) 입문 & Binlog/WAL 설정 가이드</title>
+  <title>Kafka CDC (Change Data Capture) 입문 & 파이프라인 용어 사전</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -49,6 +49,14 @@
     }
     .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
     
+    .problem-box {
+      background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;
+    }
+    .solution-box {
+      background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3);
+      border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;
+    }
     .flow-grid {
       display: flex; align-items: center; justify-content: space-between;
       background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);
@@ -88,48 +96,30 @@
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🔄 Kafka CDC (Change Data Capture) & DB 설정 가이드</h1>
-      <p class="subtitle">MySQL Binlog 및 PostgreSQL WAL 기본 설정 여부, 확인 쿼리, Debezium 연동 파이프라인 완벽 해설</p>
+      <h1>🔄 Kafka CDC (Change Data Capture) 입문 & 파이프라인 용어 사전</h1>
+      <p class="subtitle">이중 작성(Dual Write) 문제 해결부터 Binlog, WAL, Avro, Sink 등 CDC 핵심 용어 및 DB 설정 가이드</p>
     </div>
 
-    <!-- 1. Binlog와 WAL 기본 활성화 여부 & 확인 쿼리 (질문 피드백 신규 추가) -->
+    <!-- 1. 초보자를 위한 쉬운 비유와 필요성 -->
     <div class="card">
-      <h2>⚙️ 1. [핵심 질문 해결] Binlog와 WAL은 DB에 기본적으로 켜져 있나요?</h2>
-      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
-        DB 설치 후 아무런 설정을 하지 않아도 기본으로 켜져 있는지, 일반 사용자가 SQL로 어떻게 확인하는지 완벽히 정리합니다.
-      </p>
+      <h2>🌱 1. CDC가 왜 필요한가요? (이중 작성의 악몽)</h2>
+      
+      <div class="problem-box">
+        <h4 style="color:var(--accent-red); margin-bottom:0.4rem;">❌ 전통적인 방식: 앱에서 직접 2군데 쓰기 (Dual Write 문제)</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          회원이 닉네임을 변경할 때 백엔드 스프링 앱에서 <code>1) MySQL UPDATE ➔ 성공</code> 후 <code>2) Elasticsearch 색인 API 호출 ➔ 네트워크 장애로 실패!</code> 가 발생하면, <strong>DB에는 새 이름이 있는데 검색창에는 옛날 이름이 뜨는 치명적 데이터 불일치</strong>가 발생합니다.
+        </p>
+      </div>
 
-      <div class="grid-2">
-        <!-- MySQL -->
-        <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:12px; padding:1.25rem; border-top:3px solid var(--accent-blue);">
-          <h4 style="color:var(--accent-blue); margin-bottom:0.5rem;">🐬 MySQL (Binlog 기본값 & 확인)</h4>
-          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
-            • <strong>기본 적용 여부</strong>: <strong>MySQL 8.0부터는 기본(Default)으로 켜져 있습니다(ON).</strong><br>
-            • <strong>CDC 필수 설정</strong>: Debezium이 변경 전/후 데이터를 다 읽으려면 <code>binlog_format = ROW</code> 및 <code>binlog_row_image = FULL</code> 설정이 필요합니다.
-          </p>
-          <pre><code>-- [일반 유저의 Binlog 확인 쿼리]
-SHOW VARIABLES LIKE 'log_bin';
--- 결과: Value = ON (활성화 상태)
-
-SHOW VARIABLES LIKE 'binlog_format';
--- 결과: Value = ROW (행 단위 변경 기록)</code></pre>
-        </div>
-
-        <!-- PostgreSQL -->
-        <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:12px; padding:1.25rem; border-top:3px solid var(--accent-emerald);">
-          <h4 style="color:var(--accent-emerald); margin-bottom:0.5rem;">🐘 PostgreSQL (WAL 기본값 & 확인)</h4>
-          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
-            • <strong>기본 적용 여부</strong>: 서버 비정상 종료 시 복구(Crash Recovery)를 위해 <strong>기본으로 항상 켜져 있습니다.</strong><br>
-            • <strong>CDC 필수 설정</strong>: 기본 <code>wal_level</code>은 <code>replica</code>이므로, Debezium CDC 연동을 위해서는 <code>postgresql.conf</code>에서 <strong><code>wal_level = logical</code></strong>로 변경해주어야 합니다.
-          </p>
-          <pre><code>-- [일반 유저의 WAL 레벨 확인 쿼리]
-SHOW wal_level;
--- 결과: logical (CDC 복제 가능 상태)</code></pre>
-        </div>
+      <div class="solution-box">
+        <h4 style="color:var(--accent-emerald); margin-bottom:0.4rem;">✅ CDC 방식: DB의 'CCTV 일기장'을 감시하기</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          앱은 오직 <strong>MySQL DB에만 평소처럼 저장</strong>하고 끝냅니다. 대신 <strong>CDC 엔진(Debezium)</strong>이 DB의 변경 로그(Binlog/WAL)를 실시간으로 테일링(훔쳐보기)하여 <strong>Kafka 이벤트로 발행</strong>해 Elasticsearch, Redis, Snowflake로 안전하게 자동 배달합니다.
+        </p>
       </div>
     </div>
 
-    <!-- 2. Debezium + Kafka Connect CDC 실시간 동기화 흐름 -->
+    <!-- 2. Debezium + Kafka Connect CDC 실시간 동기화 파이프라인 -->
     <div class="card">
       <h2>📊 2. Debezium + Kafka Connect 실시간 데이터 파이프라인 흐름</h2>
       <div class="flow-grid">
@@ -153,6 +143,16 @@ SHOW wal_level;
           <span style="font-size:0.75rem; color:var(--text-muted);">Elasticsearch (검색)<br>Redis (캐시)<br>Snowflake (DW)</span>
         </div>
       </div>
+
+      <h4 style="color:#fff; margin:1.5rem 0 0.5rem 0; font-size:1rem;">📝 Debezium이 캡처한 변경 이벤트 JSON 페이로드 실제 예시</h4>
+      <pre><code>{
+  "payload": {
+    "before": { "id": 101, "username": "hong_old", "email": "hong@test.com" },
+    "after": { "id": 101, "username": "hong_new_king", "email": "hong@test.com" },
+    "op": "u", // 'c'=Create, 'u'=Update, 'd'=Delete
+    "ts_ms": 1723351200000
+  }
+}</code></pre>
     </div>
 
     <!-- 3. 핵심 용어 사전 -->
@@ -186,6 +186,43 @@ SHOW wal_level;
         <div class="glossary-item" style="border-left:3px solid var(--accent-purple);">
           <div class="glossary-term">❄️ Snowflake & DW (Data Warehouse)</div>
           <div class="glossary-desc"><strong>DW</strong>는 대규모 비즈니스 분석용 빅데이터 저장소이며, <strong>Snowflake</strong>는 대표적인 클라우드 초고속 분산 DW입니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Binlog와 WAL 기본 활성화 여부 & 확인 쿼리 (용어 사전 하단 배치 완료) -->
+    <div class="card">
+      <h2>⚙️ 4. [질문 해결] Binlog와 WAL은 DB에 기본적으로 켜져 있나요?</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
+        DB 설치 후 아무런 설정을 하지 않아도 기본으로 켜져 있는지, 일반 사용자가 SQL로 어떻게 확인하는지 완벽히 정리합니다.
+      </p>
+
+      <div class="grid-2">
+        <!-- MySQL -->
+        <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:12px; padding:1.25rem; border-top:3px solid var(--accent-blue);">
+          <h4 style="color:var(--accent-blue); margin-bottom:0.5rem;">🐬 MySQL (Binlog 기본값 & 확인)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            • <strong>기본 적용 여부</strong>: <strong>MySQL 8.0부터는 기본(Default)으로 켜져 있습니다(ON).</strong><br>
+            • <strong>CDC 필수 설정</strong>: Debezium이 변경 전/후 데이터를 다 읽으려면 <code>binlog_format = ROW</code> 및 <code>binlog_row_image = FULL</code> 설정이 필요합니다.
+          </p>
+          <pre><code>-- [일반 유저의 Binlog 확인 쿼리]
+SHOW VARIABLES LIKE 'log_bin';
+-- 결과: Value = ON (활성화 상태)
+
+SHOW VARIABLES LIKE 'binlog_format';
+-- 결과: Value = ROW (행 단위 변경 기록)</code></pre>
+        </div>
+
+        <!-- PostgreSQL -->
+        <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:12px; padding:1.25rem; border-top:3px solid var(--accent-emerald);">
+          <h4 style="color:var(--accent-emerald); margin-bottom:0.5rem;">🐘 PostgreSQL (WAL 기본값 & 확인)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            • <strong>기본 적용 여부</strong>: 서버 비정상 종료 시 복구(Crash Recovery)를 위해 <strong>기본으로 항상 켜져 있습니다.</strong><br>
+            • <strong>CDC 필수 설정</strong>: 기본 <code>wal_level</code>은 <code>replica</code>이므로, Debezium CDC 연동을 위해서는 <code>postgresql.conf</code>에서 <strong><code>wal_level = logical</code></strong>로 변경해주어야 합니다.
+          </p>
+          <pre><code>-- [일반 유저의 WAL 레벨 확인 쿼리]
+SHOW wal_level;
+-- 결과: logical (CDC 복제 가능 상태)</code></pre>
         </div>
       </div>
     </div>
