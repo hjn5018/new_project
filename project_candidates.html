@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>프로젝트 후보군 & 와이어프레임 (Project Candidates & Wireframes)</title>
+  <title>사전 PoC 5종 & 프로젝트 후보군 와이어프레임 (PoC & Project Candidates)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-dark: #090d16;
-      --card-bg: rgba(22, 30, 46, 0.75);
+      --card-bg: rgba(22, 30, 46, 0.8);
       --card-border: rgba(255, 255, 255, 0.1);
       --accent-blue: #38bdf8;
       --accent-purple: #c084fc;
@@ -24,11 +24,12 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, sans-serif;
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.15) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(192, 132, 252, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(52, 211, 153, 0.08) 0px, transparent 50%);
       background-attachment: fixed;
       color: var(--text-main);
       padding: 2rem 1.5rem;
@@ -52,7 +53,7 @@
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 2.4rem;
       font-weight: 700;
       background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
       -webkit-background-clip: text;
@@ -63,7 +64,7 @@
     header p { color: var(--text-muted); font-size: 1.1rem; }
 
     .nav-links {
-      display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;
+      display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;
     }
 
     .nav-link {
@@ -74,37 +75,48 @@
     }
     .nav-link:hover { background: rgba(56, 189, 248, 0.25); transform: translateY(-2px); }
 
-    /* Candidates Tab Bar */
-    .candidate-tabs {
-      display: flex; gap: 1rem; margin-bottom: 2rem;
+    /* Main Section Tabs (PoCs vs Candidates) */
+    .view-mode-tabs {
+      display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem;
+    }
+    .mode-tab {
+      padding: 0.85rem 1.75rem; border-radius: 12px;
+      background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border);
+      color: var(--text-muted); font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-tab:hover { border-color: var(--accent-blue); color: #fff; }
+    .mode-tab.active {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: #090d16; border-color: transparent; font-weight: 700;
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
     }
 
-    .cand-btn {
-      flex: 1; padding: 1.25rem; border-radius: 14px;
+    /* Sub Tabs (PoC 1~5 or Cand 1~3) */
+    .selector-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem; margin-bottom: 2rem;
+    }
+    .select-btn {
+      padding: 1rem; border-radius: 12px;
       background: var(--card-bg); border: 1px solid var(--card-border);
       color: var(--text-muted); cursor: pointer; text-align: left;
-      transition: all 0.25s ease;
+      transition: all 0.2s ease;
     }
-
-    .cand-btn:hover { border-color: rgba(56, 189, 248, 0.4); }
-
-    .cand-btn.active {
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+    .select-btn:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-2px); }
+    .select-btn.active {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
       border: 1.5px solid var(--accent-blue);
-      box-shadow: 0 8px 20px -4px rgba(56, 189, 248, 0.25);
+      box-shadow: 0 6px 16px -2px rgba(56, 189, 248, 0.25);
     }
-
-    .cand-btn .cand-tag {
-      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-      color: var(--accent-blue); margin-bottom: 0.35rem; display: block;
+    .select-btn .tag {
+      font-size: 0.75rem; font-weight: 700; color: var(--accent-blue);
+      display: block; margin-bottom: 0.3rem; font-family: 'JetBrains Mono', monospace;
     }
+    .select-btn .title { font-size: 0.95rem; font-weight: 700; color: #fff; line-height: 1.3; }
 
-    .cand-btn .cand-name {
-      font-size: 1.1rem; font-weight: 700; color: #fff;
-    }
-
-    /* Candidate Detail Section */
-    .cand-detail {
+    /* Content Card */
+    .detail-card {
       background: var(--card-bg); backdrop-filter: blur(12px);
       border: 1px solid var(--card-border); border-radius: 20px;
       padding: 2rem; margin-bottom: 2.5rem;
@@ -115,34 +127,35 @@
       margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border);
       padding-bottom: 1.25rem;
     }
+    .detail-title { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .detail-desc { color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; line-height: 1.6; }
 
-    .detail-title { font-size: 1.6rem; font-weight: 700; color: #fff; }
-    .detail-desc { color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; }
-
-    .must-have-list {
-      display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;
-    }
-
+    .stack-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
     .stack-chip {
-      padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+      padding: 0.3rem 0.65rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600;
       background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3);
       color: var(--accent-emerald);
     }
 
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+    .info-box {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border);
+      border-radius: 12px; padding: 1.25rem;
+    }
+    .info-box h4 { font-size: 1.05rem; margin-bottom: 0.6rem; }
+    ul { padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+
     /* Wireframe UI Mockup Preview */
     .wireframe-container {
-      margin-top: 2rem; background: #0f172a; border-radius: 14px;
+      margin-top: 1.5rem; background: #0f172a; border-radius: 14px;
       border: 1px solid var(--card-border); overflow: hidden;
     }
-
     .wireframe-bar {
       background: #1e293b; padding: 0.75rem 1.25rem; display: flex;
       align-items: center; gap: 0.6rem; border-bottom: 1px solid var(--card-border);
     }
-
     .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
     .red { background: #ef4444; } .yellow { background: #f59e0b; } .green { background: #10b981; }
-
     .url-bar {
       background: rgba(15, 23, 42, 0.8); padding: 0.3rem 1rem; border-radius: 6px;
       color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
@@ -151,19 +164,16 @@
 
     .mockup-body {
       padding: 1.5rem; display: grid; grid-template-columns: 240px 1fr; gap: 1.5rem;
-      min-height: 400px;
+      min-height: 380px;
     }
-
     .mockup-sidebar {
       background: rgba(30, 41, 59, 0.6); border-radius: 10px; padding: 1rem;
-      display: flex; flex-direction: column; gap: 0.75rem;
+      display: flex; flex-direction: column; gap: 0.6rem;
     }
-
     .side-item {
       padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted);
       cursor: pointer; transition: all 0.2s;
     }
-
     .side-item.active, .side-item:hover {
       background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); font-weight: 600;
     }
@@ -172,78 +182,238 @@
       background: rgba(30, 41, 59, 0.4); border-radius: 10px; padding: 1.25rem;
       display: flex; flex-direction: column; gap: 1rem;
     }
-
     .mockup-card-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
     }
-
     .m-card {
       background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border);
-      border-radius: 8px; padding: 1rem;
+      border-radius: 8px; padding: 0.9rem;
     }
+    .m-card-title { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .m-card-val { font-size: 1.3rem; font-weight: 700; color: #fff; }
 
-    .m-card-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem; }
-    .m-card-val { font-size: 1.4rem; font-weight: 700; color: #fff; }
-
-    .m-table {
-      width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem;
-    }
-
-    .m-table th, .m-table td {
-      padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--card-border);
-    }
+    .m-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.85rem; }
+    .m-table th, .m-table td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--card-border); }
     .m-table th { color: var(--text-muted); font-weight: 600; }
 
-    /* Responsive */
+    pre {
+      background: #090d16; padding: 1rem; border-radius: 8px;
+      border: 1px solid var(--card-border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
+      line-height: 1.55; margin-top: 0.75rem;
+    }
+
     @media (max-width: 900px) {
-      .candidate-tabs { flex-direction: column; }
       .mockup-body { grid-template-columns: 1fr; }
       .mockup-card-grid { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <span class="badge">Project Selection & Wireframes</span>
-      <h1>프로젝트 후보군 & UI 와이어프레임</h1>
-      <p>JD 필수 기술스택(NoSQL, VectorDB, Kafka, RabbitMQ, PortOne, Redis)이 포함된 후보 3종</p>
+      <span class="badge">Enterprise PoC & Project Hub</span>
+      <h1>사전 PoC 5종 & 프로젝트 후보군 인터랙티브 뷰어</h1>
+      <p>단위 기술 검증용 소규모 PoC 5종 및 JD 필수 역량 통합 실무 프로젝트 후보 3종 완벽 가이드</p>
       <div class="nav-links">
         <a href="README.md" class="nav-link">📂 README 대문</a>
-        <a href="jargons.html" class="nav-link">📚 용어 사전 & PoC 가이드</a>
-        <a href="selected_project_details.md" class="nav-link">🎯 최종 프로젝트 설계</a>
+        <a href="jargons.html" class="nav-link">📚 용어 사전 & 19대 주제 탐색</a>
+        <a href="selected_project_details.md" class="nav-link">🎯 최종 프로젝트 상세 설계</a>
       </div>
     </header>
 
-    <!-- Candidate Selector Tabs -->
-    <div class="candidate-tabs">
-      <button class="cand-btn active" onclick="selectCandidate(0)">
-        <span class="cand-tag">Candidate 01 [최종 추천]</span>
-        <div class="cand-name">대용량 선착순 결제/정산 & AI 트랜잭션 관제</div>
-      </button>
-      <button class="cand-btn" onclick="selectCandidate(1)">
-        <span class="cand-tag">Candidate 02</span>
-        <div class="cand-name">EDA 기반 AI 멀티 에이전트 커머스</div>
-      </button>
-      <button class="cand-btn" onclick="selectCandidate(2)">
-        <span class="cand-tag">Candidate 03</span>
-        <div class="cand-name">실시간 금융 거래 관제 & 장애 격리 핀테크</div>
-      </button>
+    <!-- Main Navigation Tabs: PoCs vs Candidates -->
+    <div class="view-mode-tabs">
+      <button class="mode-tab active" id="tabPoc" onclick="switchMode('poc')">🧪 사전 PoC 5종 상세 탐색기</button>
+      <button class="mode-tab" id="tabCand" onclick="switchMode('cand')">🏆 최종 프로젝트 후보 3종 & 와이어프레임</button>
     </div>
 
-    <!-- Active Candidate View -->
-    <div class="cand-detail" id="candidateView">
+    <!-- Dynamic Sub Selector -->
+    <div class="selector-grid" id="selectorGrid">
+      <!-- Dynamic selector buttons rendered via JS -->
+    </div>
+
+    <!-- Active View Display Area -->
+    <div class="detail-card" id="detailView">
       <!-- Dynamic render via JS -->
     </div>
   </div>
 
   <script>
+    let currentMode = 'poc'; // 'poc' or 'cand'
+    let activePocIndex = 0;
+    let activeCandIndex = 0;
+
+    const pocs = [
+      {
+        id: 1,
+        tag: "PoC 01 : 동시성 & 대기열",
+        title: "🎟️ Redis ZSET 대기열 & Redisson 분산락 동시성 PoC",
+        desc: "선착순 100명 티켓 구매 시 1,000건의 동시 요청이 인입될 때 Redis Sorted Set(ZSET)으로 대기 순번을 발급하고, Redisson 분산락으로 초과 판매(Overselling)를 0건으로 통제하는 단위 검증 PoC.",
+        stacks: ["Redis 7.2 (ZSET)", "Redisson (Distributed Lock)", "Spring Boot 3.x", "JMeter / k6", "JUnit 5 동시성 테스트"],
+        wireframeUrl: "http://localhost:8080/poc/queue/monitor",
+        sidebarItems: ["📊 실시간 ZSET 대기열 순번", "🔒 Redisson Lock 경합 상태", "📉 재고 정합성 카운터", "🧪 동시성 부하 테스트 실행"],
+        cards: [
+          { label: "동시 요청 인입 수", val: "1,000 req" },
+          { label: "초과 판매 (Overselling)", val: "0 건 (정상 차감)" },
+          { label: "평균 락 획득 대기시간", val: "18 ms" }
+        ],
+        tableRows: [
+          ["REQ-101", "ZADD queue:event (Score: 1723351200)", "WAIT", "순번 #482", "1ms"],
+          ["REQ-001", "Redisson rLock.tryLock()", "LOCKED", "재고 차감 진행 (100 ➔ 99)", "4ms"],
+          ["REQ-002", "Redisson rLock.tryLock()", "WAITING", "이전 락 대기 중", "12ms"],
+          ["REQ-001", "rLock.unlock()", "RELEASED", "주문 성공 200 OK 반환", "2ms"]
+        ],
+        objectives: [
+          "<strong>동시 1,000개 요청 정합성 검증</strong>: JUnit 5 <code>ExecutorService</code> 멀티스레드 환경에서 재고 100개가 정확히 0개로 소진되고 데이터 충돌이 없음을 증명.",
+          "<strong>ZSET 대기 순번 발급</strong>: <code>ZADD</code>와 <code>ZRANK</code>를 통해 유저에게 실시간 대기 순번 및 예상 대기시간을 제공."
+        ],
+        codeSample: `// [Java Redisson 분산락을 통한 선착순 재고 차감]
+RLock lock = redissonClient.getLock("lock:product:101");
+try {
+    boolean available = lock.tryLock(3, 5, TimeUnit.SECONDS);
+    if (available) {
+        Product product = productRepository.findById(101L).orElseThrow();
+        product.decreaseStock(1); // 도메인 내부에서 재고 0 검증
+        productRepository.save(product);
+    }
+} finally {
+    if (lock.isHeldByCurrentThread()) lock.unlock();
+}`
+      },
+      {
+        id: 2,
+        tag: "PoC 02 : 메시징 이원화",
+        tagColor: "var(--accent-purple)",
+        title: "📬 Kafka 대용량 스트리밍 vs RabbitMQ DLQ 격리 PoC",
+        desc: "초당 수만 건의 결제/주문 이벤트는 Kafka의 분산 파티션 토픽으로 고속 발행하고, 실패 시 재시도와 격리가 중요한 알림 작업은 RabbitMQ의 Dead Letter Queue(DLQ)로 처리하는 이원화 PoC.",
+        stacks: ["Apache Kafka 3.7", "RabbitMQ 3.13 (AMQP)", "Dead Letter Exchange (DLX)", "Spring Kafka / Rabbit"],
+        wireframeUrl: "http://localhost:8080/poc/messaging/dashboard",
+        sidebarItems: ["⚡ Kafka Topic 실시간 스트림", "💀 RabbitMQ DLQ 격리 큐", "🔄 Redrive 수동 재처리", "📈 Consumer Lag 모니터링"],
+        cards: [
+          { label: "Kafka 이벤트 처리량", val: "15,200 msg/s" },
+          { label: "RabbitMQ 정상 처리", val: "99.8%" },
+          { label: "DLQ 격리 실패 메시지", val: "2 건 (재시도 초과)" }
+        ],
+        tableRows: [
+          ["KAFKA-991", "orders.v1 토픽 발행", "ACK", "Payment Consumer 수신", "0.8ms"],
+          ["RABBIT-102", "noti.sms 큐 발송 시도", "RETRY_1", "외부 SMS API 타임아웃", "2000ms"],
+          ["RABBIT-102", "3회 재시도 실패", "DLQ_ISOLATED", "Dead Letter Exchange 격리", "15ms"],
+          ["ADMIN-01", "DLQ Redrive 요청", "REPROCESSED", "수동 재발송 성공", "12ms"]
+        ],
+        objectives: [
+          "<strong>Kafka Non-blocking 스트리밍</strong>: 주문 API가 지연 없이 1ms 내에 이벤트를 발행하고 응답하는 디커플링 구조 검증.",
+          "<strong>RabbitMQ DLQ 격리 & Redrive</strong>: 외부 API 통신 실패 메시지를 DLQ로 안전하게 격리하고 사후 수동 재처리(Redrive)하는 복구 파이프라인 검증."
+        ],
+        codeSample: `// [RabbitMQ DLQ 설정 및 Listener 예시]
+@Bean
+public Queue mainQueue() {
+    return QueueBuilder.durable("noti.main.queue")
+        .withArgument("x-dead-letter-exchange", "noti.dlx")
+        .withArgument("x-dead-letter-routing-key", "noti.dead")
+        .build();
+}`
+      },
+      {
+        id: 3,
+        tag: "PoC 03 : 하이브리드 DB",
+        title: "🍃 MongoDB 비정형 로그 & pgvector 시맨틱 검색 PoC",
+        desc: "PG사별로 형태가 다른 결제 웹훅 원본 JSON 및 AI 챗봇 멀티턴 대화 이력을 MongoDB 가변 BSON 문서로 적재하고, PostgreSQL pgvector로 1536차원 임베딩 코사인 유사도 FAQ 검색을 수행하는 PoC.",
+        stacks: ["MongoDB 7.0", "PostgreSQL 16 + pgvector", "OpenAI text-embedding-3", "Spring Data MongoDB"],
+        wireframeUrl: "http://localhost:8080/poc/database/hybrid",
+        sidebarItems: ["📄 MongoDB BSON 웹훅/대화", "📐 pgvector 코사인 유사도", "✂️ $slice 대화 컨텍스트 추출", "🔍 시맨틱 FAQ 검색기"],
+        cards: [
+          { label: "MongoDB 쓰기 지연", val: "2.4 ms" },
+          { label: "pgvector 검색 정확도", val: "95.8%" },
+          { label: "챗봇 대화 세션 수", val: "4,810 세션" }
+        ],
+        tableRows: [
+          ["MONGO-01", "토스 결제 웹훅 원본 적재", "INSERTED", "MongoDB BSON Store", "3ms"],
+          ["MONGO-02", "최근 5턴 대화 $slice 조회", "FETCHED", "LLM Context Window", "1.5ms"],
+          ["VECTOR-01", "질문: '환불 언제 들어와?'", "COSINE_MATCH", "FAQ #101 (유사도: 0.94)", "14ms"]
+        ],
+        objectives: [
+          "<strong>MongoDB 유연한 가변 스키마</strong>: 별도의 테이블 DDL 수정 없이 임의의 JSON 웹훅과 멀티턴 대화 배열을 통째로 저장.",
+          "<strong>pgvector 코사인 거리 연산</strong>: 키워드가 일치하지 않아도 의미적 유사성을 기반으로 사내 규정/FAQ 문맥을 0.02초 내에 고속 추출."
+        ],
+        codeSample: `// [pgvector 유사도 검색 쿼리]
+@Query(value = "SELECT id, content, 1 - (embedding <=> :queryVector) AS similarity " +
+               "FROM faq_knowledge ORDER BY embedding <=> :queryVector ASC LIMIT 2", nativeQuery = true)
+List<FaqMatch> findTopSimilarFaq(@Param("queryVector") String vectorString);`
+      },
+      {
+        id: 4,
+        tag: "PoC 04 : 결제 & 정산",
+        title: "💳 PortOne 결제 Webhook 멱등성 & Spring Batch 정산 PoC",
+        desc: "PortOne V2 결제 연동 시 네트워크 중복 재전송에 대비하여 Redis Unique Key로 Webhook 멱등성을 보장하고, 자정에 10만 건의 결제 내역을 Spring Batch Chunk(1,000건) 기반으로 수수료 정산 CSV를 생성하는 PoC.",
+        stacks: ["PortOne V2 Payment API", "Redis (SETNX 멱등성 락)", "Spring Batch 5.x", "MySQL 8.0"],
+        wireframeUrl: "http://localhost:8080/poc/settlement/batch",
+        sidebarItems: ["🛡️ Webhook 멱등성 필터", "🌙 Spring Batch 정산 실행", "📊 Chunk 1,000건 처리 현황", "📁 정산 CSV 파일 생성"],
+        cards: [
+          { label: "중복 Webhook 방어율", val: "100% (3회 유입 중 1회만 승인)" },
+          { label: "10만 건 정산 처리시간", val: "38 초 (Chunk 1,000)" },
+          { label: "정산 총액 오차율", val: "0.00% (완전 일치)" }
+        ],
+        tableRows: [
+          ["WH-001", "PortOne Webhook 수신 (imp_991)", "FIRST_PASS", "Redis SETNX 성공 ➔ DB 승인", "5ms"],
+          ["WH-001", "PortOne Webhook 중복 수신 (imp_991)", "DUPLICATE_DROP", "Redis Key 존재 ➔ 200 OK 무시", "1ms"],
+          ["BATCH-01", "SettlementJob Step 1 실행", "COMPLETED", "100,000 건 정산 CSV 생성", "38s"]
+        ],
+        objectives: [
+          "<strong>Webhook 멱등성(Idempotency)</strong>: 결제 웹훅이 중복 수신되어도 고객 잔고 충전이나 상태 변경이 2번 발생하지 않도록 차단.",
+          "<strong>Spring Batch OOM 없는 대용량 집계</strong>: 10만 건의 데이터를 1,000건 단위 페이징/청크로 처리하여 메모리 누수 없이 고속 파일 생성."
+        ],
+        codeSample: `// [Redis SETNX를 활용한 Webhook 중복 처리 방어]
+Boolean isFirst = redisTemplate.opsForValue()
+    .setIfAbsent("webhook:lock:" + impUid, "PROCESSING", Duration.ofDays(1));
+if (Boolean.FALSE.equals(isFirst)) {
+    log.warn("중복 수신된 결제 웹훅입니다. 건너뜁니다: {}", impUid);
+    return ResponseEntity.ok("ALREADY_PROCESSED");
+}`
+      },
+      {
+        id: 5,
+        tag: "PoC 05 : 컨테이너 관제",
+        title: "🔭 Docker 멀티 컨테이너 & OpenTelemetry 분산 관제 PoC",
+        desc: "Docker Compose 환경에서 백엔드 앱과 5대 미들웨어를 통합 실행하고, OpenTelemetry Java Agent로 W3C Trace ID를 주입하여 Grafana Tempo 및 Kibana에서 엔드투엔드 분산 트레이싱을 추적하는 PoC.",
+        stacks: ["Docker Compose", "OpenTelemetry Java Agent", "ELK Stack (Elasticsearch, Kibana)", "Grafana & Prometheus"],
+        wireframeUrl: "http://localhost:8080/poc/observability/traces",
+        sidebarItems: ["🐳 Docker 5대 컨테이너 상태", "🌐 Trace ID 분산 트레이싱 타임라인", "📈 JVM & QPS 메트릭", "📊 Kibana 에러 로그"],
+        cards: [
+          { label: "컨테이너 기동 상태", val: "5 / 5 Healthy" },
+          { label: "분산 트레이스 수집률", val: "100% (W3C 표준)" },
+          { label: "P99 레이턴시 추적", val: "42 ms" }
+        ],
+        tableRows: [
+          ["SPAN-01", "GET /api/v1/orders (Gateway)", "OK", "TraceId: 4bf92f3577b34da6", "2ms"],
+          ["SPAN-02", "OrderService.placeOrder()", "OK", "ParentSpan: SPAN-01", "8ms"],
+          ["SPAN-03", "Redis rLock.tryLock()", "OK", "Redis Command Span", "3ms"],
+          ["SPAN-04", "KafkaProducer.send()", "OK", "Kafka Inject Span", "1ms"]
+        ],
+        objectives: [
+          "<strong>원클릭 컨테이너 인프라</strong>: <code>docker compose up -d</code> 단일 명령어로 앱과 모든 데이터베이스/브로커를 자동 구성.",
+          "<strong>분산 트레이싱 가시성</strong>: 장애 또는 지연 발생 시どの 컴포넌트(Redis, DB, Kafka)에서 병목이 발생했는지 1초 만에 시각화 추적."
+        ],
+        codeSample: `# [docker-compose.yml 예시]
+version: '3.8'
+services:
+  app:
+    build: .
+    environment:
+      - JAVA_TOOL_OPTIONS=-javaagent:/opentelemetry-javaagent.jar
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on: [mysql, redis, kafka, mongodb]`
+      }
+    ];
+
     const candidates = [
       {
         id: 1,
+        tag: "Candidate 01 [최종 추천]",
         title: "🏆 대용량 선착순 결제/정산 & AI 트랜잭션 관제 플랫폼 (Flash-Pay & AI Analytics)",
-        desc: "초당 수천 건의 이벤트 구매/예약 요청을 Redis ZSET 대기열 및 Redisson 분산락으로 정합성을 보장하고, Kafka/RabbitMQ 이원화 메시징 파이프라인으로 결제, 정산, 알림, AI 분석을 처리하는 백엔드 플랫폼.",
-        mustHaves: ["NoSQL (MongoDB)", "VectorDB (pgvector)", "컨테이너 (Docker/GCP)", "메시지 큐 (Kafka & RabbitMQ)", "TDD (JUnit 5)", "결제 시스템 (PortOne)", "Redis (ZSET & Lock)"],
+        desc: "초당 수천 건의 이벤트 구매/예약 요청을 Redis ZSET 대기열 및 Redisson 분산락으로 정합성을 보장하고, Kafka/RabbitMQ 이원화 메시징 파이프라인으로 결제, 정산, 알림, AI 분석을 처리하는 백엔드 플랫폼. <strong>(PoC 1~5가 100% 통합된 플래그십 프로젝트)</strong>",
+        stacks: ["NoSQL (MongoDB)", "VectorDB (pgvector)", "컨테이너 (Docker/GCP)", "메시지 큐 (Kafka & RabbitMQ)", "TDD (JUnit 5)", "결제 시스템 (PortOne)", "Redis (ZSET & Lock)"],
         wireframeUrl: "https://flashpay.internal/admin/dashboard",
         sidebarItems: ["📊 트랜잭션 실시간 관제", "🎟️ 선착순 대기열 현황", "💳 PortOne 결제 & Webhook", "🤖 AI CS & 상품 추천", "🌙 Spring Batch 정산"],
         cards: [
@@ -256,13 +426,18 @@
           ["TX-98202", "Redisson Lock 잔액 차감", "SUCCESS", "Redis Engine", "3ms"],
           ["TX-98203", "RabbitMQ 알림 발송", "QUEUED", "RabbitMQ Queue", "5ms"],
           ["TX-98204", "MongoDB 이벤트 로그 적재", "SAVED", "MongoDB Cluster", "8ms"]
+        ],
+        objectives: [
+          "<strong>JD 필수 기술 7대 스택 100% 만족</strong>: NoSQL, VectorDB, Kafka, RabbitMQ, PortOne, Redis, TDD, Docker를 하나의 유기적인 금융/커머스 도메인으로 완성.",
+          "<strong>대용량 트래픽 & 정합성 보장</strong>: 1만 명 이상의 동시 접속 환경에서도 데이터 불일치 및 초과 판매 0건 보장."
         ]
       },
       {
         id: 2,
+        tag: "Candidate 02",
         title: "💡 EDA 기반 AI 멀티 에이전트 커머스 & 자동 정산 오케스트레이터",
         desc: "LangGraph 기반 AI 에이전트가 자연어 명령을 해석하여 백엔드 REST/gRPC API를 호출하고, VectorDB 시맨틱 검색과 비동기 이벤트 파이프라인을 구동하는 플랫폼.",
-        mustHaves: ["NoSQL (MongoDB)", "VectorDB (ChromaDB)", "컨테이너 (Docker/GKE)", "Kafka & RabbitMQ", "TDD", "PortOne 결제", "Redis Pub/Sub"],
+        stacks: ["NoSQL (MongoDB)", "VectorDB (ChromaDB)", "컨테이너 (Docker/GKE)", "Kafka & RabbitMQ", "TDD", "PortOne 결제", "Redis Pub/Sub"],
         wireframeUrl: "https://ai-commerce.internal/agent/console",
         sidebarItems: ["💬 AI Agent 멀티턴 대화", "🔍 VectorDB 시맨틱 검색", "📦 주문 & 이벤트 파이프라인", "📊 Token & Latency 관제"],
         cards: [
@@ -274,13 +449,18 @@
           ["AGENT-01", "자연어 상품 검색 & 추천", "COMPLETED", "pgvector / LLM", "310ms"],
           ["AGENT-02", "PortOne 결제 링킹 호출", "COMPLETED", "Spring Boot API", "85ms"],
           ["AGENT-03", "RabbitMQ 작업 분배", "RUNNING", "RabbitMQ Task", "14ms"]
+        ],
+        objectives: [
+          "<strong>LLM AI 에이전트 통합</strong>: 자연어 발화로 상품 검색, 장바구니 담기, 결제 트리거까지 엔드투엔드 자동화.",
+          "<strong>비동기 작업 오케스트레이션</strong>: AI 연산 지연을 RabbitMQ 비동기 큐로 격리하여 사용자 경험 극대화."
         ]
       },
       {
         id: 3,
+        tag: "Candidate 03",
         title: "💡 실시간 금융 거래 관제 & 장애 격리 핀테크 플랫폼",
         desc: "금융 계좌 이체 및 펌뱅킹 이력을 Kafka/RabbitMQ 스트리밍으로 감시하고, 이상 거래(FDS) 발생 시 서킷 브레이커 작동 및 WebSocket STOMP 대시보드에 관제 정보를 전달하는 시스템.",
-        mustHaves: ["NoSQL (MongoDB)", "VectorDB (pgvector)", "컨테이너 (Docker/GCP)", "Kafka & RabbitMQ", "TDD", "PortOne/가상결제", "Redis ZSET"],
+        stacks: ["NoSQL (MongoDB)", "VectorDB (pgvector)", "컨테이너 (Docker/GCP)", "Kafka & RabbitMQ", "TDD", "PortOne/가상결제", "Redis ZSET"],
         wireframeUrl: "https://fintech-control.internal/fds/dashboard",
         sidebarItems: ["🛡️ FDS 이상거래 관제", "⚡ Resilience4j Circuit Status", "📡 WebSocket/STOMP 스트림", "📋 FDS DLQ 수동 재처리"],
         cards: [
@@ -292,46 +472,100 @@
           ["FDS-401", "이상 고액 거래 검출", "ALERT", "Kafka FDS Processor", "7ms"],
           ["FDS-402", "서킷 브레이커 헬스체크", "HEALTHY", "Resilience4j", "2ms"],
           ["FDS-403", "DLQ 실패 메시지 이관", "ISOLATED", "RabbitMQ DLX", "4ms"]
+        ],
+        objectives: [
+          "<strong>실시간 금융 FDS 감지</strong>: 밀리초 단위 이상 거래 패턴 탐지 및 즉각 결제 차단.",
+          "<strong>고가용성 장애 격리</strong>: Resilience4j Circuit Breaker와 DLQ를 결합한 금융권 수준의 내결함성 확보."
         ]
       }
     ];
 
-    function selectCandidate(index) {
-      document.querySelectorAll('.cand-btn').forEach((btn, idx) => {
-        if(idx === index) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabPoc').classList.toggle('active', mode === 'poc');
+      document.getElementById('tabCand').classList.toggle('active', mode === 'cand');
+      renderSelectors();
+      renderDetail();
+    }
 
-      const cand = candidates[index];
-      const view = document.getElementById('candidateView');
+    function renderSelectors() {
+      const grid = document.getElementById('selectorGrid');
+      grid.innerHTML = '';
+      const list = (currentMode === 'poc') ? pocs : candidates;
+      const activeIdx = (currentMode === 'poc') ? activePocIndex : activeCandIndex;
+
+      list.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `select-btn ${idx === activeIdx ? 'active' : ''}`;
+        btn.onclick = () => {
+          if(currentMode === 'poc') activePocIndex = idx;
+          else activeCandIndex = idx;
+          renderSelectors();
+          renderDetail();
+        };
+        btn.innerHTML = `
+          <span class="tag">${item.tag}</span>
+          <div class="title">${item.title}</div>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderDetail() {
+      const list = (currentMode === 'poc') ? pocs : candidates;
+      const item = (currentMode === 'poc') ? pocs[activePocIndex] : candidates[activeCandIndex];
+      const view = document.getElementById('detailView');
 
       view.innerHTML = `
         <div class="detail-header">
           <div>
-            <div class="detail-title">${cand.title}</div>
-            <div class="detail-desc">${cand.desc}</div>
-            <div class="must-have-list">
-              ${cand.mustHaves.map(stack => `<span class="stack-chip">✓ ${stack}</span>`).join('')}
+            <div class="detail-title">${item.title}</div>
+            <div class="detail-desc">${item.desc}</div>
+            <div class="stack-chips">
+              ${item.stacks.map(s => `<span class="stack-chip">✓ ${s}</span>`).join('')}
             </div>
           </div>
         </div>
 
-        <!-- Wireframe Preview -->
-        <h3 style="color: var(--accent-blue); margin-bottom: 0.75rem; font-size: 1.1rem;">🖥️ UI/UX 와이어프레임 & 시스템 대시보드 미리보기</h3>
+        <!-- Objectives & Scenarios -->
+        <div class="grid-2">
+          <div class="info-box" style="border-top:3px solid var(--accent-blue);">
+            <h4 style="color:var(--accent-blue);">🎯 핵심 검증 목표 & 실습 시나리오</h4>
+            <ul>
+              ${item.objectives.map(obj => `<li>${obj}</li>`).join('')}
+            </ul>
+          </div>
+          ${item.codeSample ? `
+            <div class="info-box" style="border-top:3px solid var(--accent-emerald);">
+              <h4 style="color:var(--accent-emerald);">💻 핵심 구현 & 검증 코드 샘플</h4>
+              <pre><code>${item.codeSample}</code></pre>
+            </div>
+          ` : `
+            <div class="info-box" style="border-top:3px solid var(--accent-purple);">
+              <h4 style="color:var(--accent-purple);">🚀 실무 프로젝트 통합 가치</h4>
+              <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+                사전 PoC 5종에서 검증된 요소들을 하나의 일관된 아키텍처로 통합하여 완성도 높은 포트폴리오를 제공합니다.
+              </p>
+            </div>
+          `}
+        </div>
+
+        <!-- Wireframe & Console UI Preview -->
+        <h3 style="color: var(--accent-blue); margin: 1.75rem 0 0.5rem 0; font-size: 1.15rem;">🖥️ UI/UX 와이어프레임 & 실시간 대시보드 모의 화면</h3>
         <div class="wireframe-container">
           <div class="wireframe-bar">
             <span class="dot red"></span>
             <span class="dot yellow"></span>
             <span class="dot green"></span>
-            <div class="url-bar">${cand.wireframeUrl}</div>
+            <div class="url-bar">${item.wireframeUrl}</div>
           </div>
           <div class="mockup-body">
             <div class="mockup-sidebar">
-              ${cand.sidebarItems.map((item, i) => `<div class="side-item ${i===0?'active':''}">${item}</div>`).join('')}
+              ${item.sidebarItems.map((s, i) => `<div class="side-item ${i===0?'active':''}">${s}</div>`).join('')}
             </div>
             <div class="mockup-content">
               <div class="mockup-card-grid">
-                ${cand.cards.map(c => `
+                ${item.cards.map(c => `
                   <div class="m-card">
                     <div class="m-card-title">${c.label}</div>
                     <div class="m-card-val">${c.val}</div>
@@ -342,15 +576,15 @@
               <table class="m-table">
                 <thead>
                   <tr>
-                    <th>이벤트 ID</th>
+                    <th>항목 / 식별자</th>
                     <th>작업 내용</th>
                     <th>상태</th>
-                    <th>처리 모듈</th>
+                    <th>처리 모듈 / 파이프라인</th>
                     <th>지연시간</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${cand.tableRows.map(r => `
+                  ${item.tableRows.map(r => `
                     <tr>
                       <td style="font-family: 'JetBrains Mono'; color: var(--accent-blue);">${r[0]}</td>
                       <td>${r[1]}</td>
@@ -367,8 +601,9 @@
       `;
     }
 
-    // Initial load
-    selectCandidate(0);
+    // Initial Load
+    renderSelectors();
+    renderDetail();
   </script>
 </body>
 </html>
