@@ -16,6 +16,7 @@
       --accent-pink: #f472b6;
       --accent-emerald: #34d399;
       --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
       --text: #f1f5f9;
       --text-muted: #94a3b8;
     }
@@ -52,14 +53,14 @@
       background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
       border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
     }
-    .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .scenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
     .scenario-title { font-size: 1.15rem; font-weight: 700; }
     
     .diag-box {
       background: #090d16; border-radius: 10px; padding: 1.25rem; border: 1px solid var(--border);
       font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.65; margin: 1rem 0;
     }
-    .diag-step { padding: 0.5rem 0.75rem; border-left: 4px solid var(--accent-blue); margin-bottom: 0.5rem; background: rgba(30,41,59,0.5); }
+    .diag-step { padding: 0.6rem 0.85rem; border-left: 4px solid var(--accent-blue); margin-bottom: 0.6rem; background: rgba(30,41,59,0.5); border-radius: 0 6px 6px 0; }
     
     pre {
       background: #090d16; padding: 1rem; border-radius: 8px;
@@ -68,18 +69,19 @@
       margin-top: 0.75rem; line-height: 1.55;
     }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 0.75rem; }
-    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 0.75rem; }
+    @media (max-width: 800px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🌐 REST vs GraphQL vs gRPC 실무 시나리오 다이어그램 & 비교</h1>
-      <p class="subtitle">외부 오픈 API 결제 승인(REST), 모바일 종합 대시보드(GraphQL), MSA 내부 초고속 RPC(gRPC)의 최적 활용 아키텍처</p>
+      <h1>🌐 REST vs GraphQL vs gRPC 실무 시나리오 다이어그램 & 심층 비교</h1>
+      <p class="subtitle">외부 오픈 API 결제 승인(REST), 모바일 종합 대시보드(GraphQL), 대규모 MSA 백엔드 다단계 RPC 파이프라인(gRPC)</p>
     </div>
 
-    <!-- 1. 프로토콜별 3대 실무 사용 시나리오 상세화 (피드백 전격 보강) -->
+    <!-- 1. 프로토콜별 3대 실무 사용 시나리오 상세화 (gRPC 파이프라인 대폭 확장) -->
     <div class="card">
       <h2>🎯 1. 3대 프로토콜 구체적 실무 적용 시나리오 & 페이로드 분석</h2>
       
@@ -146,28 +148,49 @@
         </div>
       </div>
 
-      <!-- 시나리오 3: gRPC (대규모 MSA 백엔드 내부 통신) -->
+      <!-- 시나리오 3: gRPC (대규모 MSA 백엔드 다단계 RPC 파이프라인 - 심층 확장) -->
       <div class="scenario-card" style="border-top:3px solid var(--accent-emerald);">
         <div class="scenario-header">
-          <span class="scenario-title" style="color:var(--accent-emerald);">3. gRPC 시나리오 : 쿠팡/배민 MSA 백엔드 간 초저지연 내부 RPC 통신</span>
-          <span style="font-size:0.75rem; background:rgba(52,211,153,0.2); color:var(--accent-emerald); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">초저지연 2ms / Protobuf 바이너리 / HTTP/2</span>
+          <span class="scenario-title" style="color:var(--accent-emerald);">3. gRPC 시나리오 : 쿠팡/배민 선착순 특가 주문 MSA 다단계 RPC 파이프라인</span>
+          <span style="font-size:0.75rem; background:rgba(52,211,153,0.2); color:var(--accent-emerald); padding:0.25rem 0.5rem; border-radius:4px; font-weight:700;">초저지연 2ms / 단일 TCP 멀티플렉싱 / Protobuf</span>
         </div>
         <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
-          <strong>배경</strong>: 주문 서비스 ➔ 재고 서비스 ➔ 쿠폰 서비스 ➔ 결제 서비스 간에 초당 50,000건의 마이크로서비스 호출이 오갈 때, 텍스트 JSON 파싱 CPU 낭비를 없애고 초소형 Protobuf 바이너리로 초고속 통신합니다.
+          <strong>실제 비즈니스 상황</strong>: 선착순 타임세일 발생 시, <strong>주문 서비스(Order Service)</strong>는 1초 안에 <strong>재고 차감 ➔ 쿠폰 적용 ➔ 결제 승인</strong> 3단계 마이크로서비스 RPC를 동기식으로 초고속 연계 처리해야 합니다. 텍스트 JSON 파싱 부담 없이 <strong>HTTP/2 단일 TCP 파이프 위에서 바이너리 프레임</strong>으로 통신합니다.
         </p>
 
         <div class="diag-box">
           <div class="diag-step" style="border-color:var(--accent-emerald);">
-            <strong>1. Order Service</strong> ➔ <code>InventoryGrpc.deductStock(itemId: 101, qty: 1)</code> 호출<br>
-            • HTTP/2 단일 TCP 연결 멀티플렉싱, <strong>단 7 Byte 바이너리 스트림</strong> 전송 (2ms 응답)
+            <strong style="color:var(--accent-emerald);">[1단계: 재고 차감 RPC]</strong> Order Service ➔ <code>InventoryServiceGrpc.deductStock()</code><br>
+            • Proto Payload: <code>[08 65 10 01]</code> (itemId=101, qty=1, <strong>단 4 Byte 바이너리</strong>)<br>
+            • 성능: 단일 TCP 멀티플렉싱 스트림 #1 전송 ➔ <strong>1.5ms 만에 재고 선점 완료</strong>
           </div>
-          <div class="diag-step" style="border-color:var(--accent-emerald);">
-            <strong>2. Order Service</strong> ➔ <code>PaymentGrpc.approvePayment(orderId: "ORD-101", amount: 50000)</code> 호출<br>
-            • Proto 계약 기반 엄격한 컴파일 타임 타입 검증 (오타로 인한 런타임 에러 0%)
+
+          <div class="diag-step" style="border-color:var(--accent-amber);">
+            <strong style="color:var(--accent-amber);">[2단계: 쿠폰 검증 RPC]</strong> Order Service ➔ <code>CouponServiceGrpc.applyDiscount()</code><br>
+            • Proto Payload: <code>[08 E8 07 12 08 53 41 4C 45 32 30 32 36]</code> (userId=1000, code="SALE2026")<br>
+            • 성능: 동일 TCP 멀티플렉싱 스트림 #2 전송 ➔ <strong>1.0ms 만에 5,000원 할인 확정</strong>
+          </div>
+
+          <div class="diag-step" style="border-color:var(--accent-purple);">
+            <strong style="color:var(--accent-purple);">[3단계: 결제 승인 RPC]</strong> Order Service ➔ <code>PaymentServiceGrpc.processInternalPay()</code><br>
+            • Proto Payload: <code>[0A 0A 4F 52 44 2D 31 30 31 10 D0 B2 02]</code> (orderId="ORD-101", amount=45000)<br>
+            • 성능: 스트림 #3 바이너리 처리 ➔ <strong>2.5ms 만에 최종 결제 완료 (전체 파이프라인 단 5ms 소요!)</strong>
           </div>
         </div>
-        <div style="font-size:0.85rem; color:var(--accent-emerald); line-height:1.5;">
-          💡 <strong>왜 gRPC인가?</strong>: 직렬화/역직렬화 속도가 JSON 대비 10배 빠르며, 서버 CPU 리소스를 극적으로 절약하여 초당 수만 건의 대규모 트래픽을 처리합니다.
+
+        <div class="grid-3">
+          <div style="background:rgba(15,23,42,0.9); padding:0.85rem; border-radius:8px; border:1px solid var(--border);">
+            <div style="color:var(--accent-emerald); font-weight:700; font-size:0.85rem;">⚡ CPU 파싱 오버헤드 0%</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">JSON 영문 문자열 파싱 없이 메모리 버퍼를 직접 역직렬화하여 초당 수만 건 처리</div>
+          </div>
+          <div style="background:rgba(15,23,42,0.9); padding:0.85rem; border-radius:8px; border:1px solid var(--border);">
+            <div style="color:var(--accent-amber); font-weight:700; font-size:0.85rem;">🔄 단일 TCP 연결 재사용</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">HTTP/2 멀티플렉싱으로 매 요청마다 TCP/TLS 3-way 핸드셰이크를 하지 않고 영구 파이프 유지</div>
+          </div>
+          <div style="background:rgba(15,23,42,0.9); padding:0.85rem; border-radius:8px; border:1px solid var(--border);">
+            <div style="color:var(--accent-purple); font-weight:700; font-size:0.85rem;">🔒 컴파일 타임 타입 검증</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">.proto 인터페이스 자동 생성 코드로 서버-클라이언트 간 오타로 인한 500 에러 원천 차단</div>
+          </div>
         </div>
       </div>
     </div>

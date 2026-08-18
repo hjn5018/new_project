@@ -61,62 +61,53 @@
 
     .anim-canvas {
       background: #0f172a; border-radius: 14px; padding: 1.75rem; border: 1px solid var(--border);
-      position: relative; min-height: 220px; overflow: hidden;
-    }
-    .track {
-      position: relative; height: 90px; background: rgba(30, 41, 59, 0.5); border-radius: 10px;
-      border: 2px dashed rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.5rem; margin: 1rem 0;
-    }
-    .station {
-      background: #1e293b; border: 2px solid var(--border); border-radius: 10px;
-      padding: 0.6rem 1rem; text-align: center; z-index: 2; min-width: 120px;
-    }
-    .station.broker { border-color: var(--accent-amber); background: rgba(251, 191, 36, 0.1); }
-    .station.exchange { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
-    .station.kafka { border-color: var(--accent-purple); background: rgba(192, 132, 252, 0.1); }
-
-    .moving-packet {
-      position: absolute; padding: 0.4rem 0.8rem; border-radius: 99px; font-weight: 700;
-      font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: #fff; z-index: 5;
-      box-shadow: 0 0 12px currentColor;
-    }
-    .pkt-mqtt {
-      background: var(--accent-blue); color: #090d16;
-      animation: animMqtt 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .pkt-rmq {
-      background: var(--accent-amber); color: #090d16;
-      animation: animRmq 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .pkt-kafka {
-      background: var(--accent-purple); color: #fff;
-      animation: animKafka 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative; min-height: 280px; overflow: hidden;
     }
 
-    @keyframes animMqtt {
-      0% { left: 10%; opacity: 0; transform: scale(0.8); }
-      15% { opacity: 1; transform: scale(1); }
-      45% { left: 45%; }
-      55% { left: 50%; }
-      90% { left: 85%; opacity: 1; transform: scale(1); }
-      100% { left: 90%; opacity: 0; transform: scale(0.8); }
+    /* MQTT Multi-sub layout */
+    .mqtt-layout {
+      display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+      position: relative; height: 200px;
     }
-    @keyframes animRmq {
-      0% { left: 10%; opacity: 0; }
-      20% { opacity: 1; }
-      45% { left: 45%; }
-      55% { left: 52%; }
-      90% { left: 85%; opacity: 1; }
-      100% { left: 90%; opacity: 0; }
+    .mqtt-sub-group { display: flex; flex-direction: column; gap: 0.6rem; }
+    .sub-node {
+      background: #1e293b; border: 1px solid var(--accent-emerald); border-radius: 8px;
+      padding: 0.4rem 0.8rem; font-size: 0.8rem; color: #fff;
     }
-    @keyframes animKafka {
-      0% { left: 10%; opacity: 0; }
-      20% { opacity: 1; }
-      45% { left: 45%; }
-      55% { left: 52%; }
-      90% { left: 85%; opacity: 1; }
-      100% { left: 90%; opacity: 0; }
+
+    /* RabbitMQ Branching layout */
+    .rmq-layout {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      position: relative; height: 200px;
+    }
+    .rmq-branch-group { display: flex; flex-direction: column; gap: 1rem; }
+    .queue-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: rgba(30, 41, 59, 0.6); padding: 0.5rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);
+    }
+
+    /* Kafka Partition & Offset layout */
+    .kafka-layout {
+      display: flex; flex-direction: column; gap: 1rem; position: relative;
+    }
+    .partition-row {
+      background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between;
+    }
+    .block-chain { display: flex; gap: 0.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+    .block {
+      background: rgba(15, 23, 42, 0.9); border: 1px solid var(--accent-purple); border-radius: 4px;
+      padding: 0.35rem 0.6rem; color: #fff;
+    }
+    .block.new { border-color: var(--accent-emerald); color: var(--accent-emerald); animation: pulseBlock 1.5s infinite; }
+    .consumer-pointer {
+      padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes pulseBlock {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.95); }
     }
 
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
@@ -147,20 +138,20 @@
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
       <h1>📡 EDA & MQTT vs RabbitMQ vs Kafka 동작 원리 및 4-Way Handshake</h1>
-      <p class="subtitle">3대 메시징 시스템의 실시간 인터랙티브 패킷 애니메이션과 MQTT QoS 0/1/2 및 4-Way vs 3-Way Handshake 비교</p>
+      <p class="subtitle">다중 구독자 브로드캐스트(MQTT), 큐 분기 배달(RabbitMQ), 파티션 & 독립 오프셋(Kafka) 시각 애니메이션</p>
     </div>
 
-    <!-- 1. 인터랙티브 실시간 패킷 애니메이션 시뮬레이터 (전면 업그레이드) -->
+    <!-- 1. 인터랙티브 실시간 패킷 애니메이션 시뮬레이터 (다중 구독자, 큐 분기, 파티션 오프셋 완벽 반영) -->
     <div class="card">
-      <h2>📊 1. MQTT, RabbitMQ, Kafka 실시간 패킷 이동 애니메이션</h2>
+      <h2>📊 1. MQTT, RabbitMQ, Kafka 3대 아키텍처 실시간 시각 다이어그램</h2>
       <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">
-        각 탭을 클릭하여 3대 메시징 시스템에서 데이터 패킷이 어떻게 이동하고 라우팅되는지 확인하세요.
+        각 탭을 클릭하여 3대 메시징 시스템의 핵심 동작(다중 전파, 라우팅 분기, 파티션 오프셋)을 확인하세요.
       </p>
 
       <div class="sim-tab-bar">
-        <button class="sim-tab-btn active" onclick="switchAnim('mqtt')">1. MQTT (토픽 실시간 브로드캐스팅)</button>
-        <button class="sim-tab-btn" onclick="switchAnim('rmq')">2. RabbitMQ (Exchange ➔ Queue 라우팅)</button>
-        <button class="sim-tab-btn" onclick="switchAnim('kafka')">3. Kafka (파티션 디스크 순차 로그 적재)</button>
+        <button class="sim-tab-btn active" onclick="switchAnim('mqtt')">1. MQTT (다중 Subscriber 1:N 동시 전파)</button>
+        <button class="sim-tab-btn" onclick="switchAnim('rmq')">2. RabbitMQ (Routing Key 다중 큐 분기 배달)</button>
+        <button class="sim-tab-btn" onclick="switchAnim('kafka')">3. Kafka (파티션 순차 적재 & 독립 오프셋)</button>
       </div>
 
       <div class="anim-canvas" id="animCanvas">
@@ -260,74 +251,89 @@
   <script>
     const animData = {
       mqtt: {
-        title: "1. MQTT 동작 원리 (Topic 실시간 푸시)",
-        desc: "센서가 경량 토픽(<code>home/livingroom/temp</code>)으로 메시지를 발행하면, EMQX 브로커가 이를 구독 중인 수천 대의 스마트폰 앱으로 즉시 실시간 복사 전달합니다.",
+        title: "1. MQTT : 1개 토픽 발행 시 3개 Subscriber로 동시 복제 브로드캐스팅",
+        desc: "온도 센서가 <code>home/temp</code> 토픽으로 24°C를 발행하면, EMQX 브로커가 이를 구독 중인 <strong>스마트폰 앱 A, 스마트폰 앱 B, 거실 월패드 C</strong> 3곳에 동시에 실시간 푸시합니다.",
         html: `
-          <div class="track">
-            <div class="station" style="border-color:var(--accent-blue);">
-              <div style="color:var(--accent-blue); font-weight:700; font-size:0.9rem;">온도 센서</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Publisher</div>
+          <div class="mqtt-layout">
+            <div style="background:#1e293b; border:2px solid var(--accent-blue); border-radius:10px; padding:1rem; text-align:center; min-width:140px;">
+              <div style="color:var(--accent-blue); font-weight:700;">🌡️ 거실 온도 센서</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Pub (24°C)</div>
             </div>
-            <div class="moving-packet pkt-mqtt">Topic: temp (24°C)</div>
-            <div class="station broker">
-              <div style="color:var(--accent-amber); font-weight:700; font-size:0.9rem;">MQTT Broker</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">EMQX / Mosquitto</div>
+
+            <div style="text-align:center; flex:1; padding:0 1rem;">
+              <div style="color:var(--accent-amber); font-weight:700; font-size:1rem; margin-bottom:0.3rem;">➔ [EMQX Broker] ➔</div>
+              <div style="font-size:0.75rem; color:var(--accent-blue); font-family:'JetBrains Mono';">Topic: home/livingroom/temp</div>
+              <div style="font-size:0.75rem; color:var(--accent-emerald); margin-top:0.3rem;">⚡ 3개 채널로 1:N 동시 복제 전파</div>
             </div>
-            <div class="station" style="border-color:var(--accent-emerald);">
-              <div style="color:var(--accent-emerald); font-weight:700; font-size:0.9rem;">스마트폰 앱</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Subscriber</div>
+
+            <div class="mqtt-sub-group">
+              <div class="sub-node">📱 스마트폰 A (홍길동) <span style="color:var(--accent-emerald); font-weight:700;">[24°C 수신]</span></div>
+              <div class="sub-node">📱 스마트폰 B (가족) <span style="color:var(--accent-emerald); font-weight:700;">[24°C 수신]</span></div>
+              <div class="sub-node">📟 거실 월패드 C <span style="color:var(--accent-emerald); font-weight:700;">[24°C 수신]</span></div>
             </div>
-          </div>
-          <div style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
-            ⚡ <strong>특징</strong>: 브로커에 큐 대기열이 없으며, 수신자가 없으면 메시지가 즉시 소멸되는 초경량 1:N 방송망.
           </div>
         `
       },
       rmq: {
-        title: "2. RabbitMQ 동작 원리 (Exchange 라우팅 ➔ Queue)",
-        desc: "생산자가 Exchange로 메시지를 보내면, Exchange가 바인딩 규칙(Routing Key: <code>order.created</code>)에 따라 알림 큐와 결제 큐로 정확히 분기 배달합니다.",
+        title: "2. RabbitMQ : Direct Exchange의 Routing Key 기반 다중 큐 분기 배달",
+        desc: "주문 서버가 Exchange로 메시지를 보내면, Routing Key(<code>order.alert</code>, <code>order.pay</code>)에 따라 <strong>알림 큐</strong>와 <strong>결제 큐</strong>로 각각 분기 배달되어 독립된 워커가 소비(Ack)합니다.",
         html: `
-          <div class="track">
-            <div class="station" style="border-color:var(--accent-amber);">
-              <div style="color:var(--accent-amber); font-weight:700; font-size:0.9rem;">주문 서버</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Producer</div>
+          <div class="rmq-layout">
+            <div style="background:#1e293b; border:2px solid var(--accent-amber); border-radius:10px; padding:1rem; text-align:center; min-width:130px;">
+              <div style="color:var(--accent-amber); font-weight:700;">🛒 주문 서버</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Producer</div>
             </div>
-            <div class="moving-packet pkt-rmq">Routing: order.created</div>
-            <div class="station exchange">
-              <div style="color:var(--accent-blue); font-weight:700; font-size:0.9rem;">Direct Exchange</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">알림 Queue 매핑</div>
+
+            <div style="background:rgba(56,189,248,0.1); border:2px solid var(--accent-blue); border-radius:10px; padding:0.8rem; text-align:center; min-width:150px;">
+              <div style="color:var(--accent-blue); font-weight:700;">🔀 Direct Exchange</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Routing Key 규칙 매핑</div>
             </div>
-            <div class="station" style="border-color:var(--accent-green);">
-              <div style="color:var(--accent-green); font-weight:700; font-size:0.9rem;">알림 Worker</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Consumer (Ack 삭제)</div>
+
+            <div class="rmq-branch-group">
+              <div class="queue-row">
+                <span style="font-size:0.75rem; color:var(--accent-amber); font-family:'JetBrains Mono';">Key: order.alert ➔</span>
+                <span style="background:#0f172a; padding:0.3rem 0.6rem; border-radius:4px; border:1px solid var(--accent-amber); font-size:0.8rem; color:#fff;">📬 알림 큐</span>
+                <span style="color:var(--accent-green); font-size:0.75rem;">➔ 알림 Worker (소비 후 삭제)</span>
+              </div>
+              <div class="queue-row">
+                <span style="font-size:0.75rem; color:var(--accent-blue); font-family:'JetBrains Mono';">Key: order.pay ➔</span>
+                <span style="background:#0f172a; padding:0.3rem 0.6rem; border-radius:4px; border:1px solid var(--accent-blue); font-size:0.8rem; color:#fff;">💳 결제 큐</span>
+                <span style="color:var(--accent-green); font-size:0.75rem;">➔ 결제 Worker (소비 후 삭제)</span>
+              </div>
             </div>
-          </div>
-          <div style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
-            ⚡ <strong>특징</strong>: 컨슈머가 메시지를 소비하고 확인 응답(Ack)을 보내면 큐에서 즉시 삭제되는 작업 분배형 큐.
           </div>
         `
       },
       kafka: {
-        title: "3. Apache Kafka 동작 원리 (디스크 분산 Commit Log)",
-        desc: "결제 이벤트를 디스크의 파티션(Partition 0, 1, 2)에 순차 기록(Append-Only)하며, 결제/정산/DW 컨슈머 그룹이 각자의 오프셋(Offset) 위치를 읽어갑니다.",
+        title: "3. Kafka : 파티션 순차 블록 Commit Log & 컨슈머 그룹별 독립 오프셋 위치",
+        desc: "이벤트가 파티션 디스크에 순차 추가(Append)되며, <strong>결제 컨슈머(Offset: 3)</strong>와 <strong>DW/통계 컨슈머(Offset: 1)</strong>가 서로 다른 위치를 독립적으로 읽어갑니다.",
         html: `
-          <div class="track">
-            <div class="station" style="border-color:var(--accent-purple);">
-              <div style="color:var(--accent-purple); font-weight:700; font-size:0.9rem;">결제 서버</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Producer</div>
+          <div class="kafka-layout">
+            <!-- Partition 0 -->
+            <div class="partition-row">
+              <div style="color:var(--accent-purple); font-weight:700; font-size:0.85rem; min-width:120px;">
+                Topic [orders.v1]<br><span style="font-size:0.75rem; color:var(--text-muted);">Partition 0 (Disk)</span>
+              </div>
+              <div class="block-chain">
+                <div class="block">Offset 0</div>
+                <div class="block">Offset 1</div>
+                <div class="block">Offset 2</div>
+                <div class="block">Offset 3</div>
+                <div class="block new">Offset 4 (Append 🆕)</div>
+              </div>
             </div>
-            <div class="moving-packet pkt-kafka">Partition [0] Append</div>
-            <div class="station kafka">
-              <div style="color:var(--accent-purple); font-weight:700; font-size:0.9rem;">Kafka Topic</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Disk Commit Log</div>
+
+            <!-- Consumer Offsets -->
+            <div style="display:flex; justify-content:space-around; background:rgba(15,23,42,0.8); padding:0.85rem; border-radius:8px; border:1px solid var(--border);">
+              <div>
+                <span class="consumer-pointer" style="background:rgba(52,211,153,0.2); color:var(--accent-emerald);">💳 결제 Consumer Group</span>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">👉 현재 읽는 위치: <strong>Offset 4</strong> (실시간 결제 승인 완료)</div>
+              </div>
+              <div>
+                <span class="consumer-pointer" style="background:rgba(244,114,182,0.2); color:var(--accent-pink);">📊 DW / 통계 Consumer Group</span>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">👉 현재 읽는 위치: <strong>Offset 1</strong> (과거 배치 분석 진행 중, 충돌 0%)</div>
+              </div>
             </div>
-            <div class="station" style="border-color:var(--accent-pink);">
-              <div style="color:var(--accent-pink); font-weight:700; font-size:0.9rem;">정산/DW 서버</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Consumer Group (Offset)</div>
-            </div>
-          </div>
-          <div style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
-            ⚡ <strong>특징</strong>: 읽어도 메시지가 삭제되지 않고 수일~수개월간 디스크에 영구 보관되어 장애 시 재처리(Replay) 가능.
           </div>
         `
       }
