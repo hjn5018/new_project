@@ -3,62 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Node.js vs NestJS vs Next.js 역할 및 차이점</title>
+  <title>Node.js vs NestJS vs Next.js 역할 및 JS 런타임 생태계</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-green: #34d399; --accent-red: #f87171; --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-green: #34d399;
+      --accent-red: #f87171;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(52, 211, 153, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
-    .eco-box { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
-    @media (max-width: 800px) { .eco-grid { grid-template-columns: 1fr; } }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
+    .box {
+      background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    pre {
+      background: #090d16; padding: 1rem; border-radius: 8px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;
+      margin-top: 0.75rem; line-height: 1.55;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
+    @media (max-width: 800px) { .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🟩 Node.js vs NestJS vs Next.js 역할 완벽 비교</h1>
-      <p class="subtitle">자바스크립트 생태계의 실행 환경(Runtime), 순수 백엔드 프레임워크, 풀스택/SSR 프레임워크의 명확한 경계</p>
+      <h1>🟩 Node.js vs NestJS vs Next.js 생태계 완벽 비교</h1>
+      <p class="subtitle">런타임(Runtime) 환경 개념(Java JDK/JVM 비교)부터 백엔드 엔터프라이즈 프레임워크(NestJS), 풀스택 SSR(Next.js) 구조 분석</p>
     </div>
 
+    <!-- 1. 런타임 환경이란? (Java 비교) -->
     <div class="card">
-      <h2>📊 3개 기술 포지셔닝 지도</h2>
-      <div class="eco-grid">
-        <div class="eco-box" style="border-top:3px solid var(--accent-green);">
-          <h3 style="color:var(--accent-green);">Node.js</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
-            - <strong>정의</strong>: Chrome V8 엔진 기반의 JavaScript 실행 런타임 환경 (Runtime).<br>
-            - <strong>역할</strong>: 서버 측에서 JS 코드를 구동시키는 엔진 그 자체.<br>
-            - <strong>비유</strong>: 자동차의 '엔진'.
-          </p>
+      <h2>💡 1. '런타임 환경(Runtime Environment)'이란? (Java 생태계와의 1:1 비교)</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6; margin-bottom:1rem;">
+        과거 JavaScript는 웹 브라우저(크롬, 사파리) 안에서만 실행될 수 있었습니다. <strong>Node.js</strong>는 크롬의 V8 자바스크립트 엔진을 브라우저 밖으로 떼어내어 컴퓨터/서버 OS에서 직접 실행할 수 있게 만든 <strong>실행 환경(Runtime)</strong>입니다.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>비교 항목</th>
+            <th style="color:var(--accent-amber);">Java 생태계</th>
+            <th style="color:var(--accent-green);">JavaScript / TypeScript 생태계</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">실행 엔진 / 런타임</td>
+            <td><strong>JVM (Java Virtual Machine) & JRE</strong><br>(자바 바이트코드를 OS 명령어로 실행)</td>
+            <td><strong>Node.js (V8 엔진 + libuv 이벤트 루프)</strong><br>(JS 코드를 OS 네이티브 명령어로 실행)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">컴파일 vs 런타임</td>
+            <td><code>javac</code>로 바이트코드 컴파일(.class) 후 JVM에서 런타임 구동</td>
+            <td>TypeScript(<code>tsc</code>)로 JS 트랜스파일 후 Node.js에서 런타임 구동</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">엔터프라이즈 백엔드 프레임워크</td>
+            <td><strong>Spring Boot</strong> (IoC / DI, Controller-Service 구조)</td>
+            <td><strong>NestJS</strong> (TypeScript 기반 Spring 구조를 그대로 채택)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">웹 풀스택 프레임워크</td>
+            <td>Spring MVC + Thymeleaf / JSP</td>
+            <td><strong>Next.js</strong> (Node.js 런타임 위에서 React SSR/SSG 구동)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. NestJS와 Next.js가 Node.js를 어떻게 활용하고 확장했는가? -->
+    <div class="card">
+      <h2>🏗️ 2. 기술별 아키텍처 포지셔닝 & 코드 예시</h2>
+      
+      <div class="grid-3">
+        <!-- Node.js -->
+        <div class="box" style="border-top:3px solid var(--accent-green);">
+          <div>
+            <h3 style="color:var(--accent-green);">1. Node.js (엔진/런타임)</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.4rem;">
+              순수 실행 환경. Express 라이브러리를 붙여 HTTP 서버를 띄울 수 있으나, 규칙(아키텍처)이 없어 대규모 협업 시 코드가 난잡해지기 쉽습니다.
+            </p>
+          </div>
+          <pre><code>// [Node.js + Express]
+import express from 'express';
+const app = express();
+
+app.get('/api/ping', (req, res) => {
+  res.send('pong');
+});
+
+app.listen(3000);</code></pre>
         </div>
-        <div class="eco-box" style="border-top:3px solid var(--accent-red);">
-          <h3 style="color:var(--accent-red);">NestJS</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
-            - <strong>정의</strong>: Node.js 위에서 동작하는 TypeScript 기반 순수 백엔드 아키텍처 프레임워크.<br>
-            - <strong>역할</strong>: Angular 스타일의 모듈, Controller, Service, DI 엔터프라이즈 구조 제공.<br>
-            - <strong>비유</strong>: Spring Boot의 JS/TS 버전.
-          </p>
+
+        <!-- NestJS -->
+        <div class="box" style="border-top:3px solid var(--accent-red);">
+          <div>
+            <h3 style="color:var(--accent-red);">2. NestJS (순수 백엔드)</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.4rem;">
+              Node.js 위에서 <strong>Spring Boot처럼 Module, Controller, Service, 의존성 주입(DI)</strong> 패턴을 강제하는 완결형 엔터프라이즈 백엔드 프레임워크입니다.
+            </p>
+          </div>
+          <pre><code>// [NestJS Controller & DI]
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findById(id);
+  }
+}</code></pre>
         </div>
-        <div class="eco-box" style="border-top:3px solid var(--accent-blue);">
-          <h3 style="color:var(--accent-blue);">Next.js</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem;">
-            - <strong>정의</strong>: React 기반의 풀스택 웹 프레임워크 (SSR/SSG).<br>
-            - <strong>역할</strong>: 서버 사이드 렌더링(SSR), SEO 최적화 및 간단한 API Route 백엔드 기능 제공.<br>
-            - <strong>비유</strong>: 모던 웹 앱의 완결형 풀스택 플랫폼.
-          </p>
+
+        <!-- Next.js -->
+        <div class="box" style="border-top:3px solid var(--accent-blue);">
+          <div>
+            <h3 style="color:var(--accent-blue);">3. Next.js (풀스택 SSR)</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.4rem;">
+              <strong>Node.js 런타임을 서버 사이드 렌더링(SSR) 엔진으로 활용</strong>하여 React 컴포넌트를 서버에서 HTML로 미리 렌더링하고, API Route도 지원하는 풀스택 웹 프레임워크입니다.
+            </p>
+          </div>
+          <pre><code>// [Next.js Server Component]
+export default async function Page({ params }) {
+  // 서버(Node.js)에서 DB/API 직접 조회
+  const product = await getProduct(params.id);
+  
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;{product.name}&lt;/h1&gt;
+      &lt;p&gt;{product.price}원&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
         </div>
       </div>
     </div>

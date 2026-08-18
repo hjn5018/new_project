@@ -3,73 +3,164 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PG vs VAN 카드 결제 구조 다이어그램</title>
+  <title>PG vs VAN 카드 결제 구조 다이어그램 & 온/오프라인 예시</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-purple: #c084fc; --accent-green: #34d399; --accent-amber: #fbbf24;
-      --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-pink: #f472b6;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    .flow-diagram { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); gap: 0.5rem; flex-wrap: wrap; }
-    .flow-step { background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; flex: 1; min-width: 130px; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+
+    .flow-diagram {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);
+      gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;
+    }
+    .flow-step {
+      background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem; text-align: center; flex: 1; min-width: 130px;
+    }
     .arrow { color: var(--accent-amber); font-weight: 700; font-size: 1.2rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    .box { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    ul { padding-left: 1.2rem; color: var(--text-muted); font-size: 0.92rem; line-height: 1.65; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>💳 PG (Payment Gateway) vs VAN 사 결제 다이어그램</h1>
-      <p class="subtitle">온라인 가맹점과 전용 카드망(VAN), 그리고 카드사 사이의 승인 및 정산 중계 구조</p>
+      <h1>💳 PG (Payment Gateway) vs VAN 사 결제 승인 구조 & 실무 예시</h1>
+      <p class="subtitle">온라인 쇼핑몰 결제와 오프라인 매장 결제의 차이점 및 가맹점-PG-VAN-카드사 간의 정산과 망 중계 흐름</p>
     </div>
 
+    <!-- 1. 온라인 결제 승인 흐름도 (PG + VAN) -->
     <div class="card">
-      <h2>📊 온라인 카드 결제 승인 종합 흐름도</h2>
+      <h2>🌐 1. 온라인 쇼핑몰 카드 결제 흐름 (예: 무신사에서 나이키 운동화 구매)</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
+        개별 스타트업/쇼핑몰이 수많은 카드사(신한, 현대, 국민 등)와 일일이 가맹 계약을 맺기 어렵기 때문에, <strong>PG사(토스페이먼츠, KG이니시스)</strong>가 대표 가맹점 역할을 대행하고 결제 UI 창을 제공합니다.
+      </p>
+
       <div class="flow-diagram">
-        <div class="flow-step">
-          <strong style="color:#fff;">1. 구매자 (User)</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">결제창 클릭</span>
+        <div class="flow-step" style="border-top:3px solid #fff;">
+          <strong style="color:#fff;">1. 구매자</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">무신사 앱 결제 클릭</span>
         </div>
         <span class="arrow">➔</span>
-        <div class="flow-step">
-          <strong style="color:var(--accent-blue);">2. 온라인 가맹점</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">PortOne 연동</span>
+        <div class="flow-step" style="border-top:3px solid var(--accent-blue);">
+          <strong style="color:var(--accent-blue);">2. 온라인 쇼핑몰</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">무신사 백엔드 서버</span>
         </div>
         <span class="arrow">➔</span>
-        <div class="flow-step" style="border-color:var(--accent-purple);">
+        <div class="flow-step" style="border-top:3px solid var(--accent-purple);">
           <strong style="color:var(--accent-purple);">3. PG 사</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">토스/KG이니시스</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">토스페이먼츠 / KG이니시스<br>(결제창 호출 & 대행)</span>
         </div>
         <span class="arrow">➔</span>
-        <div class="flow-step" style="border-color:var(--accent-amber);">
+        <div class="flow-step" style="border-top:3px solid var(--accent-amber);">
           <strong style="color:var(--accent-amber);">4. VAN 사</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">NICE/KICC (망 중계)</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">NICE / KICC<br>(보안 전용망 중계)</span>
         </div>
         <span class="arrow">➔</span>
-        <div class="flow-step" style="border-color:var(--accent-green);">
+        <div class="flow-step" style="border-top:3px solid var(--accent-green);">
           <strong style="color:var(--accent-green);">5. 카드사</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">한도/승인 검증</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">신한/현대카드<br>(한도 검증 & 승인)</span>
         </div>
       </div>
     </div>
 
+    <!-- 2. 오프라인 매장 결제 흐름도 (VAN 단독) -->
     <div class="card">
-      <h2>💡 PG사 vs VAN사 역할 차이 요약</h2>
-      <ul style="line-height:1.8; color:var(--text-muted); padding-left:1.2rem;">
-        <li><strong>PG (Payment Gateway)</strong>: 온라인 가맹점을 대표하여 여러 카드사와 계약을 대신하고, 온라인 웹/앱 결제창 및 대표 가맹점 정산 역할을 수행.</li>
-        <li><strong>VAN (Value Added Network)</strong>: 오프라인 결제 단말기 또는 PG사와 카드사 전산망 사이의 물리적 보안 통신망 중계 및 승인 데이터 전달을 담당.</li>
-      </ul>
+      <h2>☕ 2. 오프라인 매장 카드 결제 흐름 (예: 스타벅스에서 카드 긁기)</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
+        오프라인 매장에는 결제 웹페이지가 필요 없으므로 <strong>PG사가 개입하지 않고</strong>, POS 단말기가 <strong>VAN사의 물리 통신망</strong>을 통해 직접 카드사로 승인 요청을 보냅니다.
+      </p>
+
+      <div class="flow-diagram">
+        <div class="flow-step" style="border-top:3px solid #fff;">
+          <strong style="color:#fff;">1. 손님</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">실물 카드 IC칩 삽입</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step" style="border-top:3px solid var(--accent-blue);">
+          <strong style="color:var(--accent-blue);">2. 오프라인 매장</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">스타벅스 POS 계산대</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step" style="border-top:3px solid var(--accent-amber);">
+          <strong style="color:var(--accent-amber);">3. VAN 사 단말기</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">KICC / KIS정보통신<br>(전용선 데이터 전송)</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="flow-step" style="border-top:3px solid var(--accent-green);">
+          <strong style="color:var(--accent-green);">4. 카드사</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">국민/삼성카드<br>(승인 후 영수증 출력)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 핵심 역할 및 수수료/정산 비교 -->
+    <div class="card">
+      <h2>💡 3. PG vs VAN 핵심 차이 완벽 정리</h2>
+      <div class="grid-2">
+        <div class="box" style="border-top:3px solid var(--accent-purple);">
+          <h3 style="color:var(--accent-purple); margin-bottom:0.5rem;">PG (Payment Gateway)</h3>
+          <ul>
+            <li><strong>주요 역할</strong>: 온라인 쇼핑몰을 위한 웹 결제창 UI 제공, 통합 정산(수수료 정산 후 입금), 카드사별 가맹 계약 대행.</li>
+            <li><strong>수수료</strong>: 약 2.0% ~ 3.3% (결제 대행 수수료 포함).</li>
+            <li><strong>대표 기업</strong>: 토스페이먼츠, NHN KCP, KG이니시스, 나이스페이.</li>
+          </ul>
+        </div>
+
+        <div class="box" style="border-top:3px solid var(--accent-amber);">
+          <h3 style="color:var(--accent-amber);">VAN (Value Added Network)</h3>
+          <ul>
+            <li><strong>주요 역할</strong>: 카드사와 가맹점(또는 PG사) 사이의 물리적인 '보안 통신 전용망'을 깔아주고 데이터 승인 트래픽을 안전하게 중계.</li>
+            <li><strong>수수료</strong>: 건당 수십 원 단위 중계 수수료 (카드사가 VAN사에 지급).</li>
+            <li><strong>대표 기업</strong>: NICE정보통신, KICC(한국정보통신), KSNET, KIS정보통신.</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </body>

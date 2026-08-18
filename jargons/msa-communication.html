@@ -6,47 +6,111 @@
   <title>MSA 서비스 간 통신 (REST vs gRPC vs Kafka) 비교</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-purple: #c084fc; --accent-green: #34d399; --accent-amber: #fbbf24;
-      --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-red: #f87171;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1050px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-    .tab-btn { padding: 0.6rem 1.2rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; font-weight: 600; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card h3 { font-size: 1.15rem; color: var(--accent-blue); margin: 1.25rem 0 0.5rem 0; }
+
+    .tab-bar { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 0.75rem 1.25rem; border-radius: 10px;
+      background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: rgba(56, 189, 248, 0.15); color: #fff; }
     .tab-btn.active { background: var(--accent-blue); color: #090d16; border-color: var(--accent-blue); }
-    .seq-diagram { background: #0f172a; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
-    .seq-step { padding: 0.75rem; border-left: 3px solid var(--accent-blue); background: rgba(30, 41, 59, 0.5); margin-bottom: 0.75rem; border-radius: 0 8px 8px 0; }
-    pre { background: #090d16; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0; }
+
+    .seq-diagram {
+      background: #0f172a; border-radius: 12px; padding: 1.5rem;
+      border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.88rem;
+    }
+    .seq-step {
+      padding: 0.85rem 1rem; border-left: 4px solid var(--accent-blue);
+      background: rgba(30, 41, 59, 0.6); margin-bottom: 0.75rem; border-radius: 0 8px 8px 0;
+      line-height: 1.5;
+    }
+    pre {
+      background: #090d16; padding: 1.25rem; border-radius: 10px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0;
+      line-height: 1.55;
+    }
+    .concept-box {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; margin: 1rem 0;
+    }
+    .lang-badge {
+      display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+      font-size: 0.75rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); margin-bottom: 0.4rem;
+    }
+    .alert-box {
+      padding: 1rem 1.25rem; border-radius: 10px; margin: 1rem 0;
+      display: flex; gap: 0.75rem; align-items: flex-start; font-size: 0.92rem; line-height: 1.6;
+    }
+    .alert-warn { background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; }
+    .alert-info { background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #bae6fd; }
+    .alert-success { background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.3); color: #a7f3d0; }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🔄 MSA 서비스 간 통신 방식 패턴 비교</h1>
-      <p class="subtitle">동기식 (REST API, gRPC) vs 비동기 이벤트 스트리밍 (Kafka) 통신 구조와 사용 예시</p>
+      <h1>🔄 MSA 서비스 간 통신 (REST vs gRPC vs Kafka) 심층 비교</h1>
+      <p class="subtitle">동기식 블로킹 호출(REST), 고성능 바이너리 RPC(gRPC), 비동기 분산 이벤트 스트리밍(Kafka)의 동작 원리 및 언어별 구현 상세</p>
     </div>
 
     <div class="card">
-      <h2>통신 프로토콜 방식 선택 시각화</h2>
+      <h2>📡 통신 프로토콜 방식별 심층 분석 & 코드</h2>
       <div class="tab-bar">
-        <button class="tab-btn active" onclick="showMode('rest')">1. REST API (동기 HTTP/JSON)</button>
+        <button class="tab-btn active" onclick="showMode('rest')">1. REST API (동기 HTTP/1.1 JSON)</button>
         <button class="tab-btn" onclick="showMode('grpc')">2. gRPC (동기 HTTP/2 Protobuf)</button>
-        <button class="tab-btn" onclick="showMode('kafka')">3. Kafka (비동기 Event-Driven)</button>
+        <button class="tab-btn" onclick="showMode('kafka')">3. Kafka (비동기 Event Streaming)</button>
       </div>
 
       <div id="modeContent">
-        <!-- Dynamic content -->
+        <!-- Dynamic content rendered below -->
       </div>
     </div>
   </div>
@@ -54,54 +118,146 @@
   <script>
     const modes = {
       rest: {
-        title: "REST API (Representational State Transfer)",
-        desc: "HTTP/1.1 프로토콜 기반 JSON 텍스트 서식 동기 호출. 가장 가독성이 높고 범용적이나 헤더 오버헤드가 크고 동기 대기(Blocking) 발생.",
+        title: "1. REST API (HTTP/1.1 + JSON)",
+        desc: "인간이 읽기 편한 JSON 텍스트와 표준 HTTP 동사를 사용하는 범용 동기 통신 방식입니다. 직관적이고 도구 지원이 풍부하지만, MSA 환경에서는 '헤더 오버헤드'와 '동기 대기(Blocking)' 문제가 발생합니다.",
+        deepDive: `
+          <div class="alert-box alert-warn">
+            <div>
+              <strong>⚠️ [핵심 한계 1] 헤더 오버헤드 (Header Overhead)란?</strong><br>
+              HTTP/1.1은 요청마다 매번 수백 바이트~수 킬로바이트에 달하는 텍스트 헤더(<code>Host</code>, <code>User-Agent</code>, <code>Cookie</code>, <code>Authorization: Bearer JWT...</code> 등)를 압축 없이 반복 전송합니다. 실제 데이터 본문(Body)이 20바이트에 불과해도 헤더가 1,000바이트를 차지해 네트워크 대역폭 낭비가 큽니다.
+            </div>
+          </div>
+          <div class="alert-box alert-warn">
+            <div>
+              <strong>⚠️ [핵심 한계 2] 동기 대기 (Synchronous Blocking & Cascade Latency)란?</strong><br>
+              A 서비스가 B 서비스를 호출하면, B 서비스가 응답을 줄 때까지 A 서비스의 작업 스레드(Thread)는 <strong>아무 일도 못하고 멈춰서 기다립니다(Blocking)</strong>. B 서비스가 지연되면 A의 스레드 풀이 고갈(Thread Starvation)되어 전체 시스템으로 장애가 전파(Cascading Failure)됩니다.
+            </div>
+          </div>
+        `,
         seq: [
-          "[Order Service] ➔ (HTTP POST /api/v1/payments) ➔ [Payment Service]",
-          "[Payment Service] ➔ 카드 승인 처리 (동기 대기 200ms)",
-          "[Payment Service] ➔ (HTTP 200 OK Response) ➔ [Order Service]"
+          "[Order Service (주문 서버)] ➔ HTTP POST /api/v1/payments (무거운 JSON + JWT 헤더 1KB) ➔ [Payment Service]",
+          "[Payment Service (결제 서버)] ➔ 카드사 승인 연동 처리 중 (Order Service 스레드는 250ms 동안 정지/대기)",
+          "[Payment Service] ➔ HTTP 200 OK Response (JSON 파싱 필요) ➔ [Order Service (응답 수신 후 다음 로직 진행)]"
         ],
-        code: `// Spring RestTemplate / WebClient 예시
+        lang: "Java (Spring Boot / WebClient)",
+        code: `// [Java Spring Boot] WebClient를 통한 REST API 동기 호출 예시
+// 1. 요청 객체 준비
+PaymentRequest requestDto = new PaymentRequest("ORD-2026-0811", 50000);
+
+// 2. HTTP POST 호출 (동기 대기 방식)
 PaymentResponse response = webClient.post()
-    .uri("http://payment-service/api/v1/payments")
-    .bodyValue(new PaymentRequest(orderId, amount))
+    .uri("http://payment-service:8080/api/v1/payments")
+    .header("Authorization", "Bearer " + jwtToken) // 매 요청마다 무거운 헤더 동봉
+    .bodyValue(requestDto)
     .retrieve()
     .bodyToMono(PaymentResponse.class)
-    .block(); // 동기 차단 대기`
+    .block(); // ⚠️ 응답이 올 때까지 현재 톰캣 워커 스레드가 Blocking 상태로 대기!`
       },
       grpc: {
-        title: "gRPC (Google Remote Procedure Call)",
-        desc: "HTTP/2 기반 Protocol Buffers(Protobuf) 바이너리 통신. 멀티플렉싱과 직렬화 성능이 뛰어나 MSA 내부 microservice 간 고성능 동기 통신에 최적화.",
+        title: "2. gRPC (HTTP/2 + Protocol Buffers)",
+        desc: "구글이 개발한 고성능 오픈소스 RPC 프레임워크로, 텍스트(JSON) 대신 IDL 기반의 바이너리 압축 포맷(Protocol Buffers)과 HTTP/2 멀티플렉싱을 활용합니다.",
+        deepDive: `
+          <div class="alert-box alert-info">
+            <div>
+              <strong>💡 [핵심 원리 1] Protobuf(Protocol Buffers) 직렬화란?</strong><br>
+              JSON은 필드명(<code>"orderId": "ORD-101"</code>)을 매번 텍스트 그대로 전송하지만, Protobuf는 <code>.proto</code> 스키마 파일에 필드 번호(예: <code>string order_id = 1;</code>)를 매겨 바이너리로 압축 직렬화(Serialization)합니다. 데이터 용량이 70~80% 감소하며 CPU 파싱 속도가 5~10배 빠릅니다.
+            </div>
+          </div>
+          <div class="alert-box alert-info">
+            <div>
+              <strong>💡 [핵심 원리 2] HTTP/2 멀티플렉싱(Multiplexing)이란?</strong><br>
+              HTTP/1.1은 연결 하나당 한 번에 하나의 요청/응답만 순차 처리하여 앞 요청이 밀리면 뒤 요청도 지연되는 HOL(Head-of-Line) 블로킹이 생깁니다. 반면 HTTP/2는 <strong>단 1개의 TCP 연결 위에서 수백 개의 요청/응답 스트림을 프레임 단위로 쪼개어 동시에 양방향 전송</strong>합니다.
+            </div>
+          </div>
+        `,
         seq: [
-          "[Order Service] ➔ (gRPC Call: PayOrder(PaymentRequest)) ➔ [Payment Service]",
-          "[Payment Service] ➔ HTTP/2 바이너리 스트림 고속 연산 (15ms)",
-          "[Payment Service] ➔ (gRPC Response: PaymentReply) ➔ [Order Service]"
+          "[Order Service] ➔ gRPC Stub 메서드 직접 호출: payOrder(PaymentRequest) ➔ [Payment Service]",
+          "[네트워크 전송] ➔ HTTP/2 단일 TCP 커넥션 상에서 이진(Binary) 프레임 멀티플렉싱 전송 (단 30바이트, 12ms)",
+          "[Payment Service] ➔ 고속 바이너리 역직렬화 및 승인 ➔ [Order Service 로 결과 바이너리 스트림 반환]"
         ],
-        code: `// Protocol Buffer 정의 (payment.proto)
+        lang: "Protocol Buffer IDL (payment.proto) & Java gRPC Client",
+        code: `// [1단계: payment.proto 파일 정의]
+syntax = "proto3";
+package com.ecommerce.payment;
+
 service PaymentService {
   rpc ProcessPayment (PaymentRequest) returns (PaymentReply);
 }
-// Java gRPC Stub 호출
-PaymentReply reply = paymentStub.processPayment(PaymentRequest.newBuilder()
-    .setOrderId("ORD-101")
-    .setAmount(50000)
-    .build());`
+
+message PaymentRequest {
+  string order_id = 1; // 필드명을 숫자로 매핑하여 초소형 바이너리로 압축
+  int64 amount = 2;
+}
+
+message PaymentReply {
+  bool success = 1;
+  string transaction_id = 2;
+}
+
+// ----------------------------------------------------
+// [2단계: Java gRPC 클라이언트 호출 코드]
+PaymentServiceGrpc.PaymentServiceBlockingStub stub = PaymentServiceGrpc.newBlockingStub(grpcChannel);
+
+// 마치 로컬 함수를 호출하듯 직관적이며, 내부적으로 HTTP/2 바이너리 통신 수행
+PaymentReply reply = stub.processPayment(
+    PaymentRequest.newBuilder()
+        .setOrderId("ORD-2026-0811")
+        .setAmount(50000L)
+        .build()
+);
+System.out.println("결제 성공 여부: " + reply.getSuccess());`
       },
       kafka: {
-        title: "Kafka (Distributed Event Streaming)",
-        desc: "발행/구독(Publish/Subscribe) 기반 비동기 이벤트 버스. 주문 서비스는 결제 완료 이벤트를 발행만 하고, 수신 서비스들은 개별 속도로 느슨하게 결합되어 처리.",
+        title: "3. Apache Kafka (비동기 분산 이벤트 스트리밍)",
+        desc: "서비스 간 직접 호출(Point-to-Point)을 완전히 제거하고, 이벤트를 중앙 브로커(Topic)에 발행(Publish)한 뒤 관심 있는 서비스들이 구독(Subscribe)하여 각자의 속도로 처리하는 비동기 분산 플랫폼입니다.",
+        deepDive: `
+          <div class="alert-box alert-success">
+            <div>
+              <strong>🌱 [초보자를 위한 개념] Kafka란 무엇인가요?</strong><br>
+              • <strong>전통적 메시지 큐(RabbitMQ 등)와의 차이</strong>: 일반 큐는 소비자가 메시지를 읽으면 큐에서 즉시 삭제됩니다. 하지만 Kafka는 <strong>분산 디스크에 이벤트 로그를 영구/장기 보관(Append-only Commit Log)</strong>하여 장애가 나도 과거 시점부터 다시 읽기(Replay)가 가능합니다.<br>
+              • <strong>핵심 구성요소</strong>:<br>
+              &nbsp;&nbsp;1) <strong>Producer(생산자)</strong>: 이벤트를 발행하는 서비스 (예: 주문 완료 이벤트 발행)<br>
+              &nbsp;&nbsp;2) <strong>Topic & Partition</strong>: 이벤트가 분류되어 저장되는 분산 큐 채널 (수평 확장 가능)<br>
+              &nbsp;&nbsp;3) <strong>Consumer Group(소비자)</strong>: 이벤트를 가져가서 처리하는 서비스 (예: 배송, 알림, 통계 서버)<br>
+              • <strong>비동기 결합 해제(Decoupling)</strong>: 주문 서버는 알림 서버나 배송 서버가 살아있는지, 느린지 알 필요 없이 이벤트만 Kafka에 던져놓고 1ms만에 사용자에게 "주문 완료" 응답을 줍니다!
+            </div>
+          </div>
+        `,
         seq: [
-          "[Order Service] ➔ (Publish: OrderCreatedEvent) ➔ [Kafka Topic: order-events]",
-          "[Kafka Topic] ➔ (Subscribe Async) ➔ [Payment Service], [Notification Service], [Analytics Service]",
-          "※ Order Service는 결제 완료를 기다리지 않고 사용자에게 빠른 응답 반환!"
+          "[Order Service] ➔ (이벤트 발행: OrderCreatedEvent) ➔ [Kafka Broker: Topic 'orders.v1'] ➔ (0.5ms 즉시 응답 완료)",
+          "[Kafka Topic 'orders.v1'] ➔ 이벤트를 파티션 디스크에 영속 보관 (Commit Log)",
+          "[Payment Service (Consumer Group 1)] ➔ 자신의 속도로 메시지 읽어 카드 결제 진행",
+          "[Notification Service (Consumer Group 2)] ➔ 자신의 속도로 메시지 읽어 알림톡 발송",
+          "[Analytics Service (Consumer Group 3)] ➔ 자신의 속도로 메시지 읽어 통계 DB 적재"
         ],
-        code: `// Kafka Producer 이벤트 발행
-kafkaTemplate.send("order-events", orderId, new OrderCreatedEvent(orderId, userId, price));
+        lang: "Java (Spring Kafka Producer & Consumer)",
+        code: `// [Java Spring Boot - Kafka Producer (주문 서비스)]
+@Service
+@RequiredArgsConstructor
+public class OrderService {
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 
-// Payment Service Consumer 이벤트 소비
-@KafkaListener(topics = "order-events", groupId = "payment-group")
-public void handleOrderEvent(OrderCreatedEvent event) {
-    paymentService.process(event.getOrderId());
+    public void placeOrder(String orderId, Long userId, Long amount) {
+        OrderCreatedEvent event = new OrderCreatedEvent(orderId, userId, amount);
+        
+        // Topic("orders.v1")에 이벤트를 발행하고 즉시 반환 (Non-blocking)
+        // 결제나 알림 서버가 꺼져있어도 주문 처리는 즉시 성공!
+        kafkaTemplate.send("orders.v1", orderId, event);
+    }
+}
+
+// ----------------------------------------------------
+// [Java Spring Boot - Kafka Consumer (알림 서비스)]
+@Component
+@Slf4j
+public class NotificationConsumer {
+
+    @KafkaListener(topics = "orders.v1", groupId = "notification-group")
+    public void onOrderCreated(OrderCreatedEvent event) {
+        // 알림 서비스가 독립적으로 메시지를 소비하여 카카오톡 전송
+        log.info("주문 알림톡 발송 시작 - 주문번호: {}, 금액: {}", event.orderId(), event.amount());
+        kakaoNotificationSender.send(event.userId(), "주문이 정상 완료되었습니다.");
+    }
 }`
       }
     };
@@ -113,13 +269,19 @@ public void handleOrderEvent(OrderCreatedEvent event) {
       const m = modes[key];
       document.getElementById('modeContent').innerHTML = `
         <h3 style="color: var(--accent-blue); margin-bottom: 0.5rem;">${m.title}</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1.25rem;">${m.desc}</p>
+        <p style="color: var(--text-muted); margin-bottom: 1.25rem; line-height:1.6;">${m.desc}</p>
+        
+        ${m.deepDive}
+
         <div class="seq-diagram">
-          <h5 style="color: var(--accent-amber); margin-bottom: 0.75rem;">[ 통신 시퀀스 흐름 ]</h5>
+          <h4 style="color: var(--accent-amber); margin-bottom: 0.75rem; font-family:'Inter';">🔄 통신 시퀀스 및 처리 흐름</h4>
           ${m.seq.map(s => `<div class="seq-step">${s}</div>`).join('')}
         </div>
-        <h5 style="color: var(--accent-green); margin: 1.25rem 0 0.5rem 0;">[ 실제 구현 코드 샘플 ]</h5>
-        <pre><code>${m.code}</code></pre>
+
+        <div style="margin-top: 1.5rem;">
+          <span class="lang-badge">💻 구현 언어: ${m.lang}</span>
+          <pre><code>${m.code}</code></pre>
+        </div>
       `;
     }
 

@@ -3,50 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket vs STOMP 프레임 구조 비교</title>
+  <title>WebSocket vs STOMP 아키텍처 & 프레임 구조 심층 비교</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-amber: #fbbf24; --accent-emerald: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-amber: #fbbf24;
+      --accent-emerald: #34d399;
+      --accent-purple: #c084fc;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    pre { background: #0f172a; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    .box { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    pre {
+      background: #0f172a; padding: 1.1rem; border-radius: 8px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
+      margin-top: 0.6rem; line-height: 1.55;
+    }
+    ul { padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.65; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🔌 WebSocket vs STOMP 프레임 구조 비교</h1>
-      <p class="subtitle">순수 전송 계층 프로토콜(WebSocket)과 그 위에서 서브스크립션 메시지 규격을 정의하는 상위 프로토콜(STOMP)</p>
+      <h1>🔌 WebSocket vs STOMP 프로토콜 심층 분석</h1>
+      <p class="subtitle">TCP 3-Way Handshake와 HTTP Upgrade를 통한 전이중 파이프(WebSocket) 및 Pub/Sub 메시지 브로커 규격(STOMP) 비교</p>
     </div>
 
+    <!-- 1. 핵심 동작 원리 및 차이점 -->
     <div class="card">
-      <h2>💡 STOMP 메세지 프레임 구조 예시</h2>
-      <p style="color:var(--text-muted); margin-bottom:0.75rem;">순수 WebSocket은 텍스트/바이너리 데이터만 전달하지만, STOMP는 HTTP처럼 COMMAND, Headers, Body 구조를 가집니다.</p>
-      <pre><code>SEND
+      <h2>💡 1. WebSocket과 STOMP의 핵심 동작 메커니즘</h2>
+      <div class="grid-2">
+        <div class="box" style="border-top:3px solid var(--accent-blue);">
+          <h3 style="color:var(--accent-blue); margin-bottom:0.5rem;">🌐 WebSocket (전송 계층 프로토콜)</h3>
+          <ul>
+            <li><strong>핸드셰이크 과정</strong>: 1단계 TCP 3-Way Handshake(SYN, SYN-ACK, ACK) ➔ 2단계 HTTP Upgrade 요청(<code>Upgrade: websocket</code>, <code>101 Switching Protocols</code>).</li>
+            <li><strong>양방향 파이프(Full-Duplex)</strong>: 연결이 한번 수립되면 서버와 클라이언트가 연결을 끊지 않고 실시간으로 데이터를 주고받음.</li>
+            <li><strong>한계</strong>: 순수 전송 프로토콜(Transport)이므로 <strong>메시지 형식(규격)이 없음</strong>. 단순 문자열/바이너리만 오가므로 개발자가 직접 데이터 파싱 및 라우팅 로직을 하드코딩해야 함.</li>
+          </ul>
+        </div>
+
+        <div class="box" style="border-top:3px solid var(--accent-purple);">
+          <h3 style="color:var(--accent-purple); margin-bottom:0.5rem;">📬 STOMP (응용 서브 프로토콜)</h3>
+          <ul>
+            <li><strong>정의</strong>: WebSocket 통신 위에서 동작하며, HTTP처럼 <code>COMMAND</code>, <code>Headers</code>, <code>Body</code> 표준 규격을 정의하는 상위 프로토콜.</li>
+            <li><strong>Pub/Sub 브로커 연동</strong>: <code>SUBSCRIBE /topic/chat/101</code>, <code>SEND /app/chat.send</code> 명령어로 채널 구독 및 브로드캐스팅 지원.</li>
+            <li><strong>Spring & Redis 연동</strong>: Spring Boot <code>@MessageMapping</code> 및 다중 서버 확장을 위한 <strong>Redis Pub/Sub 메시지 브로커</strong>와 손쉽게 결합.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 실제 코드 및 프레임 비교 예시 -->
+    <div class="card">
+      <h2>💻 2. WebSocket Raw Data vs STOMP 프레임 실제 예시</h2>
+      
+      <div class="grid-2">
+        <div>
+          <h4 style="color:var(--accent-amber); margin-bottom:0.4rem;">순수 WebSocket 메시지 (직접 규격 파싱 필요)</h4>
+          <pre><code>// 클라이언트가 임의로 정의한 JSON 문자열 전송
+// 서버가 if (action === 'chat') { ... } 직접 파싱
+{
+  "action": "TALK",
+  "roomId": "room_101",
+  "user": "홍길동",
+  "msg": "안녕하세요!"
+}</code></pre>
+        </div>
+
+        <div>
+          <h4 style="color:var(--accent-emerald); margin-bottom:0.4rem;">STOMP 표준 메시지 프레임 규격</h4>
+          <pre><code>SEND
 destination:/topic/chat/room101
 content-type:application/json
 
-{"sender":"홍길동", "message":"안녕하세요! 선착순 티켓 수량 남았나요?"}^@</code></pre>
+{"sender":"홍길동", "message":"안녕하세요!"}^@
+
+// 구독 프레임
+SUBSCRIBE
+id:sub-01
+destination:/topic/chat/room101^@</code></pre>
+        </div>
+      </div>
     </div>
 
+    <!-- 3. Spring Boot + Redis Pub/Sub STOMP 아키텍처 -->
     <div class="card">
-      <h2>📊 핵심 차이점 분석</h2>
-      <ul style="line-height:1.8; color:var(--text-muted); padding-left:1.2rem;">
-        <li><strong>WebSocket</strong>: TCP 3-way handshake 후 HTTP 핸드셰이크를 통해 양방향 파이프(Pipe)를 연결하는 Transport 프로토콜. 데이터의 형태(JSON, String 등)를 직접 파싱해야 함.</li>
-        <li><strong>STOMP (Simple Text Oriented Messaging Protocol)</strong>: WebSocket 통신 위에서 동작하며, <code style="color:var(--accent-amber);">SUBSCRIBE</code>, <code style="color:var(--accent-emerald);">SEND</code> 명령어로 Pub/Sub 브로커(Spring MessageBroker, Redis)와 쉽게 연동 가능.</li>
-      </ul>
+      <h2>🚀 3. Spring Boot & Redis Pub/Sub 실무 연동 구조</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
+        서버 1번에 접속한 유저 A가 채팅을 치면, Spring 백엔드가 <strong>Redis Channel(Topic)</strong>로 메시지를 발행(Publish)하고, 서버 2번에 접속한 유저 B에게 Redis가 이벤트를 전달하여 <strong>여러 대의 서버로 Scale-Out된 실시간 채팅망</strong>을 구축합니다.
+      </p>
+      <pre><code>// [Spring Boot Controller] STOMP 메시지 수신 및 Redis 브로드캐스팅
+@MessageMapping("/chat.send")
+public void sendMessage(@Payload ChatMessage message) {
+    // 1. DB에 채팅 기록 저장
+    chatService.saveMessage(message);
+    
+    // 2. Redis Topic으로 발행 ➔ 모든 서버에 분산 전파
+    redisTemplate.convertAndSend("chat-room-" + message.getRoomId(), message);
+}</code></pre>
     </div>
   </div>
 </body>

@@ -3,74 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EDA 깊이보기 & MQTT와의 비교 분석</title>
+  <title>EDA 깊이보기 & MQTT vs RabbitMQ vs Kafka 비교</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-purple: #c084fc; --accent-emerald: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-emerald: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-pink: #f472b6;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
-    .comp-box { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
-    .comp-box h3 { font-size: 1.2rem; margin-bottom: 0.75rem; }
-    ul { padding-left: 1.2rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
-    @media (max-width: 768px) { .comparison-grid { grid-template-columns: 1fr; } }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+    .card h3 { font-size: 1.15rem; margin-bottom: 0.75rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
+    .box {
+      background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem;
+    }
+    ul { padding-left: 1.2rem; color: var(--text-muted); font-size: 0.92rem; line-height: 1.65; }
+    li { margin-bottom: 0.4rem; }
+
+    .qos-card {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem;
+    }
+    .qos-badge {
+      display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px;
+      font-size: 0.8rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 0.6rem;
+    }
+    .flow-step {
+      background: rgba(30, 41, 59, 0.5); padding: 0.6rem 0.8rem;
+      border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      color: #e2e8f0; margin-top: 0.5rem; border-left: 3px solid var(--accent-blue);
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
+    @media (max-width: 800px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>📡 EDA (Event-Driven Architecture) & MQTT 비교</h1>
-      <p class="subtitle">이벤트 기반 아키텍처의 비즈니스 예시 및 IoT 프로토콜 MQTT와의 결정적 차이점</p>
+      <h1>📡 EDA (이벤트 기반 아키텍처) & MQTT vs RabbitMQ vs Kafka</h1>
+      <p class="subtitle">비동기 결합 해제(Decoupling)의 원리와 대용량 엔터프라이즈 메시징 vs 초경량 IoT 프로토콜 및 MQTT QoS 레벨 완벽 분석</p>
     </div>
 
+    <!-- 1. EDA 핵심 개념 및 결합 해제 상세 설명 -->
     <div class="card">
-      <h2>💡 EDA (이벤트 기반 아키텍처) 백엔드 예시</h2>
-      <p style="color: var(--text-muted); margin-bottom: 1rem;">
-        사용자가 상품을 주문하면, 주문 서비스는 결제나 배송 완료를 기다리지 않고 <code style="color:var(--accent-blue);">OrderPlacedEvent</code>를 발행한 뒤 즉시 200 OK 응답을 반환합니다.
+      <h2>💡 1. EDA의 비동기 결합 해제(Decoupling)와 엔터프라이즈 환경</h2>
+      <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.25rem;">
+        전통적인 MSA에서는 주문 서비스가 결제, 배송, 알림 서비스의 IP와 API 주소를 모두 알고 직접 호출해야 했습니다. 하지만 <strong>EDA(Event-Driven Architecture)</strong>에서는 서비스 간의 직접 의존 관계를 완전히 끊어냅니다(<strong>결합 해제 / Decoupling</strong>).
       </p>
-      <div style="background:#0f172a; padding:1.25rem; border-radius:10px; border:1px solid var(--border);">
-        <div style="color:var(--accent-emerald); font-weight:700; margin-bottom:0.5rem;">[ 이벤트 분산 전파 흐름 ]</div>
-        <div style="color:var(--text-muted); font-size:0.9rem;">
-          1. 🛒 <strong>주문 서비스</strong> ➔ Kafka Topic <code style="color:#fff;">orders.v1</code> 에 이벤트 발행<br>
-          2. 💳 <strong>결제 서비스</strong> ➔ 이벤트를 수신하여 PG 승인 진행<br>
-          3. 🚚 <strong>배송 서비스</strong> ➔ 이벤트를 수신하여 상품 출고 지시<br>
-          4. 📱 <strong>알림 서비스</strong> ➔ 사용자 카카오톡/SMS 알림 발송
+
+      <div class="grid-2">
+        <div class="box" style="border-top: 3px solid var(--accent-purple);">
+          <h3 style="color: var(--accent-purple);">🚀 비동기 결합 해제 (Decoupling)의 실무 가치</h3>
+          <ul>
+            <li><strong>발행자-구독자 독립성</strong>: 주문 서비스는 알림 서비스가 배포 중이거나 다운되어도 전혀 영향받지 않고 오직 브로커에 이벤트만 발행 후 정상 종료.</li>
+            <li><strong>신규 비즈니스 확장성</strong>: 추후 '추천 AI 분석 서비스'나 '마케팅 쿠폰 서비스'가 새로 추가되어도 주문 서비스 코드는 단 한 글자도 수정할 필요 없이 새 서비스가 이벤트만 구독하면 됨.</li>
+          </ul>
+        </div>
+        <div class="box" style="border-top: 3px solid var(--accent-emerald);">
+          <h3 style="color: var(--accent-emerald);">🌐 대용량 데이터 보관 & 브로드밴드 네트워크</h3>
+          <ul>
+            <li><strong>고속 브로드밴드(10Gbps+) 전제</strong>: AWS, GCP 등의 데이터센터 내부 백본망은 대역폭이 매우 넓고 안정적이므로 대용량 JSON/Protobuf/Avro 메시지를 초당 수십만 건씩 처리.</li>
+            <li><strong>데이터 영속성(Persistence)</strong>: Kafka 등은 메시지를 디스크 로그에 수일~수개월간 보관하므로 장애 복구 후 재처리(Replay) 가능.</li>
+          </ul>
         </div>
       </div>
     </div>
 
+    <!-- 2. MQTT vs RabbitMQ vs Kafka 비교 -->
     <div class="card">
-      <h2>🆚 Enterprise EDA (Kafka/RabbitMQ) vs IoT MQTT 비교</h2>
-      <div class="comparison-grid">
-        <div class="comp-box" style="border-top:3px solid var(--accent-purple);">
-          <h3 style="color: var(--accent-purple);">Kafka / RabbitMQ (Enterprise EDA)</h3>
-          <ul>
-            <li><strong>주요 목적</strong>: 마이크로서비스 간 고성능 비동기 결합 해제 & 데이터 파이프라인.</li>
-            <li><strong>특징</strong>: 대용량 데이터 보관(영속성), 순서 보장, 파티셔닝 수평 확장.</li>
-            <li><strong>네트워크 환경</strong>: 클라우드/내부 데이터센터 고속 브로드밴드 네트워크.</li>
-            <li><strong>사용처</strong>: E-Commerce 주문/결제 이벤트, 금융 정산 데이터 스트리밍.</li>
-          </ul>
+      <h2>🆚 2. MQTT vs RabbitMQ vs Kafka 핵심 차이점 분석</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
+        MQTT와 RabbitMQ는 모두 '메시지 브로커' 역할을 할 수 있지만, 탄생 목적과 네트워크 환경이 완전히 다릅니다.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>비교 항목</th>
+            <th style="color: var(--accent-blue);">MQTT</th>
+            <th style="color: var(--accent-amber);">RabbitMQ</th>
+            <th style="color: var(--accent-purple);">Apache Kafka</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">탄생 목적 & 환경</td>
+            <td><strong>초경량 IoT 기기 통신</strong><br>(불안정한 3G/LTE, 배터리/대역폭 제한)</td>
+            <td><strong>엔터프라이즈 비즈니스 메시지 큐</strong><br>(신뢰성 있는 트랜잭션 라우팅)</td>
+            <td><strong>대용량 분산 실시간 이벤트 스트리밍</strong><br>(초당 수백만 건 빅데이터 로그)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">패킷 헤더 크기</td>
+            <td><strong style="color:var(--accent-emerald);">최소 2 Byte</strong> (극도의 경량화)</td>
+            <td>수십~수백 Byte (AMQP 규격)</td>
+            <td>수십~수백 Byte (Kafka 프로토콜)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">메시지 라우팅 방식</td>
+            <td>계층형 토픽 (예: <code>factory/sensor1/temp</code>)</td>
+            <td>다양한 Exchange (Direct, Fanout, Topic, Headers)</td>
+            <td>파티션 기반 고속 스트리밍 (Key Hash 기반)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">메시지 보관 (영속성)</td>
+            <td>소비 즉시 소멸 (브로커 메모리 중심)</td>
+            <td>Consumer Ack 즉시 큐에서 삭제</td>
+            <td><strong style="color:var(--accent-purple);">디스크 분산 로그 영구 보관</strong> (Replay 가능)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">대표 사용처</td>
+            <td>스마트워치 심박수 전송, 스마트홈 센서</td>
+            <td>E-Commerce 주문 결제 대기열, 이메일 발송 큐</td>
+            <td>사용자 행동 로그 수집, 실시간 결제 스트림</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. MQTT QoS 레벨 완벽 가이드 -->
+    <div class="card">
+      <h2>📶 3. MQTT QoS (Quality of Service) 3단계 레벨 상세 분석</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6;">
+        네트워크가 불안정한 IoT 환경에서 메시지가 누락되거나 중복 전송되는 것을 제어하기 위해 MQTT는 3단계 전송 품질(QoS)을 제공합니다.
+      </p>
+
+      <div class="grid-3">
+        <div class="qos-card" style="border-top: 3px solid var(--accent-blue);">
+          <span class="qos-badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent-blue);">QoS 0 : At most once</span>
+          <h3 style="color: #fff; font-size:1.05rem;">최대 1회 전송 (Fire and Forget)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+            메시지를 딱 1번 전송하고 응답을 확인하지 않습니다. 네트워크가 끊기면 <strong>유실될 수 있습니다.</strong>
+          </p>
+          <div class="flow-step">
+            Client ➔ [PUBLISH] ➔ Broker<br>
+            (수신 확인 없음, 최고 속도)
+          </div>
+          <p style="font-size:0.8rem; color:var(--accent-blue); margin-top:0.5rem;">
+            💡 사용처: 1초마다 갱신되는 온습도 센서, 실시간 GPS 좌표 (한 번 유실되어도 다음 데이터가 곧 오므로 무방한 경우)
+          </p>
         </div>
-        <div class="comp-box" style="border-top:3px solid var(--accent-blue);">
-          <h3 style="color: var(--accent-blue);">MQTT (IoT Message Queue)</h3>
-          <ul>
-            <li><strong>주요 목적</strong>: 대역폭이 좁고 유연하지 못한 경량 센서/기기 간 메시지 전송.</li>
-            <li><strong>특징</strong>: 패킷 헤더 크기가 매우 적음(2 Byte), QoS 레벨(0, 1, 2) 지원.</li>
-            <li><strong>네트워크 환경</strong>: 3G/LTE, 스마트홈 센서 등 불안정한 저대역폭 환경.</li>
-            <li><strong>사용처</strong>: 스마트 워치 심박수 전송, 스마트 팜 센서 데이터 수집.</li>
-          </ul>
+
+        <div class="qos-card" style="border-top: 3px solid var(--accent-amber);">
+          <span class="qos-badge" style="background: rgba(251, 191, 36, 0.2); color: var(--accent-amber);">QoS 1 : At least once</span>
+          <h3 style="color: #fff; font-size:1.05rem;">최소 1회 전송 (확인 응답 수신)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+            브로커가 PUBACK(응답)을 줄 때까지 재전송합니다. <strong>유실은 없으나 중복 수신될 수 있습니다.</strong>
+          </p>
+          <div class="flow-step">
+            1. Client ➔ [PUBLISH] ➔ Broker<br>
+            2. Broker ➔ [PUBACK] ➔ Client
+          </div>
+          <p style="font-size:0.8rem; color:var(--accent-amber); margin-top:0.5rem;">
+            💡 사용처: 도어락 열림/닫힘 상태 알림 (반드시 전달되어야 하지만 중복되어도 상태 덮어쓰기가 가능한 경우)
+          </p>
+        </div>
+
+        <div class="qos-card" style="border-top: 3px solid var(--accent-emerald);">
+          <span class="qos-badge" style="background: rgba(52, 211, 153, 0.2); color: var(--accent-emerald);">QoS 2 : Exactly once</span>
+          <h3 style="color: #fff; font-size:1.05rem;">정확히 1회 전송 (4-Way 핸드셰이크)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+            4단계 핸드셰이크를 통해 <strong>유실과 중복을 완벽하게 방지</strong>합니다. 네트워크 비용이 가장 큽니다.
+          </p>
+          <div class="flow-step">
+            1. Client ➔ [PUBLISH] ➔ Broker<br>
+            2. Broker ➔ [PUBREC] ➔ Client<br>
+            3. Client ➔ [PUBREL] ➔ Broker<br>
+            4. Broker ➔ [PUBCOMP] ➔ Client
+          </div>
+          <p style="font-size:0.8rem; color:var(--accent-emerald); margin-top:0.5rem;">
+            💡 사용처: 스마트 결제 단말기, 의료 기기 원격 투약 명령 (절대 중복되거나 유실되면 안 되는 중요 명령)
+          </p>
         </div>
       </div>
     </div>

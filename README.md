@@ -25,7 +25,7 @@
 - [EDA & MQTT 비교](jargons/eda-mqtt.html)
 - [Kafka CDC (Debezium)](jargons/kafka-cdc.html)
 - [DLQ 예외 처리 프로세스](jargons/dlq.html)
-- [NoSQL 4대 구조 비교](jargons/nosql-mongodb.html)
+- [NoSQL 4대 구조 비교](jargons/nosql.html)
 - [MongoDB 실무 활용 사례](jargons/mongodb-usage.html)
 - [VectorDB & RAG Visualizer](jargons/vectordb.html)
 - [Sharding-JDBC 라우팅](jargons/sharding-jdbc.html)

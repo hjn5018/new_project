@@ -6,74 +6,215 @@
   <title>VectorDB 텍스트 임베딩 & RAG 검색 Visualizer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-purple: #c084fc; --accent-green: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    .box { background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+    
+    .rag-pipeline {
+      display: flex; align-items: stretch; justify-content: space-between;
+      background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);
+      gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;
+    }
+    .rag-step {
+      background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem; text-align: center; flex: 1; min-width: 140px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .arrow { color: var(--accent-amber); font-weight: 700; font-size: 1.2rem; align-self: center; }
+
     .vector-sim { background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
-    .search-input { width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: rgba(15,23,42,0.8); color: #fff; font-size: 1rem; margin-bottom: 1rem; }
-    .res-card { background: rgba(30, 41, 59, 0.6); border-left: 4px solid var(--accent-purple); padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; margin-bottom: 0.5rem; }
+    .search-input {
+      width: 100%; padding: 0.85rem 1.2rem; border-radius: 10px;
+      border: 1px solid var(--border); background: rgba(15, 23, 42, 0.9);
+      color: #fff; font-size: 1rem; margin-bottom: 1.25rem; outline: none;
+    }
+    .search-input:focus { border-color: var(--accent-purple); }
+    .res-card {
+      background: rgba(30, 41, 59, 0.6); border-left: 4px solid var(--accent-purple);
+      padding: 0.85rem 1.1rem; border-radius: 0 8px 8px 0; margin-bottom: 0.6rem;
+      transition: all 0.2s;
+    }
+    .res-card:hover { background: rgba(30, 41, 59, 0.9); }
+    pre {
+      background: #090d16; padding: 1rem; border-radius: 8px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
+      margin-top: 0.75rem; line-height: 1.5;
+    }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>📐 VectorDB 텍스트 임베딩 & RAG 검색 Visualizer</h1>
-      <p class="subtitle">문장의 의미(Semantic)를 고차원 벡터로 변환하여 코사인 유사도로 가장 관련성 높은 지식을 탐색하는 전용 DB</p>
+      <h1>📐 VectorDB, 임베딩, 코사인 유사도 & RAG 파이프라인</h1>
+      <p class="subtitle">자연어의 의미(Semantic)를 고차원 부동소수점 벡터로 수치화하고 유사도를 계산하여 LLM의 환각을 방지하는 원리와 구조</p>
     </div>
 
+    <!-- 1. 핵심 개념: 고차원 벡터, 코사인 유사도, pgvector vs ChromaDB -->
     <div class="card">
-      <h2>🔍 시맨틱 벡터 유사도 검색 인터랙티브 데모</h2>
-      <div class="vector-sim">
-        <label style="color:var(--text-muted); font-size:0.9rem; display:block; margin-bottom:0.4rem;">[ 질문 입력 ]</label>
-        <input type="text" class="search-input" id="qInput" value="결제 후 환불은 어떻게 하나요?" oninput="runVectorSearch()">
+      <h2>💡 1. VectorDB의 3대 핵심 기초 원리</h2>
+      <div class="grid-2">
+        <div class="box" style="border-top:3px solid var(--accent-blue);">
+          <h3 style="color:var(--accent-blue); margin-bottom:0.5rem;">🧠 고차원 임베딩 & 코사인 유사도</h3>
+          <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.6;">
+            • <strong>고차원 벡터(High-dimensional Vector)</strong>: 텍스트 문장을 인공지능 모델(text-embedding-3)을 통과시켜 1,536개의 실수 배열(<code>[0.021, -0.045, ...]</code>)로 변환한 것입니다.<br>
+            • <strong>코사인 유사도(Cosine Similarity)</strong>: 단어의 단순 일치가 아닌 <strong>두 벡터 간의 사잇각(방향)</strong>을 계산하여, "강아지"와 "댕댕이"처럼 글자가 달라도 의미가 같으면 0.95 이상의 높은 유사도를 도출합니다.
+          </p>
+        </div>
 
-        <h4 style="color:var(--accent-purple); margin-bottom:0.75rem;">[ pgvector / ChromaDB 코사인 유사도 탑 3 결과 ]</h4>
+        <div class="box" style="border-top:3px solid var(--accent-purple);">
+          <h3 style="color:var(--accent-purple); margin-bottom:0.5rem;">🗄️ pgvector vs ChromaDB 차이</h3>
+          <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.6;">
+            • <strong>pgvector (PostgreSQL 확장)</strong>: 기존 RDBMS에 벡터 인덱스(HNSW / IVFFlat)를 추가하여 일반 SQL 테이블(회원, 주문)과 벡터 검색을 단일 DB 트랜잭션으로 JOIN 가능.<br>
+            • <strong>ChromaDB</strong>: 파이썬 기반 AI 개발 및 프로토타입에 매우 가볍게 연동 가능한 오픈소스 임베딩 전용 데이터베이스.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. RAG 파이프라인 시각화 5단계 -->
+    <div class="card">
+      <h2>📊 2. RAG (검색 증강 생성) 5단계 연동 시각 파이프라인</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:1rem; line-height:1.6;">
+        LLM은 회사의 최신 사내 규정이나 비밀 문서를 학습하지 못했습니다. RAG는 사용자의 질문과 가장 유사한 사내 문서를 VectorDB에서 먼저 찾아서 프롬프트에 주입(Injection)해 답변을 생성시킵니다.
+      </p>
+
+      <div class="rag-pipeline">
+        <div class="rag-step" style="border-top:3px solid var(--accent-blue);">
+          <strong style="color:var(--accent-blue);">1. 사용자 질문</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">"환불 규정이 어떻게 되나요?"</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="rag-step" style="border-top:3px solid var(--accent-amber);">
+          <strong style="color:var(--accent-amber);">2. 임베딩 모델</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">1536차원 벡터 생성<br><code>[0.12, -0.84, ...]</code></span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="rag-step" style="border-top:3px solid var(--accent-purple);">
+          <strong style="color:var(--accent-purple);">3. VectorDB 검색</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">pgvector 코사인 거리<br>Top-2 유사 문서 조각 추출</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="rag-step" style="border-top:3px solid var(--accent-green);">
+          <strong style="color:var(--accent-green);">4. 프롬프트 결합</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">문맥(Context) + 질문<br>합쳐서 LLM 전송</span>
+        </div>
+        <span class="arrow">➔</span>
+        <div class="rag-step" style="border-top:3px solid #f472b6;">
+          <strong style="color:#f472b6;">5. 정확한 AI 답변</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">환각(Hallucination) 없는<br>100% 신뢰성 있는 응답</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 실시간 인터랙티브 시맨틱 검색 시뮬레이터 -->
+    <div class="card">
+      <h2>🔍 3. pgvector / ChromaDB 코사인 유사도 검색 인터랙티브 데모</h2>
+      <div class="vector-sim">
+        <label style="color:var(--text-muted); font-size:0.9rem; display:block; margin-bottom:0.5rem;">[ 사용자 질문을 입력하거나 아래 예시 키워드를 테스트해보세요 ]</label>
+        <input type="text" class="search-input" id="qInput" value="결제 취소하고 돈 언제 들어오나요?" oninput="runVectorSearch()">
+
+        <h4 style="color:var(--accent-purple); margin-bottom:0.75rem; font-size:1.05rem;">[ VectorDB 코사인 유사도 랭킹 결과 ]</h4>
         <div id="resultsGrid">
           <!-- Dynamic -->
         </div>
       </div>
     </div>
 
+    <!-- 4. pgvector 실제 SQL 쿼리 예시 -->
     <div class="card">
-      <h2>💡 RAG (Retrieval-Augmented Generation) 연동 구조</h2>
-      <p style="color:var(--text-muted); line-height:1.7;">
-        1. 사용자 질문 ➔ Embedding Model (text-embedding-3-small) ➔ 1536차원 벡터 변환.<br>
-        2. VectorDB (pgvector) ➔ Cosine Distance <code style="color:var(--accent-blue);">&lt;-&gt;</code> 연산자로 가장 유사도 높은 FAQ 문맥 2건 추출.<br>
-        3. LLM (Azure OpenAI) ➔ 추출된 FAQ 문맥을 프롬프트에 덧붙여 환각(Hallucination) 없는 정확한 답변 생성.
-      </p>
+      <h2>💻 4. pgvector 실제 PostgreSQL 쿼리 문법</h2>
+      <pre><code>-- pgvector 확장 활성화 및 1536차원 벡터 컬럼 테이블 생성
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE document_embeddings (
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    embedding vector(1536) -- OpenAI text-embedding-3-small 벡터
+);
+
+-- 사용자 질문 벡터와 가장 가까운 코사인 유사도 Top 3 문서 고속 검색 (<=> 연산자)
+SELECT id, content, 1 - (embedding <=> '[0.012, -0.043, ...]') AS cosine_similarity
+FROM document_embeddings
+ORDER BY embedding <=> '[0.012, -0.043, ...]' ASC
+LIMIT 3;</code></pre>
     </div>
   </div>
 
   <script>
-    const docs = [
-      { text: "FAQ #101: 결제 취소 및 환불은 마이페이지 > 주문내역에서 신청 후 3일 이내 승인됩니다.", score: 0.94 },
-      { text: "FAQ #102: 신용카드 승인 취소 시 카드사 정산에 따라 2~3일 소요됩니다.", score: 0.88 },
-      { text: "FAQ #205: 회원 탈퇴는 프로필 설정 메뉴 하단에서 진행하실 수 있습니다.", score: 0.21 }
+    const knowledgeBase = [
+      { text: "FAQ #101: 결제 취소 및 환불은 마이페이지 > 주문내역에서 신청 후 영업일 기준 3일 이내 승인 및 계좌 입금됩니다.", keywords: ["환불", "취소", "돈", "결제", "입금", "돌려"] },
+      { text: "FAQ #102: 신용카드 승인 취소 시 카드사 정산 주기에 따라 영업일 기준 2~3일 소요됩니다.", keywords: ["카드", "신용카드", "취소", "정산", "승인"] },
+      { text: "FAQ #103: 새벽 배송은 전날 밤 11시 이전 주문 건에 한하여 익일 오전 7시까지 도착합니다.", keywords: ["배송", "새벽", "도착", "언제", "택배"] },
+      { text: "FAQ #205: 회원 탈퇴는 프로필 설정 메뉴 하단에서 진행하실 수 있으며 적립금은 소멸됩니다.", keywords: ["탈퇴", "회원", "계정", "삭제"] }
     ];
 
     function runVectorSearch() {
+      const q = document.getElementById('qInput').value.toLowerCase();
       const grid = document.getElementById('resultsGrid');
       grid.innerHTML = '';
-      docs.forEach((d, idx) => {
+
+      const scored = knowledgeBase.map(item => {
+        let matchCount = item.keywords.filter(k => q.includes(k)).length;
+        let sim = 0.25 + (matchCount * 0.24) + (Math.random() * 0.05);
+        if (sim > 0.98) sim = 0.98;
+        return { text: item.text, score: sim.toFixed(2) };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+
+      scored.forEach((d, idx) => {
+        const color = d.score > 0.7 ? 'var(--accent-green)' : (d.score > 0.4 ? 'var(--accent-amber)' : 'var(--text-muted)');
         grid.innerHTML += `
           <div class="res-card">
             <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
               <span style="font-weight:600; color:#fff;">문서 조각 #${idx+1}</span>
-              <span style="color:var(--accent-green); font-weight:700; font-family:'JetBrains Mono';">유사도: ${d.score}</span>
+              <span style="color:${color}; font-weight:700; font-family:'JetBrains Mono'; font-size:0.95rem;">코사인 유사도: ${d.score}</span>
             </div>
-            <div style="color:var(--text-muted); font-size:0.9rem;">${d.text}</div>
+            <div style="color:var(--text-muted); font-size:0.9rem; line-height:1.5;">${d.text}</div>
           </div>
         `;
       });

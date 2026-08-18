@@ -139,7 +139,7 @@
         <a href="jargons/eda-mqtt.html" class="topic-btn">📡 EDA & MQTT 비교 <span>➔</span></a>
         <a href="jargons/kafka-cdc.html" class="topic-btn">🔄 Kafka CDC & Debezium <span>➔</span></a>
         <a href="jargons/dlq.html" class="topic-btn">💀 DLQ 예외 처리 시뮬레이터 <span>➔</span></a>
-        <a href="jargons/nosql-mongodb.html" class="topic-btn">🍃 NoSQL 4대 구조 비교 <span>➔</span></a>
+        <a href="jargons/nosql.html" class="topic-btn">🍃 NoSQL 4대 구조 비교 <span>➔</span></a>
         <a href="jargons/mongodb-usage.html" class="topic-btn">🍃 MongoDB 실무 사용 사례 <span>➔</span></a>
         <a href="jargons/vectordb.html" class="topic-btn">📐 VectorDB & RAG Visualizer <span>➔</span></a>
         <a href="jargons/sharding-jdbc.html" class="topic-btn">🗄️ Sharding-JDBC 라우터 <span>➔</span></a>
@@ -188,8 +188,8 @@
       { term: "EDA (Event-Driven)", cat: "아키텍처", def: "이벤트를 발행/구독 방식으로 전달하여 결합도를 낮추는 구조.", usage: "Kafka 이벤트 수집 및 MQTT 비교.", link: "jargons/eda-mqtt.html" },
       { term: "Kafka CDC", cat: "DB", def: "DB 트랜잭션 로그를 실시간 감지하여 타겟 시스템에 동기화.", usage: "Debezium 파이프라인.", link: "jargons/kafka-cdc.html" },
       { term: "DLQ (Dead Letter Queue)", cat: "동시성", def: "처리 실패 메시지를 격리 보관하는 전용 큐.", usage: "재시도 및 Redrive 수동 재처리.", link: "jargons/dlq.html" },
-      { term: "NoSQL & MongoDB", cat: "DB", def: "가변 스키마와 수평 확장성을 제공하는 비관계형 데이터베이스.", usage: "JSON 페이로드 및 4대 구조 비교.", link: "jargons/nosql-mongodb.html" },
-      { term: "MongoDB 실무 사례", cat: "DB", def: "비정형 결제 웹훅 및 AI 대화 이력 적재.", usage: "Aggregation Pipeline 연산.", link: "jargons/mongodb-usage.html" },
+      { term: "NoSQL 4대 데이터 모델", cat: "DB", def: "Document, Key-Value, Wide-Column, Graph 4대 비관계형 데이터베이스 구조.", usage: "가변 스키마 및 수평 분산.", link: "jargons/nosql.html" },
+      { term: "MongoDB 실무 사례", cat: "DB", def: "비정형 결제 웹훅 및 AI 챗봇 멀티턴 대화 이력 적재.", usage: "Aggregation Pipeline 연산.", link: "jargons/mongodb-usage.html" },
       { term: "VectorDB (pgvector)", cat: "DB", def: "임베딩 벡터 간 유사도를 고속 검색하는 전용 DB.", usage: "LLM RAG 시맨틱 검색.", link: "jargons/vectordb.html" },
       { term: "Sharding JDBC", cat: "DB", def: "데이터를 여러 DB 노드에 수평 분할 저장/조회.", usage: "Sharding Key 기반 쿼리 라우팅.", link: "jargons/sharding-jdbc.html" },
       { term: "JPA vs QueryDSL", cat: "DB", def: "Java ORM 표준 및 타입 안전 컴파일 타임 쿼리 빌더.", usage: "동적 쿼리 나란히 코드 비교.", link: "jargons/jpa-querydsl.html" },

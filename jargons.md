@@ -16,7 +16,7 @@
 | **4** | **EDA & MQTT 비교** | [jargons/eda-mqtt.html](jargons/eda-mqtt.html) | Enterprise Kafka 분산 로그 vs IoT 경량 MQTT Pub/Sub 비교 |
 | **5** | **Kafka CDC** | [jargons/kafka-cdc.html](jargons/kafka-cdc.html) | Debezium + Kafka Connect 트랜잭션 로그 실시간 동기화 |
 | **6** | **DLQ 예외 처리 프로세스** | [jargons/dlq.html](jargons/dlq.html) | Retry Backoff 횟수 초과 시 DLX 라우팅 및 Redrive 수동 재처리 |
-| **7** | **NoSQL 4대 데이터 모델** | [jargons/nosql-mongodb.html](jargons/nosql-mongodb.html) | Document, Key-Value, Wide-Column, Graph 특징 매트릭스 |
+| **7** | **NoSQL 4대 데이터 모델** | [jargons/nosql.html](jargons/nosql.html) | Document, Key-Value, Wide-Column, Graph 특징 매트릭스 & 실무 예시 |
 | **8** | **MongoDB 실무 사용 사례** | [jargons/mongodb-usage.html](jargons/mongodb-usage.html) | JSON 결제 페이로드 & Aggregation Pipeline 연산 실습 |
 | **9** | **VectorDB & RAG** | [jargons/vectordb.html](jargons/vectordb.html) | 1536차원 임베딩 공간 Cosine 유사도 시맨틱 검색 Visualizer |
 | **10** | **Sharding-JDBC** | [jargons/sharding-jdbc.html](jargons/sharding-jdbc.html) | Sharding Key 기준 DB 수평 분할 라우터 시뮬레이터 & Spring 코드 |

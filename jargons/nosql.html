@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoSQL 데이터베이스 4대 데이터 모델 심층 비교</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-green: #34d399;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
+    .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+    
+    .nosql-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem; margin-top: 1rem;
+    }
+    .type-card {
+      background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .type-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #fff; }
+    .tag {
+      display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px;
+      font-size: 0.75rem; font-weight: 700; margin-bottom: 0.75rem; font-family: 'JetBrains Mono', monospace;
+    }
+    pre {
+      background: #090d16; padding: 1rem; border-radius: 8px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;
+      margin-top: 0.75rem; line-height: 1.5;
+    }
+    .example-section { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
+    <div class="header-box">
+      <h1>🍃 NoSQL 4대 데이터 모델 심층 비교 및 실무 예시</h1>
+      <p class="subtitle">문서(Document), 키-값(Key-Value), 와이드 컬럼(Wide-Column), 그래프(Graph) 데이터베이스의 아키텍처 및 실제 데이터 모델링 예시</p>
+    </div>
+
+    <!-- 4대 NoSQL 매트릭스 카드 -->
+    <div class="card">
+      <h2>📊 NoSQL 4대 유형별 특징 및 구조 매트릭스</h2>
+      <div class="nosql-grid">
+        <div class="type-card" style="border-top:3px solid var(--accent-green);">
+          <div>
+            <span class="tag" style="background:rgba(52,211,153,0.2); color:var(--accent-green);">1. Document Store</span>
+            <h3>MongoDB / Couchbase</h3>
+            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
+              JSON/BSON 형태의 가변 구조 문서를 통째로 저장. 중첩 객체와 배열 지원이 뛰어나며 가장 범용적인 RDBMS 대안.
+            </p>
+          </div>
+        </div>
+
+        <div class="type-card" style="border-top:3px solid var(--accent-blue);">
+          <div>
+            <span class="tag" style="background:rgba(56,189,248,0.2); color:var(--accent-blue);">2. Key-Value Store</span>
+            <h3>Redis / DynamoDB</h3>
+            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
+              Unique Key와 Value를 1:1 매핑. 극도의 초고속 인메모리 읽기/쓰기 성능을 제공하며 세션 및 캐싱에 최적화.
+            </p>
+          </div>
+        </div>
+
+        <div class="type-card" style="border-top:3px solid var(--accent-purple);">
+          <div>
+            <span class="tag" style="background:rgba(192,132,252,0.2); color:var(--accent-purple);">3. Wide-Column Store</span>
+            <h3>Cassandra / ScyllaDB</h3>
+            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
+              행(Row)마다 동적인 컬럼 집합을 가지며, 초당 수십만 건의 대규모 분산 쓰기 및 시계열(Time-series) 데이터에 특화.
+            </p>
+          </div>
+        </div>
+
+        <div class="type-card" style="border-top:3px solid var(--accent-amber);">
+          <div>
+            <span class="tag" style="background:rgba(251,191,36,0.2); color:var(--accent-amber);">4. Graph Database</span>
+            <h3>Neo4j / Amazon Neptune</h3>
+            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
+              노드(Node)와 간선(Edge/Relation) 형태로 데이터를 저장하여 수직/수평 다단계 관계 탐색을 O(1)에 가깝게 해결.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4대 구조별 실무 데이터 모델 예시 -->
+    <div class="card">
+      <h2>💡 NoSQL 4대 모델별 실제 데이터 구조 & 쿼리 예시</h2>
+
+      <div class="example-section" style="border-top:none; padding-top:0;">
+        <h3 style="color:var(--accent-green);">1. Document Store 예시 (MongoDB 전자상거래 상품 스펙)</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem;">의류, 전자기기 등 카테고리마다 속성이 완전히 달라도 테이블 ALTER 없이 유연하게 적재 가능합니다.</p>
+        <pre><code>// MongoDB Document (JSON / BSON)
+{
+  "_id": ObjectId("64f8a1..."),
+  "name": "맥북 프로 16인치",
+  "category": "LAPTOP",
+  "price": 3690000,
+  "specs": {
+    "chip": "M3 Max",
+    "ram_gb": 64,
+    "ssd_tb": 1
+  },
+  "tags": ["apple", "macbook", "developer"]
+}</code></pre>
+      </div>
+
+      <div class="example-section">
+        <h3 style="color:var(--accent-blue);">2. Key-Value Store 예시 (Redis 로그인 세션 & TTL 캐시)</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem;">사용자 토큰 키로 회원 정보를 0.1ms 내에 조회하고 TTL로 자동 만료 처리합니다.</p>
+        <pre><code>// Redis SET / GET 명령
+SET user:session:tk_99a8b1 "{\"userId\": 101, \"role\": \"ADMIN\"}" EX 3600
+GET user:session:tk_99a8b1 ➔ {"userId": 101, "role": "ADMIN"}</code></pre>
+      </div>
+
+      <div class="example-section">
+        <h3 style="color:var(--accent-purple);">3. Wide-Column 예시 (Cassandra IoT 센서 시계열 로그)</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem;">장비 ID를 파티션 키로 삼고, 타임스탬프를 클러스터링 키로 삼아 초당 수만 건의 센서 데이터를 시계열로 고속 적재합니다.</p>
+        <pre><code>-- Cassandra CQL (Table & Data Insertion)
+CREATE TABLE factory_iot_metrics (
+    sensor_id text,
+    recorded_at timestamp,
+    temperature double,
+    humidity double,
+    PRIMARY KEY (sensor_id, recorded_at)
+) WITH CLUSTERING ORDER BY (recorded_at DESC);</code></pre>
+      </div>
+
+      <div class="example-section">
+        <h3 style="color:var(--accent-amber);">4. Graph DB 예시 (Neo4j 소셜 친구 추천 & 이상 거래 탐지)</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem;">"홍길동의 친구들이 가장 많이 팔로우한 사람 5명 추천" 쿼리를 직관적인 Cypher 문법으로 고속 조회합니다.</p>
+        <pre><code>// Neo4j Cypher Query (친구의 친구 추천)
+MATCH (u:User {name: '홍길동'})-[:FRIEND]->(f:User)-[:FRIEND]->(fof:User)
+WHERE NOT (u)-[:FRIEND]->(fof) AND u <> fof
+RETURN fof.name AS recommendation, count(*) AS mutual_friends
+ORDER BY mutual_friends DESC LIMIT 5;</code></pre>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

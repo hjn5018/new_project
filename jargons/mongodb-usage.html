@@ -3,59 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MongoDB 실제 백엔드 활용 예시 & Aggregation</title>
+  <title>MongoDB 실제 백엔드 활용 예시 & AI 멀티턴 대화 이력</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-green: #34d399; --accent-amber: #fbbf24; --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-green: #34d399;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    pre { background: #0f172a; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent-green); }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 0.75rem; }
+    pre {
+      background: #0f172a; padding: 1.25rem; border-radius: 10px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #34d399;
+      line-height: 1.55;
+    }
+    .badge {
+      display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px;
+      font-size: 0.8rem; font-weight: 700; background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🍃 MongoDB 실제 백엔드 사용 예시 & Aggregation</h1>
-      <p class="subtitle">E-Commerce 주문 페이로드 적재 및 AI 챗봇 멀티턴 대화 이력 보관 실무 사례</p>
+      <h1>🍃 MongoDB 실제 백엔드 사용 예시 & AI 대화 이력 보관</h1>
+      <p class="subtitle">비정형 결제 웹훅 로그, AI 챗봇 멀티턴 대화 세션 보관, 그리고 집계 파이프라인(Aggregation Pipeline) 실무 사례</p>
     </div>
 
+    <!-- 사례 1: 비정형 결제 웹훅 페이로드 -->
     <div class="card">
-      <h2>1. 비정형 E-Commerce 결제 이력 JSON 문서 저장</h2>
-      <p style="color:var(--text-muted); margin-bottom:0.75rem;">PG사별로 상이한 결제 결과 웹훅 객체를 별도 테이블 변경 없이 통째로 보관할 수 있습니다.</p>
+      <span class="badge">실무 사례 1</span>
+      <h2>💳 PG사별 비정형 결제 웹훅(Webhook) 원본 적재</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:0.75rem; line-height:1.6;">
+        토스페이먼츠, 카카오페이, 이니시스 등 PG사마다 응답 필드와 데이터 구조가 다릅니다. RDBMS 테이블을 수시로 변경하지 않고 JSON 문서를 원본 그대로 저장하여 결제 검증 및 사후 감사(Audit)에 활용합니다.
+      </p>
       <pre><code>{
   "_id": ObjectId("64f8a1e2b3c4d5e6f7a8b9c0"),
   "orderId": "ORD-20260811-99",
-  "pgProvider": "PORTONE_TOSS",
+  "pgProvider": "TOSS_PAYMENTS",
   "amount": 49000,
+  "status": "PAID",
   "rawWebhookPayload": {
-    "imp_uid": "imp_77182910",
-    "card_name": "현대카드",
-    "card_quota": 3,
-    "receipt_url": "https://toss.im/receipt/77182910"
+    "paymentKey": "toss_pk_5918230182",
+    "method": "카드",
+    "card": {
+      "company": "현대카드",
+      "number": "433012******1234",
+      "installmentPlanMonths": 0,
+      "isInterestFree": false
+    },
+    "receipt": { "url": "https://dashboard.tosspayments.com/receipt/..." }
   },
-  "createdAt": ISODate("2026-08-11T04:30:00Z")
+  "receivedAt": ISODate("2026-08-11T04:30:00Z")
 }</code></pre>
     </div>
 
+    <!-- 사례 2: AI 챗봇 멀티턴 대화 이력 보관 (신규 추가) -->
     <div class="card">
-      <h2>2. MongoDB Aggregation Pipeline vs SQL JOIN</h2>
-      <p style="color:var(--text-muted); margin-bottom:0.75rem;"><code style="color:var(--accent-blue);">$match</code> ➔ <code style="color:var(--accent-amber);">$group</code> 파이프라인 연산으로 주문 총액 통계를 고속 계산합니다.</p>
+      <span class="badge" style="background:rgba(192,132,252,0.15); color:var(--accent-purple);">실무 사례 2 (핵심)</span>
+      <h2>🤖 AI 챗봇 멀티턴(Multi-turn) 대화 세션 이력 보관</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:0.75rem; line-height:1.6;">
+        LLM과의 대화는 사용자의 발화와 AI의 응답이 순차적으로 누적되는 <strong>가변 길이 배열(Array of Messages)</strong> 구조입니다. 세션 1개 Document 안에 최근 대화 이력을 포함시키고, <code>$slice</code> 쿼리를 통해 최근 5턴(10개 메시지)만 슬라이싱하여 LLM Context Window 프롬프트로 고속 주입합니다.
+      </p>
+      <pre><code>// 1. MongoDB Session Document 구조 (BSON)
+{
+  "_id": ObjectId("66c1f92a10b..."),
+  "sessionId": "chat_session_user_8821",
+  "userId": 8821,
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "당신은 쇼핑몰 결제/환불 전문 친절한 상담원입니다.",
+      "timestamp": ISODate("2026-08-18T01:00:00Z")
+    },
+    {
+      "role": "user",
+      "content": "어제 주문한 티셔츠 배송이 언제 시작되나요?",
+      "tokens": 18,
+      "timestamp": ISODate("2026-08-18T01:00:10Z")
+    },
+    {
+      "role": "assistant",
+      "content": "주문번호 ORD-20260817-01은 오늘 오후 3시 출고 예정입니다.",
+      "tokens": 24,
+      "timestamp": ISODate("2026-08-18T01:00:12Z")
+    }
+  ],
+  "totalTokensUsed": 42,
+  "updatedAt": ISODate("2026-08-18T01:00:12Z")
+}
+
+// -----------------------------------------------------------------
+// 2. 최근 5개 메시지만 슬라이싱 조회 (Node.js / Mongoose 쿼리)
+const session = await ChatSession.findOne(
+  { sessionId: "chat_session_user_8821" },
+  { messages: { $slice: -5 } } // 끝에서부터 5개 메시지만 빠르게 가져옴!
+);</code></pre>
+    </div>
+
+    <!-- 사례 3: Aggregation Pipeline -->
+    <div class="card">
+      <span class="badge" style="background:rgba(251,191,36,0.15); color:var(--accent-amber);">실무 사례 3</span>
+      <h2>📊 MongoDB Aggregation Pipeline (집계 파이프라인)</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:0.75rem; line-height:1.6;">
+        SQL의 <code>WHERE ➔ GROUP BY ➔ ORDER BY</code> 처럼, 파이프라인 단계(<code>$match ➔ $group ➔ $sort</code>)를 거치며 대용량 주문 데이터에서 VIP 유저별 총 결제 금액을 연산합니다.
+      </p>
       <pre><code>db.orders.aggregate([
+  // 1단계: 결제 완료된 건만 필터링 (SQL WHERE status = 'PAID')
   { $match: { status: "PAID" } },
-  { $group: { _id: "$userId", totalSpent: { $sum: "$amount" }, totalOrders: { $sum: 1 } } },
-  { $sort: { totalSpent: -1 } }
+  
+  // 2단계: 유저별로 그룹핑하여 총 결제액 및 주문 건수 합산 (SQL GROUP BY userId)
+  { 
+    $group: { 
+      _id: "$userId", 
+      totalSpent: { $sum: "$amount" }, 
+      orderCount: { $sum: 1 } 
+    } 
+  },
+  
+  // 3단계: 총 결제액 기준 내림차순 정렬 (SQL ORDER BY totalSpent DESC)
+  { $sort: { totalSpent: -1 } },
+  
+  // 4단계: 상위 10명 추출 (SQL LIMIT 10)
+  { $limit: 10 }
 ]);</code></pre>
     </div>
   </div>

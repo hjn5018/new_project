@@ -3,25 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JPA vs QueryDSL 공통점과 차이점 완벽 비교</title>
+  <title>JPA vs QueryDSL 컴파일 타임 안전성 & 코드 비교</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16; --card-bg: rgba(22, 30, 46, 0.85); --border: rgba(255, 255, 255, 0.1);
-      --accent-blue: #38bdf8; --accent-amber: #fbbf24; --accent-green: #34d399; --text: #f1f5f9; --text-muted: #94a3b8;
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #38bdf8;
+      --accent-amber: #fbbf24;
+      --accent-green: #34d399;
+      --accent-red: #f87171;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .back-nav {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent-blue); text-decoration: none; font-weight: 500;
+      margin-bottom: 1.5rem; transition: transform 0.2s;
+    }
+    .back-nav:hover { transform: translateX(-4px); }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
-    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
-    .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
-    pre { background: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+
+    .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    pre {
+      background: #0f172a; padding: 1.2rem; border-radius: 10px;
+      border: 1px solid var(--border); overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
+      line-height: 1.55;
+    }
+    .typo-highlight {
+      background: rgba(248, 113, 113, 0.35); color: #ff8080;
+      font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;
+      border-bottom: 2px wavy #f87171;
+    }
+    .safe-highlight {
+      background: rgba(52, 211, 153, 0.2); color: var(--accent-green);
+      font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px;
+    }
+    .alert-box {
+      padding: 1rem 1.25rem; border-radius: 10px; margin: 1rem 0;
+      font-size: 0.92rem; line-height: 1.6;
+    }
+    .alert-danger { background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; }
+    .alert-safe { background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #a7f3d0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
     @media (max-width: 800px) { .code-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -29,64 +81,97 @@
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>⚔️ JPA vs QueryDSL 공통점과 차이점 분석</h1>
-      <p class="subtitle">자바 ORM 표준(JPA/JPQL)의 단점을 보완하여 타입-세이프(Type-Safe) 컴파일 타임 동적 쿼리를 가능하게 하는 관계</p>
+      <h1>⚔️ JPA vs QueryDSL 공통점과 차이점 & 컴파일 타임 검증</h1>
+      <p class="subtitle">문자열 쿼리(JPQL)의 런타임 장애 위험과 QueryDSL Q-Class 기반 Type-Safe 컴파일 타임 문법 검사의 원리 비교</p>
     </div>
 
+    <!-- 1. 오타 발생 시 컴파일 통과 vs 컴파일 에러 비교 -->
     <div class="card">
-      <h2>💡 JPA(JPQL) vs QueryDSL 나란히 코드 비교</h2>
+      <h2>🚨 1. 문자열 쿼리(JPA)의 치명적 함정과 QueryDSL의 컴파일 검증</h2>
+      
       <div class="code-grid">
+        <!-- JPA JPQL -->
         <div>
-          <h4 style="color:var(--accent-amber); margin-bottom:0.5rem;">JPA / JPQL (문자열 쿼리)</h4>
-          <pre><code>// ⚠️ 오타가 있어도 컴파일 통과 (런타임 에러)
-String jpql = "select m from Member m " +
-  "where m.username = :name and m.age > :age";
+          <div class="alert-box alert-danger" style="margin-top:0;">
+            <strong>❌ JPA / JPQL : 단순 문자열(String) 방식</strong><br>
+            자바 컴파일러는 큰따옴표(<code>"..."</code>) 안의 내용을 검사하지 못합니다!
+          </div>
+          <pre><code>// ⚠️ 테이블명, 컬럼명, 문법에 오타가 있어도
+// Java 컴파일러는 단순 String으로 인식하여 【컴파일 통과 (빌드 성공)】
+String jpql = "selecct m from <span class="typo-highlight">Memmbeerr</span> m " +
+              "where m.<span class="typo-highlight">userrname</span> = :name";
 
+// 💥 실제 사용자가 결제/조회 버튼을 누르는 순간!
+// 서버에서 런타임 500 에러(QuerySyntaxException) 폭발!
 List&lt;Member&gt; result = em.createQuery(jpql, Member.class)
-  .setParameter("name", "홍길동")
-  .setParameter("age", 20)
-  .getResultList();</code></pre>
+    .setParameter("name", "홍길동")
+    .getResultList();</code></pre>
         </div>
+
+        <!-- QueryDSL -->
         <div>
-          <h4 style="color:var(--accent-green); margin-bottom:0.5rem;">QueryDSL (타입-세이프 자바 코드)</h4>
-          <pre><code>// ✅ 컴파일 타임 문법 검사 & 자동완성 지원
+          <div class="alert-box alert-safe" style="margin-top:0;">
+            <strong>✅ QueryDSL : 자바 객체 & 메서드 체이닝</strong><br>
+            엔티티를 스캔하여 생성된 <code>QMember</code> 클래스의 필드를 직접 참조합니다!
+          </div>
+          <pre><code>// ✅ Annotation Processor가 생성한 Q클래스 사용
 QMember m = QMember.member;
 
+// 만약 m.<span class="typo-highlight">userrname</span> 처럼 오타를 치면?
+// 🔴 IDE에서 즉시 빨간 줄 표시 + 컴파일 에러(Cannot resolve symbol)!
+// 빌드 자체가 중단되므로 버그가 배포될 위험 0%!
 List&lt;Member&gt; result = queryFactory
-  .selectFrom(m)
-  .where(
-    m.username.eq("홍길동"),
-    m.age.gt(20)
-  )
-  .fetch();</code></pre>
+    .selectFrom(m)
+    .where(
+        m.<span class="safe-highlight">username</span>.eq("홍길동"),
+        m.<span class="safe-highlight">age</span>.gt(20)
+    )
+    .fetch();</code></pre>
         </div>
       </div>
     </div>
 
+    <!-- 2. QueryDSL Q-Class 동작 원리 상세 설명 -->
     <div class="card">
-      <h2>📊 핵심 공통점 및 차이점 비교표</h2>
-      <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
+      <h2>⚙️ 2. QueryDSL의 컴파일 타임 검사는 어떻게 가능한가요?</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.7;">
+        1. 개발자가 <code>@Entity public class Member { private String username; }</code> 엔티티를 작성합니다.<br>
+        2. 프로젝트 빌드(Build) 시 QueryDSL APT(Annotation Processing Tool) 플러그인이 동작하여 <code>QMember.java</code>라는 자바 메타모델 클래스를 자동 생성합니다.<br>
+        3. <code>QMember.java</code> 안에는 <code>public final StringPath username = createString("username");</code> 같은 실제 자바 객체 필드가 들어있습니다.<br>
+        4. 개발자가 코드를 칠 때 자바 컴파일러는 일반 자바 변수/메서드 유효성을 검사하듯이 <strong>오타와 타입 불일치(숫자 필드에 문자열 비교 등)를 100% 컴파일 단계에서 검증</strong>합니다.
+      </p>
+    </div>
+
+    <!-- 3. 핵심 공통점 및 차이점 비교표 -->
+    <div class="card">
+      <h2>📊 3. JPA(Spring Data JPA) vs QueryDSL 비교표</h2>
+      <table>
         <thead>
-          <tr style="border-bottom:1px solid var(--border); text-align:left;">
-            <th style="padding:0.6rem; color:var(--text-muted);">항목</th>
-            <th style="padding:0.6rem; color:var(--accent-amber);">JPA (Spring Data JPA)</th>
-            <th style="padding:0.6rem; color:var(--accent-green);">QueryDSL</th>
+          <tr>
+            <th>비교 항목</th>
+            <th style="color:var(--accent-amber);">JPA / Spring Data JPA</th>
+            <th style="color:var(--accent-green);">QueryDSL</th>
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.6rem; font-weight:600;">관계</td>
-            <td style="padding:0.6rem;" colspan="2">QueryDSL은 JPA 위에서 동작하는 빌더 프레임워크 (대체재가 아닌 보완재)</td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.6rem; font-weight:600;">동적 쿼리</td>
-            <td style="padding:0.6rem; color:var(--accent-amber);">문자열 더하기로 조합이 복잡함</td>
-            <td style="padding:0.6rem; color:var(--accent-green);">BooleanBuilder 및 BooleanExpression 메서드 재사용 가능</td>
+          <tr>
+            <td style="font-weight:600;">관계 및 역할</td>
+            <td colspan="2">QueryDSL은 JPA(Hibernate/EntityManager) 위에서 동작하는 SQL 빌더 라이브러리 (대체재가 아닌 상호 보완재)</td>
           </tr>
           <tr>
-            <td style="padding:0.6rem; font-weight:600;">권장 사용처</td>
-            <td style="padding:0.6rem;">단순 CRUD (`findById`, `save`)</td>
-            <td style="padding:0.6rem;">복잡한 조건 검색, 다중 JOIN, 통계 쿼리</td>
+            <td style="font-weight:600;">문법 오류 발견 시점</td>
+            <td style="color:var(--accent-red); font-weight:600;">런타임 (사용자가 API 호출할 때)</td>
+            <td style="color:var(--accent-green); font-weight:600;">컴파일 타임 (코드 작성 및 빌드 시점)</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">동적 쿼리 작성</td>
+            <td>문자열 <code>if (name != null) sql += " AND..."</code> 조합으로 가독성 최악</td>
+            <td style="color:var(--accent-green);"><code>BooleanBuilder</code> 또는 <code>usernameEq()</code> 메서드로 깔끔하게 분리 및 재사용 가능</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">실무 권장 조합</td>
+            <td>단순 CRUD (`findById`, `save`, `delete`)</td>
+            <td>복잡한 조건 검색, 다중 JOIN 페이징, 통계 대시보드 쿼리</td>
           </tr>
         </tbody>
       </table>
