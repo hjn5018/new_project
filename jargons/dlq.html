@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DLQ (Dead Letter Queue) 실패 격리 시뮬레이터</title>
+  <title>DLQ (Dead Letter Queue) 실패 격리 시뮬레이터 & 실무 시나리오</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,12 +14,14 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1000px; margin: 0 auto; }
+    .container { max-width: 1080px; margin: 0 auto; }
     .back-nav { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent-blue); text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
     .header-box { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
     h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-    p.subtitle { color: var(--text-muted); font-size: 1.05rem; }
+    p.subtitle { color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
     .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem; }
+    .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
+
     .sim-panel { background: #0f172a; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); }
     .btn { padding: 0.75rem 1.25rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .btn-amber { background: rgba(251, 191, 36, 0.2); border: 1px solid var(--accent-amber); color: var(--accent-amber); }
@@ -30,20 +32,56 @@
     .q-node.dlq { border-color: var(--accent-red); background: rgba(248, 113, 113, 0.15); }
     .msg-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 99px; background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); font-weight: 700; margin-top: 0.5rem; }
     .msg-badge.red { background: rgba(248, 113, 113, 0.3); color: var(--accent-red); }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .scenario-card { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; }
+    .scenario-card h4 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+    @media (max-width: 800px) { .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>💀 DLQ (Dead Letter Queue) 예외 처리 프로세스</h1>
-      <p class="subtitle">소비(Consume)에 실패한 비동기 메시지를 별도 격리 보관하고 관리자 수동 재처리(Redrive)를 지원하는 파이프라인</p>
+      <h1>💀 DLQ (Dead Letter Queue) 예외 격리 시뮬레이터 & 실무 시나리오</h1>
+      <p class="subtitle">소비(Consume)에 실패한 비동기 메시지를 별도 격리하여 큐 블로킹을 방지하고 수동 재처리(Redrive)하는 파이프라인</p>
     </div>
 
+    <!-- 1. 실무에서 DLQ가 발생하는 3대 현실 시나리오 (신규 추가) -->
     <div class="card">
-      <h2>🕹️ 메시지 처리 실패 및 DLQ 격리 시뮬레이터</h2>
+      <h2>🚨 1. 실무에서 DLQ 격리가 발생하는 3대 현실 시나리오</h2>
+      <div class="grid-3">
+        <div class="scenario-card" style="border-top:3px solid var(--accent-red);">
+          <h4 style="color:var(--accent-red);">1. 영구 결함 (Poison Pill)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong>상황</strong>: 이미 탈퇴한 회원 ID로 알림톡 발송 요청.<br>
+            <strong>결과</strong>: 아무리 1,000번 재시도해도 100% 영원히 실패합니다. 이 메시지가 큐 맨 앞에 막고 있으면 뒤의 정상 고객 알림 10만 건이 모두 멈추므로 즉시 <strong>DLQ로 빼내어 격리</strong>해야 합니다.
+          </p>
+        </div>
+
+        <div class="scenario-card" style="border-top:3px solid var(--accent-amber);">
+          <h4 style="color:var(--accent-amber);">2. 외부 시스템 일시 점검</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong>상황</strong>: 시중은행/PG사 새벽 정기점검(00:00~00:30)으로 타임아웃 발생.<br>
+            <strong>결과</strong>: 3회 재시도 실패 후 메시지가 유실되지 않도록 DLQ에 안전 보관해 둔 뒤, <strong>점검이 끝난 00:35에 관리자가 [Redrive] 버튼을 눌러 일괄 재처리</strong>합니다.
+          </p>
+        </div>
+
+        <div class="scenario-card" style="border-top:3px solid var(--accent-blue);">
+          <h4 style="color:var(--accent-blue);">3. 페이로드 파싱/스키마 불일치</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+            <strong>상황</strong>: 클라이언트 구버전 앱 버그로 깨진 JSON 전송.<br>
+            <strong>결과</strong>: 역직렬화(Deserialization) 에러로 스프링 리스너가 죽지 않도록 DLQ로 전송하고 개발팀 슬랙으로 에러 페이로드를 통보합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 인터랙티브 시뮬레이터 -->
+    <div class="card">
+      <h2>🕹️ 2. 메시지 처리 실패 및 DLQ 격리 시뮬레이터</h2>
       <div class="sim-panel">
-        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+        <div style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
           <button class="btn btn-amber" onclick="processMessage(false)">⚠️ 메시지 처리 예외 발생 (Retry +1)</button>
           <button class="btn btn-green" onclick="redriveDlq()">🔄 DLQ 수동 재처리 (Redrive)</button>
         </div>
@@ -66,12 +104,13 @@
       </div>
     </div>
 
+    <!-- 3. DLQ 핵심 프로세스 4단계 -->
     <div class="card">
-      <h2>📘 DLQ 핵심 프로세스 4단계</h2>
+      <h2>📘 3. DLQ 핵심 프로세스 4단계</h2>
       <ol style="padding-left:1.2rem; color:var(--text-muted); line-height:1.8;">
         <li><strong>1단계 (소비 시도 & 예외)</strong>: Consumer가 메시지를 수신하여 로직 처리 중 DB 타임아웃/외부 API 장애로 Exception 발생.</li>
         <li><strong>2단계 (지연 재시도 Retry Backoff)</strong>: 1초, 2초, 4초 등 지수 백오프(Exponential Backoff)를 적용하여 최대 N회(예: 3회) 재시도.</li>
-        <li><strong>3단계 (DLX 라우팅 및 격리)</strong>: 최대 재시도 횟수 초과 시 메인 큐에서 제거 후 Dead Letter Exchange(DLX)를 통해 <code style="color:var(--accent-red);">order-dlq</code>로 자동 전송.</li>
+        <li><strong>3단계 (DLX 라우팅 및 격리)</strong>: 최대 재시도 횟수 초과 시 메인 큐에서 제거 후 Dead Letter Exchange(DLX)를 통해 <code style="color:var(--accent-red);">order-dlq</code>로 자동 격리.</li>
         <li><strong>4단계 (수동 재처리 Redrive & 관제)</strong>: 장애 복구 후 개발자가 DLQ에 쌓인 메시지의 원인을 분석하고 메인 큐로 Re-push(Redrive)하여 유실 방지.</li>
       </ol>
     </div>
@@ -90,7 +129,7 @@
           mainMsg = 0;
           dlqMsg++;
           retries = 0;
-          log.innerText = "🚨 [Max Retries Exceeded] 3회 연속 실패! 메시지가 Dead Letter Queue(DLQ)로 자동 격리되었습니다.";
+          log.innerText = "🚨 [Max Retries Exceeded] 3회 연속 실패! 독약 메시지(Poison Pill)가 Dead Letter Queue(DLQ)로 자동 격리되어 메인 큐가 정상화되었습니다.";
         } else {
           log.innerText = `⚠️ [Retry ${retries}/3] 메시지 소비 실패 (Exception 발생). 지수 백오프 후 재시도합니다...`;
         }
@@ -106,7 +145,7 @@
         dlqMsg--;
         mainMsg++;
         retries = 0;
-        log.innerText = "🔄 [Redrive Completed] DLQ에 격리되었던 메시지를 원인 해결 후 메인 큐로 재전송하였습니다.";
+        log.innerText = "🔄 [Redrive Completed] 장애 복구 확인 완료! DLQ에 격리되었던 메시지를 메인 큐로 안전하게 재전송하였습니다.";
       } else {
         log.innerText = "ℹ️ DLQ에 재처리할 격리 메시지가 없습니다.";
       }

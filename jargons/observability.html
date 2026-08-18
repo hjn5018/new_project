@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELK vs OpenTelemetry vs LGTM 관제 풀스택 비교</title>
+  <title>ELK vs OpenTelemetry vs LGTM 관제 풀스택 심층 비교</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -56,10 +56,11 @@
     th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
     
-    .scenario-box {
-      background: #0f172a; padding: 1.5rem; border-radius: 12px;
-      border-left: 4px solid var(--accent-orange); margin-top: 1rem;
+    .deep-card {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; margin-top: 1rem;
     }
+    .deep-card h4 { font-size: 1.05rem; margin-bottom: 0.4rem; }
     @media (max-width: 800px) { .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -67,8 +68,8 @@
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🔭 ELK vs OpenTelemetry vs LGTM (Grafana) 관제 비교</h1>
-      <p class="subtitle">로그 중심(ELK), 표준 분산 트레이싱(OTel), 오픈소스 메트릭/로그/트레이스 올인원 스택(LGTM)의 실무 시나리오별 예시</p>
+      <h1>🔭 ELK vs OpenTelemetry vs LGTM (Grafana) 관제 심층 비교</h1>
+      <p class="subtitle">역색인 비용, 벤더 독립성(Vendor-Agnostic), Loki 레이블 인덱싱 비용 절감 원리 완벽 해설</p>
     </div>
 
     <!-- 1. 3대 패러다임 비교표 -->
@@ -98,7 +99,7 @@
           </tr>
           <tr>
             <td style="font-weight:600;">비용 & 리소스</td>
-            <td style="color:#f87171;">전문 인덱싱으로 디스크/메모리 비용 큼</td>
+            <td style="color:#f87171;">전문 역색인으로 디스크/메모리 비용 큼</td>
             <td>수집 전용이므로 저장소 비용은 백엔드에 종속</td>
             <td style="color:var(--accent-emerald); font-weight:600;">Loki 레이블 인덱싱으로 비용 80% 절감</td>
           </tr>
@@ -106,31 +107,36 @@
       </table>
     </div>
 
-    <!-- 2. 실제 장애 발생 시 각 솔루션의 해결 시나리오 예시 -->
+    <!-- 2. 핵심 질문 심층 해설 (질문 피드백 보강) -->
     <div class="card">
-      <h2>🚨 2. 실무 장애 해결 시나리오 (쇼핑몰 결제 지연 50ms ➔ 4,000ms 폭증 시)</h2>
-      
-      <div class="grid-3">
-        <div class="box" style="border-top:3px solid #f59e0b;">
-          <h3 style="color:#f59e0b; font-size:1.1rem; margin-bottom:0.5rem;">1. ELK 스택의 접근법</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.6;">
-            Kibana에서 <code>log.level: "ERROR" OR response_time > 3000</code> 검색어로 쿼리를 날려, 특정 시간에 발생한 에러 로그 텍스트와 스택 트레이스를 집중 검색합니다.
-          </p>
-        </div>
+      <h2>💡 2. [심층 해설] 관제 아키텍처 3대 핵심 질문 답변</h2>
 
-        <div class="box" style="border-top:3px solid var(--accent-blue);">
-          <h3 style="color:var(--accent-blue); font-size:1.1rem; margin-bottom:0.5rem;">2. OpenTelemetry의 접근법</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.6;">
-            하나의 요청에 부여된 <code>TraceId</code>를 따라 [게이트웨이 ➔ 주문 ➔ 결제 ➔ PG사 호출] 전체 구간의 Span 시각 타임라인을 확인하여 <strong>"PG사 외부 API 호출 구간에서 3.8초가 걸렸다"</strong>는 병목 지점을 1초 만에 찾아냅니다.
-          </p>
-        </div>
+      <!-- Q1: ELK 역색인 & APM -->
+      <div class="deep-card" style="border-left:4px solid #f59e0b;">
+        <h4 style="color:#f59e0b;">❓ 1. ELK의 '전문 인덱싱(Inverted Index)'과 높은 리소스 비용, 그리고 APM 라이브러리란?</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          • <strong>전문 역색인(Inverted Index)이란?</strong>: 책 맨 뒤의 '색인(Index)'처럼, 로그 본문의 모든 단어(단어 하나하나)를 쪼개어 거대한 B-Tree 색인 사전을 만듭니다. 검색 속도는 0.01초로 극도로 빠르지만, <strong>원본 로그 크기보다 색인 파일 크기가 더 커질 정도로 메모리(RAM)와 디스크(SSD)를 엄청나게 잡아먹습니다.</strong><br>
+          • <strong>별도 APM 라이브러리</strong>: <strong>Elastic APM Java Agent, Pinpoint, Scouter, SkyWalking</strong> 같은 에이전트를 JVM에 붙여야 메서드 실행시간 및 트랜잭션 호출 트리를 추적할 수 있습니다.
+        </p>
+      </div>
 
-        <div class="box" style="border-top:3px solid var(--accent-orange);">
-          <h3 style="color:var(--accent-orange); font-size:1.1rem; margin-bottom:0.5rem;">3. LGTM (Grafana)의 접근법</h3>
-          <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.6;">
-            Grafana 화면 하나에서 <strong>Mimir(메트릭 경고 그래프)</strong> ➔ 클릭 한 번으로 <strong>Tempo(해당 시점 트레이스)</strong> ➔ <strong>Loki(연관 로그)</strong>가 완벽히 이어지는 원클릭 드릴다운을 수행합니다.
-          </p>
-        </div>
+      <!-- Q2: OTel 벤더 독립성 -->
+      <div class="deep-card" style="border-left:4px solid var(--accent-blue);">
+        <h4 style="color:var(--accent-blue);">❓ 2. OpenTelemetry(OTel)가 '벤더 독립적(Vendor-Agnostic)'이라는 뜻은?</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          과거에는 Datadog을 쓰려면 Datadog 전용 SDK를 코드에 심고, New Relic으로 바꾸려면 전사 소스코드를 전부 뜯어고쳐야 했습니다(벤더 종속).<br>
+          반면 <strong>OpenTelemetry(CNCF 오픈소스 표준)</strong>는 전 세계 클라우드 기업들이 합의한 단일 표준 SDK입니다. 백엔드 코드에는 OTel만 한 번 심어두면, <strong>설정 파일의 주소 한 줄만 바꿔서 오늘은 Grafana Tempo, 내일은 Datadog, 모레는 AWS CloudWatch로 데이터를 마음대로 쏠 수 있습니다.</strong>
+        </p>
+      </div>
+
+      <!-- Q3: Loki 레이블 인덱싱 -->
+      <div class="deep-card" style="border-left:4px solid var(--accent-emerald);">
+        <h4 style="color:var(--accent-emerald);">❓ 3. Grafana Loki의 '레이블 인덱싱'은 어떻게 비용을 80% 절감하나요?</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          • Elasticsearch는 로그 내용 안의 모든 글자를 무겁게 인덱싱합니다.<br>
+          • 반면 <strong>Loki는 오직 메타데이터 레이블(<code>app=order-service</code>, <code>env=prod</code>)만 가볍게 인덱싱</strong>하고, 로그 본문은 그대로 압축하여 <strong>매우 저렴한 오브젝트 스토리지(AWS S3 / GCP GCS)</strong>에 통째로 보관합니다.<br>
+          👉 따라서 색인 구축에 필요한 고성능 RAM과 SSD 비용을 80% 이상 절감할 수 있습니다!
+        </p>
       </div>
     </div>
   </div>

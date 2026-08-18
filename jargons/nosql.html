@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NoSQL 데이터베이스 4대 데이터 모델 심층 비교</title>
+  <title>NoSQL 데이터베이스 4대 데이터 모델 심층 비교 & 쿼리 가이드</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -62,10 +62,10 @@
       font-size: 0.75rem; font-weight: 700; margin-bottom: 0.75rem; font-family: 'JetBrains Mono', monospace;
     }
     pre {
-      background: #090d16; padding: 1rem; border-radius: 8px;
+      background: #090d16; padding: 1.1rem; border-radius: 8px;
       border: 1px solid var(--border); overflow-x: auto;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0;
-      margin-top: 0.75rem; line-height: 1.5;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
+      margin-top: 0.75rem; line-height: 1.55;
     }
     .example-section { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
   </style>
@@ -74,20 +74,20 @@
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🍃 NoSQL 4대 데이터 모델 심층 비교 및 실무 예시</h1>
-      <p class="subtitle">문서(Document), 키-값(Key-Value), 와이드 컬럼(Wide-Column), 그래프(Graph) 데이터베이스의 아키텍처 및 실제 데이터 모델링 예시</p>
+      <h1>🍃 NoSQL 4대 데이터 모델 심층 비교 & 쿼리 가이드</h1>
+      <p class="subtitle">문서(Document), 키-값(Redis TTL), 와이드 컬럼(Cassandra CQL), 그래프(Neo4j Cypher)의 문법과 실무 모델링 분석</p>
     </div>
 
     <!-- 4대 NoSQL 매트릭스 카드 -->
     <div class="card">
-      <h2>📊 NoSQL 4대 유형별 특징 및 구조 매트릭스</h2>
+      <h2>📊 1. NoSQL 4대 유형별 구조 매트릭스</h2>
       <div class="nosql-grid">
         <div class="type-card" style="border-top:3px solid var(--accent-green);">
           <div>
             <span class="tag" style="background:rgba(52,211,153,0.2); color:var(--accent-green);">1. Document Store</span>
-            <h3>MongoDB / Couchbase</h3>
-            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
-              JSON/BSON 형태의 가변 구조 문서를 통째로 저장. 중첩 객체와 배열 지원이 뛰어나며 가장 범용적인 RDBMS 대안.
+            <h3>MongoDB</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+              JSON/BSON 가변 구조 문서 저장. 중첩 객체와 배열 지원이 뛰어나며 RDBMS의 가장 범용적인 대안.
             </p>
           </div>
         </div>
@@ -95,9 +95,9 @@
         <div class="type-card" style="border-top:3px solid var(--accent-blue);">
           <div>
             <span class="tag" style="background:rgba(56,189,248,0.2); color:var(--accent-blue);">2. Key-Value Store</span>
-            <h3>Redis / DynamoDB</h3>
-            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
-              Unique Key와 Value를 1:1 매핑. 극도의 초고속 인메모리 읽기/쓰기 성능을 제공하며 세션 및 캐싱에 최적화.
+            <h3>Redis</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+              Key-Value 1:1 매핑. 인메모리 초고속 읽기/쓰기와 TTL 기반 자동 세션 만료 및 캐싱 특화.
             </p>
           </div>
         </div>
@@ -105,9 +105,9 @@
         <div class="type-card" style="border-top:3px solid var(--accent-purple);">
           <div>
             <span class="tag" style="background:rgba(192,132,252,0.2); color:var(--accent-purple);">3. Wide-Column Store</span>
-            <h3>Cassandra / ScyllaDB</h3>
-            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
-              행(Row)마다 동적인 컬럼 집합을 가지며, 초당 수십만 건의 대규모 분산 쓰기 및 시계열(Time-series) 데이터에 특화.
+            <h3>Cassandra</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+              행(Row)마다 동적인 컬럼 집합. 파티션 키 기반의 대규모 분산 쓰기 및 IoT 시계열 데이터 최적화.
             </p>
           </div>
         </div>
@@ -115,64 +115,84 @@
         <div class="type-card" style="border-top:3px solid var(--accent-amber);">
           <div>
             <span class="tag" style="background:rgba(251,191,36,0.2); color:var(--accent-amber);">4. Graph Database</span>
-            <h3>Neo4j / Amazon Neptune</h3>
-            <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.5;">
-              노드(Node)와 간선(Edge/Relation) 형태로 데이터를 저장하여 수직/수평 다단계 관계 탐색을 O(1)에 가깝게 해결.
+            <h3>Neo4j</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+              노드와 간선(관계)을 물리적 포인터로 연결하여 다단계 관계 탐색을 JOIN 없이 고속 해결.
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 4대 구조별 실무 데이터 모델 예시 -->
+    <!-- 4대 구조별 상세 쿼리 및 개념 가이드 (질문 피드백 보강) -->
     <div class="card">
-      <h2>💡 NoSQL 4대 모델별 실제 데이터 구조 & 쿼리 예시</h2>
+      <h2>💡 2. NoSQL 4대 모델별 실제 쿼리 문법 & 심층 해설</h2>
 
+      <!-- 1. MongoDB -->
       <div class="example-section" style="border-top:none; padding-top:0;">
-        <h3 style="color:var(--accent-green);">1. Document Store 예시 (MongoDB 전자상거래 상품 스펙)</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">의류, 전자기기 등 카테고리마다 속성이 완전히 달라도 테이블 ALTER 없이 유연하게 적재 가능합니다.</p>
-        <pre><code>// MongoDB Document (JSON / BSON)
-{
+        <h3 style="color:var(--accent-green);">1. Document Store : MongoDB 가변 JSON</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem;">의류, 전자기기 등 카테고리마다 스펙 속성이 달라도 테이블 변경 없이 바로 저장합니다.</p>
+        <pre><code>{
   "_id": ObjectId("64f8a1..."),
   "name": "맥북 프로 16인치",
-  "category": "LAPTOP",
-  "price": 3690000,
-  "specs": {
-    "chip": "M3 Max",
-    "ram_gb": 64,
-    "ssd_tb": 1
-  },
+  "specs": { "chip": "M3 Max", "ram_gb": 64, "ssd_tb": 1 },
   "tags": ["apple", "macbook", "developer"]
 }</code></pre>
       </div>
 
+      <!-- 2. Redis TTL 상세 해설 -->
       <div class="example-section">
-        <h3 style="color:var(--accent-blue);">2. Key-Value Store 예시 (Redis 로그인 세션 & TTL 캐시)</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">사용자 토큰 키로 회원 정보를 0.1ms 내에 조회하고 TTL로 자동 만료 처리합니다.</p>
-        <pre><code>// Redis SET / GET 명령
+        <h3 style="color:var(--accent-blue);">2. Key-Value Store : Redis 로그인 세션 & TTL 자동 소멸 원리</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+          • <strong>TTL(Time To Live)이란?</strong>: 데이터의 유효 수명(초 단위)입니다. <code>EX 3600</code>을 주면 1시간 뒤 Redis가 메모리에서 해당 키를 <strong>백그라운드에서 자동 삭제(Eviction)</strong>하여 메모리 누수를 방지합니다.<br>
+          • <strong>세션 연장(Sliding Session)</strong>: 유저가 마우스를 움직이거나 API를 호출할 때마다 <code>EXPIRE</code> 명령으로 1시간을 다시 리셋합니다.
+        </p>
+        <pre><code>// 1. 세션 생성 시 1시간(3600초) TTL 설정
 SET user:session:tk_99a8b1 "{\"userId\": 101, \"role\": \"ADMIN\"}" EX 3600
-GET user:session:tk_99a8b1 ➔ {"userId": 101, "role": "ADMIN"}</code></pre>
+
+// 2. 남은 유효 시간 확인 (초 단위 반환)
+TTL user:session:tk_99a8b1 ➔ (integer) 3540 (59분 남음)
+
+// 3. 사용자가 활동할 때마다 세션 1시간 연장 (슬라이딩 세션)
+EXPIRE user:session:tk_99a8b1 3600</code></pre>
       </div>
 
+      <!-- 3. Cassandra CQL & Wide-Column 상세 해설 -->
       <div class="example-section">
-        <h3 style="color:var(--accent-purple);">3. Wide-Column 예시 (Cassandra IoT 센서 시계열 로그)</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">장비 ID를 파티션 키로 삼고, 타임스탬프를 클러스터링 키로 삼아 초당 수만 건의 센서 데이터를 시계열로 고속 적재합니다.</p>
-        <pre><code>-- Cassandra CQL (Table & Data Insertion)
+        <h3 style="color:var(--accent-purple);">3. Wide-Column : Cassandra CQL (Cassandra Query Language) & 시계열</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+          • <strong>CQL이란?</strong>: SQL과 문법이 비슷하지만 <strong>JOIN과 외래키가 없는</strong> 분산 DB 전용 쿼리 언어입니다.<br>
+          • <strong>파티션 키 vs 클러스터링 키</strong>: <code>PRIMARY KEY (sensor_id, recorded_at)</code>에서 <code>sensor_id</code>는 수백 대의 분산 노드 중 어느 서버에 저장할지(해시)를 결정하고, <code>recorded_at</code>은 해당 노드의 디스크 안에서 시간순으로 정렬(Clustering)해 둡니다. 따라서 초당 수만 건의 센서 로그를 테이블 락(Lock) 없이 분산 쓰기할 수 있습니다.
+        </p>
+        <pre><code>-- 1. IoT 센서 시계열 테이블 생성
 CREATE TABLE factory_iot_metrics (
-    sensor_id text,
-    recorded_at timestamp,
+    sensor_id text,           -- 파티션 키 (어느 DB 서버 노드로 갈지 분산)
+    recorded_at timestamp,    -- 클러스터링 키 (디스크 내에서 최신순 정렬)
     temperature double,
     humidity double,
     PRIMARY KEY (sensor_id, recorded_at)
-) WITH CLUSTERING ORDER BY (recorded_at DESC);</code></pre>
+) WITH CLUSTERING ORDER BY (recorded_at DESC);
+
+-- 2. 특정 센서의 최근 10개 온도 초고속 조회 (단일 디스크 순차 읽기)
+SELECT * FROM factory_iot_metrics WHERE sensor_id = 'SENSOR-FACTORY-A1' LIMIT 10;</code></pre>
       </div>
 
+      <!-- 4. Neo4j Cypher 문법 상세 해설 -->
       <div class="example-section">
-        <h3 style="color:var(--accent-amber);">4. Graph DB 예시 (Neo4j 소셜 친구 추천 & 이상 거래 탐지)</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem;">"홍길동의 친구들이 가장 많이 팔로우한 사람 5명 추천" 쿼리를 직관적인 Cypher 문법으로 고속 조회합니다.</p>
-        <pre><code>// Neo4j Cypher Query (친구의 친구 추천)
+        <h3 style="color:var(--accent-amber);">4. Graph Database : Neo4j Cypher 문법 기초 해설</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+          • <strong>Cypher 문법의 핵심 (ASCII-Art 화살표)</strong>:<br>
+          노드는 소괄호 <code>(u:User)</code>, 관계와 방향은 화살표 대괄호 <code>-[:FRIEND]-></code> 로 직관적으로 그립니다.<br>
+          <code>(홍길동)-[:FRIEND]->(친구)-[:FRIEND]->(친구의 친구)</code> 패턴을 매칭(MATCH)하여 복잡한 다단계 관계를 O(1) 포인터 추적으로 0.01초 만에 찾아냅니다.
+        </p>
+        <pre><code>// Neo4j Cypher (친구의 친구 추천 쿼리)
+// 1. 홍길동의 친구(f)가 맺은 또 다른 친구(fof)를 탐색
 MATCH (u:User {name: '홍길동'})-[:FRIEND]->(f:User)-[:FRIEND]->(fof:User)
+
+// 2. 이미 나와 친구이거나 본인인 경우는 제외
 WHERE NOT (u)-[:FRIEND]->(fof) AND u <> fof
+
+// 3. 가장 겹치는 친구(mutual_friends)가 많은 상위 5명 추천
 RETURN fof.name AS recommendation, count(*) AS mutual_friends
 ORDER BY mutual_friends DESC LIMIT 5;</code></pre>
       </div>

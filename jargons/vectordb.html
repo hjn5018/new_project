@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VectorDB 텍스트 임베딩 & RAG 검색 Visualizer</title>
+  <title>VectorDB 텍스트 임베딩 & RAG 프롬프트 연동 Visualizer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -63,6 +63,12 @@
     }
     .arrow { color: var(--accent-amber); font-weight: 700; font-size: 1.2rem; align-self: center; }
 
+    .prompt-assembly {
+      background: #0f172a; border-radius: 12px; padding: 1.25rem; border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e8f0;
+      margin-top: 1rem;
+    }
+
     .vector-sim { background: #0f172a; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
     .search-input {
       width: 100%; padding: 0.85rem 1.2rem; border-radius: 10px;
@@ -73,14 +79,12 @@
     .res-card {
       background: rgba(30, 41, 59, 0.6); border-left: 4px solid var(--accent-purple);
       padding: 0.85rem 1.1rem; border-radius: 0 8px 8px 0; margin-bottom: 0.6rem;
-      transition: all 0.2s;
     }
-    .res-card:hover { background: rgba(30, 41, 59, 0.9); }
     pre {
-      background: #090d16; padding: 1rem; border-radius: 8px;
+      background: #090d16; padding: 1.1rem; border-radius: 8px;
       border: 1px solid var(--border); overflow-x: auto;
       font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #e2e8f0;
-      margin-top: 0.75rem; line-height: 1.5;
+      margin-top: 0.75rem; line-height: 1.55;
     }
     @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
@@ -89,98 +93,89 @@
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>📐 VectorDB, 임베딩, 코사인 유사도 & RAG 파이프라인</h1>
-      <p class="subtitle">자연어의 의미(Semantic)를 고차원 부동소수점 벡터로 수치화하고 유사도를 계산하여 LLM의 환각을 방지하는 원리와 구조</p>
+      <h1>📐 VectorDB, pgvector 하이브리드 JOIN & RAG 프롬프트 조립</h1>
+      <p class="subtitle">SQL 관계형 데이터와 벡터 검색의 단일 JOIN 처리 원리 및 검색된 문맥(Context)의 LLM 프롬프트 결합 메커니즘</p>
     </div>
 
-    <!-- 1. 핵심 개념: 고차원 벡터, 코사인 유사도, pgvector vs ChromaDB -->
+    <!-- 1. pgvector의 SQL JOIN 원리 (질문 피드백 보강) -->
     <div class="card">
-      <h2>💡 1. VectorDB의 3대 핵심 기초 원리</h2>
-      <div class="grid-2">
-        <div class="box" style="border-top:3px solid var(--accent-blue);">
-          <h3 style="color:var(--accent-blue); margin-bottom:0.5rem;">🧠 고차원 임베딩 & 코사인 유사도</h3>
-          <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.6;">
-            • <strong>고차원 벡터(High-dimensional Vector)</strong>: 텍스트 문장을 인공지능 모델(text-embedding-3)을 통과시켜 1,536개의 실수 배열(<code>[0.021, -0.045, ...]</code>)로 변환한 것입니다.<br>
-            • <strong>코사인 유사도(Cosine Similarity)</strong>: 단어의 단순 일치가 아닌 <strong>두 벡터 간의 사잇각(방향)</strong>을 계산하여, "강아지"와 "댕댕이"처럼 글자가 달라도 의미가 같으면 0.95 이상의 높은 유사도를 도출합니다.
-          </p>
-        </div>
-
-        <div class="box" style="border-top:3px solid var(--accent-purple);">
-          <h3 style="color:var(--accent-purple); margin-bottom:0.5rem;">🗄️ pgvector vs ChromaDB 차이</h3>
-          <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.6;">
-            • <strong>pgvector (PostgreSQL 확장)</strong>: 기존 RDBMS에 벡터 인덱스(HNSW / IVFFlat)를 추가하여 일반 SQL 테이블(회원, 주문)과 벡터 검색을 단일 DB 트랜잭션으로 JOIN 가능.<br>
-            • <strong>ChromaDB</strong>: 파이썬 기반 AI 개발 및 프로토타입에 매우 가볍게 연동 가능한 오픈소스 임베딩 전용 데이터베이스.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. RAG 파이프라인 시각화 5단계 -->
-    <div class="card">
-      <h2>📊 2. RAG (검색 증강 생성) 5단계 연동 시각 파이프라인</h2>
-      <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:1rem; line-height:1.6;">
-        LLM은 회사의 최신 사내 규정이나 비밀 문서를 학습하지 못했습니다. RAG는 사용자의 질문과 가장 유사한 사내 문서를 VectorDB에서 먼저 찾아서 프롬프트에 주입(Injection)해 답변을 생성시킵니다.
+      <h2>🗄️ 1. [핵심 질문 해결] pgvector에서 SQL 테이블과 벡터 검색을 JOIN한다는 것은?</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
+        전용 VectorDB(Pinecone 등)는 오직 벡터만 저장할 수 있어서, "재고가 남아있고 5만원 이하인 의류 상품 중 유사한 것"을 찾으려면 RDBMS와 VectorDB를 2번 조회하여 백엔드에서 조합해야 했습니다.<br>
+        하지만 <strong>pgvector(PostgreSQL 확장)</strong>를 사용하면, <strong>일반 SQL 조건(WHERE 카테고리='의류' AND 재고 > 0)과 벡터 코사인 유사도 정렬을 단 1개의 SQL 쿼리로 JOIN</strong>하여 즉시 해결합니다!
       </p>
 
+      <pre><code>-- [pgvector 하이브리드 JOIN 쿼리 예시]
+SELECT 
+    p.id, 
+    p.name, 
+    p.price, 
+    p.stock_quantity,
+    1 - (e.embedding <=> '[0.012, -0.043, ...]') AS semantic_similarity
+FROM products p
+JOIN product_embeddings e ON p.id = e.product_id
+WHERE p.category = 'CLOTHES'       -- 1) 일반 SQL 조건: 의류 카테고리
+  AND p.stock_quantity > 0          -- 2) 일반 SQL 조건: 재고 있는 상품만
+  AND p.price <= 50000              -- 3) 일반 SQL 조건: 5만원 이하
+ORDER BY e.embedding <=> '[0.012, -0.043, ...]' ASC -- 4) 의미적 유사도 순 정렬!
+LIMIT 5;</code></pre>
+    </div>
+
+    <!-- 2. RAG 파이프라인 & 프롬프트 결합 실제 예시 (질문 피드백 보강) -->
+    <div class="card">
+      <h2>🤖 2. [핵심 질문 해결] RAG에서 '문맥과 질문을 합쳐 LLM에 보낸다'는 실제 과정</h2>
+      
       <div class="rag-pipeline">
         <div class="rag-step" style="border-top:3px solid var(--accent-blue);">
           <strong style="color:var(--accent-blue);">1. 사용자 질문</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">"환불 규정이 어떻게 되나요?"</span>
-        </div>
-        <span class="arrow">➔</span>
-        <div class="rag-step" style="border-top:3px solid var(--accent-amber);">
-          <strong style="color:var(--accent-amber);">2. 임베딩 모델</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">1536차원 벡터 생성<br><code>[0.12, -0.84, ...]</code></span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">"환불 언제 들어와?"</span>
         </div>
         <span class="arrow">➔</span>
         <div class="rag-step" style="border-top:3px solid var(--accent-purple);">
-          <strong style="color:var(--accent-purple);">3. VectorDB 검색</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">pgvector 코사인 거리<br>Top-2 유사 문서 조각 추출</span>
+          <strong style="color:var(--accent-purple);">2. VectorDB 검색</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">pgvector 유사도 Top-2<br>FAQ #101 추출</span>
         </div>
         <span class="arrow">➔</span>
         <div class="rag-step" style="border-top:3px solid var(--accent-green);">
-          <strong style="color:var(--accent-green);">4. 프롬프트 결합</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">문맥(Context) + 질문<br>합쳐서 LLM 전송</span>
+          <strong style="color:var(--accent-green);">3. 프롬프트 결합</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">문맥 주입(Injection)<br>하나의 텍스트로 조립</span>
         </div>
         <span class="arrow">➔</span>
         <div class="rag-step" style="border-top:3px solid #f472b6;">
-          <strong style="color:#f472b6;">5. 정확한 AI 답변</strong><br>
-          <span style="font-size:0.75rem; color:var(--text-muted);">환각(Hallucination) 없는<br>100% 신뢰성 있는 응답</span>
+          <strong style="color:#f472b6;">4. LLM 답변 생성</strong><br>
+          <span style="font-size:0.75rem; color:var(--text-muted);">환각(거짓말) 없는<br>100% 팩트 기반 응답</span>
         </div>
+      </div>
+
+      <h4 style="color:var(--accent-green); margin:1.5rem 0 0.5rem 0;">📝 [실제 LLM에 전송되는 최종 결합 프롬프트 텍스트]</h4>
+      <div class="prompt-assembly">
+        <span style="color:var(--accent-amber);">[시스템 지시사항 (System Prompt)]</span><br>
+        당신은 쇼핑몰의 친절한 고객센터 AI 상담원입니다. <strong>반드시 아래 제공된 [참고 문서]의 내용만을 근거로</strong> 사용자의 질문에 답하세요. 문서에 없는 내용은 지어내지 마세요.<br><br>
+
+        <span style="color:var(--accent-blue);">[참고 문서 (VectorDB에서 추출된 Top-2 지식)]</span><br>
+        • FAQ #101: 결제 취소 및 환불은 마이페이지 > 주문내역에서 신청 후 <strong>영업일 기준 3일 이내 승인 및 계좌 입금</strong>됩니다.<br>
+        • FAQ #102: 신용카드 승인 취소 시 카드사 정산에 따라 2~3일 소요됩니다.<br><br>
+
+        <span style="color:var(--accent-green);">[사용자 질문 (User Question)]</span><br>
+        "어제 취소했는데 돈 언제 들어오나요?"<br><br>
+
+        <span style="color:#f472b6;">[➔ 최종 AI 응답 결과]</span><br>
+        "고객님, 환불 금액은 신청 후 <strong>영업일 기준 3일 이내</strong>에 고객님의 결제 계좌로 입금될 예정입니다!"
       </div>
     </div>
 
-    <!-- 3. 실시간 인터랙티브 시맨틱 검색 시뮬레이터 -->
+    <!-- 3. 실시간 인터랙티브 시뮬레이터 -->
     <div class="card">
-      <h2>🔍 3. pgvector / ChromaDB 코사인 유사도 검색 인터랙티브 데모</h2>
+      <h2>🔍 3. VectorDB 코사인 유사도 검색 인터랙티브 데모</h2>
       <div class="vector-sim">
-        <label style="color:var(--text-muted); font-size:0.9rem; display:block; margin-bottom:0.5rem;">[ 사용자 질문을 입력하거나 아래 예시 키워드를 테스트해보세요 ]</label>
+        <label style="color:var(--text-muted); font-size:0.9rem; display:block; margin-bottom:0.5rem;">[ 사용자 질문 입력 ]</label>
         <input type="text" class="search-input" id="qInput" value="결제 취소하고 돈 언제 들어오나요?" oninput="runVectorSearch()">
 
-        <h4 style="color:var(--accent-purple); margin-bottom:0.75rem; font-size:1.05rem;">[ VectorDB 코사인 유사도 랭킹 결과 ]</h4>
+        <h4 style="color:var(--accent-purple); margin-bottom:0.75rem; font-size:1.05rem;">[ VectorDB 코사인 유사도 검색 결과 ]</h4>
         <div id="resultsGrid">
           <!-- Dynamic -->
         </div>
       </div>
-    </div>
-
-    <!-- 4. pgvector 실제 SQL 쿼리 예시 -->
-    <div class="card">
-      <h2>💻 4. pgvector 실제 PostgreSQL 쿼리 문법</h2>
-      <pre><code>-- pgvector 확장 활성화 및 1536차원 벡터 컬럼 테이블 생성
-CREATE EXTENSION IF NOT EXISTS vector;
-
-CREATE TABLE document_embeddings (
-    id SERIAL PRIMARY KEY,
-    content TEXT,
-    embedding vector(1536) -- OpenAI text-embedding-3-small 벡터
-);
-
--- 사용자 질문 벡터와 가장 가까운 코사인 유사도 Top 3 문서 고속 검색 (<=> 연산자)
-SELECT id, content, 1 - (embedding <=> '[0.012, -0.043, ...]') AS cosine_similarity
-FROM document_embeddings
-ORDER BY embedding <=> '[0.012, -0.043, ...]' ASC
-LIMIT 3;</code></pre>
     </div>
   </div>
 

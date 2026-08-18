@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kafka CDC (Change Data Capture) 입문 & 실무 아키텍처</title>
+  <title>Kafka CDC (Change Data Capture) 입문 & 핵심 용어 완벽 정리</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -51,11 +51,11 @@
     
     .problem-box {
       background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3);
-      border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;
+      border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;
     }
     .solution-box {
       background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3);
-      border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;
+      border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;
     }
     .flow-grid {
       display: flex; align-items: center; justify-content: space-between;
@@ -68,22 +68,34 @@
     }
     .arrow { color: var(--accent-amber); font-weight: 700; font-size: 1.2rem; }
 
+    .glossary-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem; margin-top: 1rem;
+    }
+    .glossary-item {
+      background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem;
+    }
+    .glossary-term {
+      font-weight: 700; color: var(--accent-blue); font-size: 0.95rem; margin-bottom: 0.3rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glossary-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
+
     pre {
       background: #0f172a; padding: 1.25rem; border-radius: 10px;
       border: 1px solid var(--border); overflow-x: auto;
       font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #e2e8f0;
       line-height: 1.55;
     }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
-    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>🔄 Kafka CDC (Change Data Capture) 완전 정복</h1>
-      <p class="subtitle">초보자를 위한 왜 CDC가 필요한가? (이중 작성 문제 해결)부터 Debezium 트랜잭션 로그 실시간 스트리밍까지</p>
+      <h1>🔄 Kafka CDC (Change Data Capture) & 파이프라인 용어 사전</h1>
+      <p class="subtitle">이중 작성(Dual Write) 문제 해결부터 Binlog, WAL, Avro, Sink 등 CDC 핵심 용어 완벽 해설</p>
     </div>
 
     <!-- 1. 초보자를 위한 쉬운 비유와 필요성 -->
@@ -91,55 +103,104 @@
       <h2>🌱 1. [초보자 필독] CDC가 왜 필요한가요? (이중 작성의 악몽)</h2>
       
       <div class="problem-box">
-        <h4 style="color:var(--accent-red); margin-bottom:0.5rem;">❌ 전통적인 방식: 앱에서 직접 2군데 쓰기 (Dual Write 문제)</h4>
-        <p style="color:var(--text); font-size:0.92rem; line-height:1.6;">
-          회원이 닉네임을 변경할 때, 백엔드 스프링 앱에서 다음과 같이 코드를 짰다고 가정해 봅시다.<br>
-          <code>1) MySQL DB에 UPDATE 쿼리 날림 (성공!)</code><br>
-          <code>2) Elasticsearch 검색엔진에 변경 반영 API 호출 (네트워크 장애로 실패! 💥)</code><br>
-          👉 <strong>결과: DB에는 새 닉네임이 있는데, 검색엔진에서는 옛날 닉네임으로 검색되는 치명적 데이터 불일치 발생!</strong>
+        <h4 style="color:var(--accent-red); margin-bottom:0.4rem;">❌ 전통적인 방식: 앱에서 직접 2군데 쓰기 (Dual Write 문제)</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          회원이 닉네임을 변경할 때 백엔드 스프링 앱에서 <code>1) MySQL UPDATE ➔ 성공</code> 후 <code>2) Elasticsearch 색인 API 호출 ➔ 네트워크 장애로 실패!</code> 가 발생하면, <strong>DB에는 새 이름이 있는데 검색창에는 옛날 이름이 뜨는 치명적 데이터 불일치</strong>가 발생합니다.
         </p>
       </div>
 
       <div class="solution-box">
-        <h4 style="color:var(--accent-emerald); margin-bottom:0.5rem;">✅ CDC (Change Data Capture) 방식: DB의 'CCTV 일기장'을 감시하기</h4>
-        <p style="color:var(--text); font-size:0.92rem; line-height:1.6;">
-          앱은 오직 <strong>MySQL DB에만 평소처럼 저장</strong>하고 끝냅니다. 대신 <strong>CDC 엔진(Debezium)</strong>이 MySQL이 내부적으로 기록하는 트랜잭션 로그(Binlog / WAL)라는 일기장을 실시간으로 훔쳐보고 있다가, 변경 사항이 감지되는 즉시 <strong>Kafka 이벤트로 발행</strong>하여 Elasticsearch, Redis, 데이터웨어하우스로 안전하게 배달해 줍니다.
+        <h4 style="color:var(--accent-emerald); margin-bottom:0.4rem;">✅ CDC 방식: DB의 'CCTV 일기장'을 감시하기</h4>
+        <p style="color:var(--text); font-size:0.9rem; line-height:1.6;">
+          앱은 오직 <strong>MySQL DB에만 평소처럼 저장</strong>하고 끝냅니다. 대신 <strong>CDC 엔진(Debezium)</strong>이 DB의 변경 로그(Binlog/WAL)를 실시간으로 테일링(훔쳐보기)하여 <strong>Kafka 이벤트로 발행</strong>해 Elasticsearch, Redis, Snowflake로 안전하게 자동 배달합니다.
         </p>
       </div>
     </div>
 
-    <!-- 2. Debezium + Kafka Connect CDC 실시간 동기화 아키텍처 -->
+    <!-- 2. Debezium + Kafka Connect CDC 실시간 동기화 파이프라인 -->
     <div class="card">
       <h2>📊 2. Debezium + Kafka Connect 실시간 데이터 파이프라인 흐름</h2>
       <div class="flow-grid">
         <div class="flow-step" style="border-top:3px solid var(--accent-emerald);">
           <strong style="color:var(--accent-emerald);">1. Source DB</strong><br>
-          <span style="font-size:0.8rem; color:var(--text-muted);">MySQL / PostgreSQL<br>(Binlog / WAL 기록)</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">MySQL (Binlog)<br>PostgreSQL (WAL)</span>
         </div>
         <span class="arrow">➔</span>
         <div class="flow-step" style="border-top:3px solid var(--accent-amber);">
           <strong style="color:var(--accent-amber);">2. Debezium Connector</strong><br>
-          <span style="font-size:0.8rem; color:var(--text-muted);">로그 테일링 (Tailing)<br>CUD 이벤트 캡처</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">로그 테일링 (Tailing)<br>CUD 이벤트 캡처</span>
         </div>
         <span class="arrow">➔</span>
         <div class="flow-step" style="border-top:3px solid var(--accent-blue);">
           <strong style="color:var(--accent-blue);">3. Kafka Topic</strong><br>
-          <span style="font-size:0.8rem; color:var(--text-muted);"><code>dbserver1.users</code><br>JSON / Avro 메시지</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);"><code>dbserver1.users</code><br>JSON / Avro 메시지</span>
         </div>
         <span class="arrow">➔</span>
         <div class="flow-step" style="border-top:3px solid var(--accent-purple);">
           <strong style="color:var(--accent-purple);">4. Target Sinks</strong><br>
-          <span style="font-size:0.8rem; color:var(--text-muted);">Elasticsearch (검색)<br>Redis (캐시)<br>Snowflake (DW)</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Elasticsearch (검색)<br>Redis (캐시)<br>Snowflake (DW)</span>
         </div>
       </div>
     </div>
 
-    <!-- 3. Debezium이 생성하는 CDC 이벤트 JSON 페이로드 실제 예시 -->
+    <!-- 3. 핵심 용어 완벽 해설 카드 (질문 피드백 신규 추가) -->
     <div class="card">
-      <h2>📝 3. Debezium이 캡처한 변경 이벤트 JSON 페이로드 실제 모습</h2>
-      <p style="color:var(--text-muted); font-size:0.92rem; margin-bottom:0.75rem;">
-        DB에서 UPDATE가 발생했을 때 Debezium이 생성하여 Kafka로 전송하는 메시지에는 변경 <strong>이전 값(before)</strong>과 <strong>이후 값(after)</strong>이 완벽히 포함됩니다.
-      </p>
+      <h2>📖 3. [용어 사전] CDC 파이프라인 필수 핵심 용어 해설</h2>
+      <div class="glossary-grid">
+        <div class="glossary-item" style="border-left:3px solid var(--accent-emerald);">
+          <div class="glossary-term">📘 Binlog (Binary Log)</div>
+          <div class="glossary-desc">
+            <strong>MySQL</strong>이 데이터 추가/수정/삭제 등 테이블 변경 사항을 시간순으로 디스크에 기록하는 이진 로그 파일(일기장).
+          </div>
+        </div>
+
+        <div class="glossary-item" style="border-left:3px solid var(--accent-emerald);">
+          <div class="glossary-term">📘 WAL (Write-Ahead Logging)</div>
+          <div class="glossary-desc">
+            <strong>PostgreSQL</strong>이 실제 데이터 페이지를 디스크에 쓰기 전에 트랜잭션 무결성을 위해 변경 내역을 먼저 기록하는 로그 파일.
+          </div>
+        </div>
+
+        <div class="glossary-item" style="border-left:3px solid var(--accent-amber);">
+          <div class="glossary-term">🔍 로그 테일링 (Log Tailing)</div>
+          <div class="glossary-desc">
+            리눅스의 <code>tail -f</code> 명령어처럼, 파일 끝에 실시간으로 새로 추가되는 로그 라인을 대기하며 지속적으로 읽어내는 기법.
+          </div>
+        </div>
+
+        <div class="glossary-item" style="border-left:3px solid var(--accent-blue);">
+          <div class="glossary-term">📬 Kafka Topic</div>
+          <div class="glossary-desc">
+            Kafka 안에서 데이터가 주제별(예: <code>dbserver1.users</code>)로 분류되어 분산 저장되는 메시지 채널.
+          </div>
+        </div>
+
+        <div class="glossary-item" style="border-left:3px solid var(--accent-blue);">
+          <div class="glossary-term">📦 Apache Avro</div>
+          <div class="glossary-desc">
+            JSON보다 훨씬 용량이 작은 바이너리 직렬화 포맷. 데이터 스키마(형식)를 중앙 Registry에 보관하여 네트워크 전송량을 80% 압축.
+          </div>
+        </div>
+
+        <div class="glossary-item" style="border-left:3px solid var(--accent-purple);">
+          <div class="glossary-term">🎯 Target Sinks (싱크)</div>
+          <div class="glossary-desc">
+            Kafka Topic에 모인 변경 데이터를 최종적으로 빨아들여 저장하는 목적지 시스템들 (Elasticsearch, Redis, S3 등).
+          </div>
+        </div>
+
+        <div class="glossary-item" style="border-left:3px solid var(--accent-purple);">
+          <div class="glossary-term">❄️ Snowflake & DW (Data Warehouse)</div>
+          <div class="glossary-desc">
+            <strong>DW(데이터 웨어하우스)</strong>는 기업의 방대한 데이터를 집계/분석하는 빅데이터 저장소이며, <strong>Snowflake</strong>는 가장 대표적인 클라우드 기반 초고속 분산 DW입니다.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Debezium이 캡처한 변경 이벤트 JSON 페이로드 실제 예시 -->
+    <div class="card">
+      <h2>📝 4. Debezium이 캡처한 변경 이벤트 JSON 페이로드 실제 모습</h2>
       <pre><code>{
   "schema": { ... },
   "payload": {
@@ -157,25 +218,6 @@
     "ts_ms": 1723351200000
   }
 }</code></pre>
-    </div>
-
-    <!-- 4. 백엔드 실무 적용 주요 이점 -->
-    <div class="card">
-      <h2>💡 4. 백엔드 아키텍처 관점의 3대 결정적 이점</h2>
-      <div class="grid-2">
-        <div class="solution-box" style="margin-bottom:0;">
-          <strong style="color:var(--accent-emerald);">1. Zero Code Mutation (코드 무수정)</strong>
-          <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.4rem;">
-            백엔드 Spring Boot 소스코드를 단 한 줄도 고칠 필요가 없습니다. DB 엔진 레벨에서 동작하므로 비즈니스 로직과 데이터 동기화 책임이 완벽히 분리됩니다.
-          </p>
-        </div>
-        <div class="solution-box" style="margin-bottom:0;">
-          <strong style="color:var(--accent-blue);">2. Near Real-time (0.1초 내 전파)</strong>
-          <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.4rem;">
-            배치(Batch) 프로그램처럼 1시간마다 DB를 무겁게 SELECT 풀스캔할 필요 없이, 로그가 쓰이는 순간 밀리초(ms) 단위로 Kafka에 실시간 스트리밍됩니다.
-          </p>
-        </div>
-      </div>
     </div>
   </div>
 </body>
