@@ -49,6 +49,48 @@
     }
     .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
 
+    /* Interactive Animation Comparison Box */
+    .animation-compare-container {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1.25rem 0;
+    }
+    .anim-box {
+      background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem;
+    }
+    .anim-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; }
+    .traffic-lane {
+      position: relative; height: 60px; background: rgba(30, 41, 59, 0.6); border-radius: 8px;
+      border: 1px dashed rgba(255,255,255,0.2); overflow: hidden; margin: 0.75rem 0;
+      display: flex; align-items: center; padding: 0 0.5rem;
+    }
+    .packet {
+      position: absolute; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;
+      font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #fff;
+    }
+    .pkt-h1-1 { background: #f87171; animation: moveH1 3s infinite linear; }
+    .pkt-h1-2 { background: #64748b; left: 10px; opacity: 0.6; }
+    .pkt-h2-1 { background: var(--accent-blue); animation: moveH2_1 2s infinite linear; top: 8px; }
+    .pkt-h2-2 { background: var(--accent-purple); animation: moveH2_2 2s infinite linear 0.4s; bottom: 8px; }
+    .pkt-h2-3 { background: var(--accent-green); animation: moveH2_3 2s infinite linear 0.8s; top: 18px; }
+
+    @keyframes moveH1 {
+      0% { left: 10px; }
+      40% { left: 120px; }
+      80% { left: 120px; } /* Blocked! */
+      100% { left: 90%; }
+    }
+    @keyframes moveH2_1 {
+      0% { left: 0%; }
+      100% { left: 90%; }
+    }
+    @keyframes moveH2_2 {
+      0% { left: 0%; }
+      100% { left: 90%; }
+    }
+    @keyframes moveH2_3 {
+      0% { left: 0%; }
+      100% { left: 90%; }
+    }
+
     .tab-bar { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
     .tab-btn {
       padding: 0.75rem 1.25rem; border-radius: 10px;
@@ -90,8 +132,12 @@
     table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
     th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1rem 0; }
-    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+    .calc-box {
+      background: #0f172a; border-left: 4px solid var(--accent-red); padding: 1rem 1.25rem;
+      border-radius: 0 10px 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #fca5a5;
+      margin-top: 0.75rem; line-height: 1.6;
+    }
+    @media (max-width: 800px) { .animation-compare-container { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -99,48 +145,57 @@
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
       <h1>🔄 MSA 서비스 간 통신 (REST vs gRPC vs Kafka) 심층 비교</h1>
-      <p class="subtitle">HTTP/1.1 vs HTTP/2의 차이, Bearer 헤더 오버헤드 분석, Protobuf 직렬화 및 멀티플렉싱 원리 완벽 해설</p>
+      <p class="subtitle">HTTP/1.1 vs HTTP/2 시각 애니메이션, HOL 블로킹, HPACK 압축, 실무 JWT 크기 분석 및 스레드 풀 고갈 원리</p>
     </div>
 
-    <!-- 1. HTTP/1.1 vs HTTP/2 기초 개념 카드 (신규 보강) -->
+    <!-- 1. HTTP/1.1 vs HTTP/2 시각적 애니메이션 & HOL 블로킹 -->
     <div class="card">
-      <h2>🌐 1. [기초 이해] HTTP/1.1 vs HTTP/2 핵심 차이점</h2>
+      <h2>🚦 1. HTTP/1.1 HOL 블로킹 vs HTTP/2 멀티플렉싱 시각 애니메이션</h2>
       <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">
-        REST API는 주로 <strong>HTTP/1.1</strong> 위에서 동작하고, gRPC는 <strong>HTTP/2</strong>를 기반으로 동작합니다. 두 프로토콜의 구조적 차이를 알면 왜 gRPC가 수배 빠른지 바로 이해할 수 있습니다.
+        • <strong>HOL(Head-of-Line) 블로킹이란?</strong> 고속도로 1차선 톨게이트에서 맨 앞 차량(요청 1)이 결제 오류로 멈춰 서면, 뒤따라오는 수십 대의 차량(요청 2, 3)이 아무런 문제 없이 통과할 수 있음에도 꼼짝없이 줄줄이 갇히는 현상입니다.
       </p>
 
-      <table>
-        <thead>
-          <tr>
-            <th>비교 항목</th>
-            <th style="color:var(--accent-blue);">HTTP/1.1 (REST API 기반)</th>
-            <th style="color:var(--accent-purple);">HTTP/2 (gRPC 기반)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="font-weight:600;">데이터 전송 포맷</td>
-            <td><strong>텍스트(Plain Text)</strong> 기반 (인간이 읽기 편한 ASCII 문자열)</td>
-            <td><strong>바이너리 프레임(Binary Frame)</strong> 기반 (0과 1로 압축된 초소형 패킷)</td>
-          </tr>
-          <tr>
-            <td style="font-weight:600;">동시 요청 처리 방식</td>
-            <td>
-              <strong>순차 처리 (1 커넥션 = 1 요청)</strong><br>
-              앞선 요청이 느리면 뒤 요청이 대기하는 <strong>HOL(Head-of-Line) 블로킹</strong> 발생
-            </td>
-            <td>
-              <strong>멀티플렉싱 (Multiplexing)</strong><br>
-              <strong>단 1개의 TCP 연결</strong> 속에서 수백 개의 요청/응답 스트림을 동시에 병렬 전송
-            </td>
-          </tr>
-          <tr>
-            <td style="font-weight:600;">헤더 처리</td>
-            <td>매 요청마다 수 킬로바이트(KB) 헤더를 <strong>압축 없이 중복 전송</strong></td>
-            <td><strong>HPACK 압축</strong>을 사용하여 중복 헤더는 인덱스 번호만 전송</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="animation-compare-container">
+        <!-- HTTP/1.1 Box -->
+        <div class="anim-box">
+          <div class="anim-title">
+            <span style="color:#f87171;">HTTP/1.1 (1차선 HOL 블로킹)</span>
+            <span style="font-size:0.75rem; color:var(--text-muted);">순차 동기 처리</span>
+          </div>
+          <div class="traffic-lane">
+            <div class="packet pkt-h1-1">요청 1 (지연중 🛑)</div>
+            <div class="packet pkt-h1-2">요청 2 (대기중 ⏳)</div>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            앞선 요청 1의 처리가 끝나야만 뒤의 요청 2가 출발할 수 있어 심각한 지연이 발생합니다.
+          </p>
+        </div>
+
+        <!-- HTTP/2 Box -->
+        <div class="anim-box">
+          <div class="anim-title">
+            <span style="color:var(--accent-green);">HTTP/2 (다중 레인 멀티플렉싱)</span>
+            <span style="font-size:0.75rem; color:var(--text-muted);">단일 TCP 병렬 전송</span>
+          </div>
+          <div class="traffic-lane">
+            <div class="packet pkt-h2-1">Frame 1</div>
+            <div class="packet pkt-h2-2">Frame 2</div>
+            <div class="packet pkt-h2-3">Frame 3</div>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+            단 1개의 TCP 연결 속에서 요청 1, 2, 3의 바이너리 프레임이 동시에 섞여서 초고속 전송됩니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- HPACK 압축 설명 (질문 피드백 보강) -->
+      <div style="background:rgba(15,23,42,0.7); border:1px solid var(--border); border-radius:10px; padding:1.1rem; margin-top:1rem;">
+        <h4 style="color:var(--accent-purple); margin-bottom:0.4rem;">💡 [부연 설명] HTTP/2의 HPACK 헤더 압축 원리란?</h4>
+        <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.6;">
+          HTTP/1.1은 매번 <code>Host: myshop.com</code>, <code>User-Agent: Mozilla...</code> 같은 영문 문자열을 그대로 전송합니다.<br>
+          반면 <strong>HPACK 압축</strong>은 1) 자주 쓰이는 61개 표준 헤더를 번호로 매긴 <strong>정적 테이블(Static Table)</strong>과, 2) 이전에 주고받은 헤더 값을 클라이언트와 서버가 서로 캐싱해 두는 <strong>동적 테이블(Dynamic Table)</strong>, 그리고 <strong>허프만 코딩(Huffman Coding)</strong>을 결합하여, 다음 요청부터는 <strong>"12번 헤더 + 변경된 값 2글자"</strong>만 보내어 헤더 크기를 <strong>85% 이상 압축</strong>합니다.
+        </p>
+      </div>
     </div>
 
     <!-- 2. 통신 프로토콜 방식별 탭 -->
@@ -165,57 +220,36 @@
         desc: "인간이 읽기 편한 JSON 텍스트와 표준 HTTP 동사를 사용하는 범용 동기 통신 방식입니다. 직관적이고 도구 지원이 풍부하지만, MSA 환경에서는 '헤더 오버헤드'와 '동기 대기(Blocking)' 문제가 발생합니다.",
         deepDive: `
           <div class="alert-box alert-warn">
-            <h4 style="color:#f87171; margin-bottom:0.5rem;">⚠️ [질문 해결] Bearer 토큰이 왜 특히 무거운가요? (헤더 크기 전격 분해)</h4>
+            <h4 style="color:#f87171; margin-bottom:0.5rem;">❓ [질문 해결] jwt.io 예시는 172 Byte인데, 실무 JWT는 왜 500~2,000 Byte까지 커질까요?</h4>
             <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-              일반적인 HTTP 헤더(<code>Host: api.shop.com</code>, <code>Accept: */*</code>)는 기껏해야 <strong>20~50 바이트</strong>에 불과합니다.<br>
-              하지만 <code>Authorization: Bearer eyJhbGciOi...</code> 로 전송되는 <strong>JWT(JSON Web Token)</strong>는 사용자 ID, 이메일, 롤(ROLE_USER), 만료시간 등의 페이로드와 암호화 전자서명이 Base64로 인코딩되어 <strong>500 바이트 ~ 2,000 바이트(2KB)</strong>를 차지합니다!<br>
-              👉 즉, <strong>Bearer 토큰 하나가 전체 HTTP 헤더 크기의 80~90%를 차지하는 주범</strong>입니다. MSA에서 서비스 A ➔ B ➔ C로 호출이 전파될 때마다 이 무거운 토큰이 네트워크에 중복 전송됩니다.
+              <code>jwt.io</code>의 기본 샘플은 최소한의 필드(<code>sub</code>, <code>name</code>, <code>iat</code>)만 들어있어 170바이트 수준입니다.<br>
+              하지만 <strong>실무 엔터프라이즈(Spring Security OAuth2, Keycloak, Azure AD)</strong> 환경에서는 DB 조회를 줄이기 위해 토큰 안에 많은 정보를 싣습니다:<br>
+              1. <strong>인가 권한/역할(Roles & Authorities) 배열</strong>: <code>["ROLE_USER", "ROLE_ADMIN", "SCOPE_read", "order:create", "payment:approve", ...]</code> 수십 개 권한 포함.<br>
+              2. <strong>비즈니스 메타데이터</strong>: 조직 코드, 부서 ID, 테넌트 ID(<code>tenant_id: "enterprise-dept-9910"</code>), 이메일, 프로필 URL 등.<br>
+              3. <strong>암호화 전자서명(Signature)</strong>: 보안을 위한 RSA 2048bit 또는 4096bit 비대칭키 서명 자체가 256~512 Byte를 차지함.<br>
+              👉 결과적으로 <strong>실무 JWT는 800 Byte ~ 2,000 Byte(2KB)에 쉽게 도달</strong>하며, 매 API 호출마다 이 무거운 헤더가 반복 전송됩니다.
             </p>
-            
-            <table>
-              <thead>
-                <tr>
-                  <th>헤더 항목</th>
-                  <th>실제 내용 예시</th>
-                  <th>크기 (Byte)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>Host</code>, <code>Connection</code></td>
-                  <td>api.myshop.com / keep-alive</td>
-                  <td>약 35 Byte</td>
-                </tr>
-                <tr>
-                  <td><code>User-Agent</code>, <code>Accept</code></td>
-                  <td>Mozilla/5.0... / application/json</td>
-                  <td>약 120 Byte</td>
-                </tr>
-                <tr>
-                  <td style="color:#f87171; font-weight:700;"><code>Authorization: Bearer</code></td>
-                  <td><strong>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (JWT 전체)</strong></td>
-                  <td style="color:#f87171; font-weight:700;"><strong>약 800 ~ 1,500 Byte (압도적!)</strong></td>
-                </tr>
-                <tr>
-                  <td>실제 전송 데이터 (Body)</td>
-                  <td><code>{"orderId":"101","price":50000}</code></td>
-                  <td>단 33 Byte</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
 
           <div class="alert-box alert-warn">
-            <h4 style="color:#f87171; margin-bottom:0.5rem;">⚠️ 동기 대기 (Synchronous Blocking & Cascade Latency)란?</h4>
+            <h4 style="color:#f87171; margin-bottom:0.5rem;">❓ [질문 해결] 결제 서비스 1초 지연 시, 주문 서버 스레드 풀(200개)이 1초 만에 고갈되는 이유 (수학적 증명)</h4>
             <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-              주문 서비스가 결제 서비스를 호출하면, 결제 서비스가 카드사 승인을 마치고 HTTP 200 응답을 줄 때까지 주문 서비스의 톰캣 작업 스레드(Thread)는 <strong>아무 일도 못하고 멈춰서 대기(Blocking)</strong>합니다. 결제 서비스가 1초 지연되면 주문 서버 스레드 풀(200개)이 1초 만에 고갈되어 전체 웹사이트가 멈추는 장애 전파(Cascading Failure)가 발생합니다.
+              톰캣(Tomcat)의 기본 최대 작업 스레드 수는 <strong>200개(maxThreads=200)</strong>입니다.
             </p>
+            <div class="calc-box">
+              • 정상 상황 (결제 응답 10ms = 0.01초):<br>
+              &nbsp;&nbsp;스레드 1개가 1초에 100건 처리 ➔ 200개 스레드로 <strong>초당 20,000건(TPS 20,000)</strong> 거뜬히 소화!<br><br>
+              • 장애 상황 (결제 서비스 1초 지연 발생 시):<br>
+              &nbsp;&nbsp;스레드 1개가 1초에 <strong>단 1건</strong>밖에 처리 못 함 (1초 동안 스레드가 멈춰서 block 대기).<br>
+              &nbsp;&nbsp;이때 사용자 요청이 초당 200건(QPS 200)만 들어와도 ➔ <strong>단 1초 만에 200개 스레드가 전원 고갈(Starvation)!</strong><br>
+              &nbsp;&nbsp;201번째 요청부터는 대기 큐로 밀리다가 타임아웃(503 Service Unavailable)으로 서버 완전 마비!
+            </div>
           </div>
         `,
         seq: [
-          "[Order Service (주문 서버)] ➔ HTTP POST /api/v1/payments (무거운 JSON + JWT 헤더 1.2KB) ➔ [Payment Service]",
-          "[Payment Service (결제 서버)] ➔ 카드사 승인 연동 처리 중 (Order Service 스레드는 250ms 동안 정지/대기)",
-          "[Payment Service] ➔ HTTP 200 OK Response (JSON 파싱 필요) ➔ [Order Service (응답 수신 후 다음 로직 진행)]"
+          "[Order Service (주문 서버)] ➔ HTTP POST /api/v1/payments (무거운 JSON + JWT 헤더 1.5KB) ➔ [Payment Service]",
+          "[Payment Service (결제 서버)] ➔ 카드사 승인 연동 처리 중 (Order Service 스레드는 1,000ms 동안 정지/대기)",
+          "[Payment Service] ➔ HTTP 200 OK Response (JSON 파싱 필요) ➔ [Order Service (스레드 풀 반환)]"
         ],
         lang: "Java (Spring Boot / WebClient)",
         code: `// [Java Spring Boot] WebClient를 통한 REST API 동기 호출 예시
@@ -223,31 +257,21 @@ PaymentRequest requestDto = new PaymentRequest("ORD-2026-0811", 50000);
 
 PaymentResponse response = webClient.post()
     .uri("http://payment-service:8080/api/v1/payments")
-    .header("Authorization", "Bearer " + jwtToken) // ⚠️ 1KB에 달하는 JWT가 매 요청마다 동봉 전송!
+    .header("Authorization", "Bearer " + enterpriseJwtToken) // ⚠️ 실무 1.5KB JWT 반복 전송
     .bodyValue(requestDto)
     .retrieve()
     .bodyToMono(PaymentResponse.class)
-    .block(); // ⚠️ 응답이 올 때까지 현재 톰캣 워커 스레드가 Blocking 상태로 정지!`
+    .block(); // ⚠️ 1초 동안 톰캣 워커 스레드가 Blocking 상태로 멈춤!`
       },
       grpc: {
         title: "2. gRPC (HTTP/2 + Protocol Buffers)",
         desc: "구글이 개발한 고성능 오픈소스 RPC 프레임워크로, 텍스트(JSON) 대신 IDL 기반의 바이너리 압축 포맷(Protocol Buffers)과 HTTP/2 멀티플렉싱을 활용합니다.",
         deepDive: `
           <div class="alert-box alert-info">
-            <h4 style="color:var(--accent-blue); margin-bottom:0.5rem;">💡 [질문 해결] Protobuf 바이너리 직렬화 실제 크기 비교 예시</h4>
+            <h4 style="color:var(--accent-blue); margin-bottom:0.5rem;">💡 Protobuf 바이너리 직렬화 실제 크기 비교</h4>
             <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-              • <strong>JSON 텍스트 포맷 (45 바이트)</strong>:<br>
-              <code>{"orderId": "ORD-101", "amount": 50000}</code> ➔ <code>"orderId"</code>, <code>"amount"</code>라는 영문 글자 자체를 텍스트 그대로 전송하므로 용량이 큽니다.<br>
-              • <strong>Protobuf 바이너리 포맷 (단 7 바이트!)</strong>:<br>
-              <code>.proto</code>에 <code>orderId = 1</code>, <code>amount = 2</code>로 필드 번호가 매겨져 있으므로, 네트워크로는 <code>[0A 07 4F 52 44 2D 31 30 31 10 C0 A7 03]</code> 같은 <strong>7바이트 순수 이진 숫자</strong>만 날아갑니다. 용량이 85% 절감되며 CPU 파싱 연산이 필요 없습니다!
-            </p>
-          </div>
-
-          <div class="alert-box alert-info">
-            <h4 style="color:var(--accent-blue); margin-bottom:0.5rem;">💡 [질문 해결] 멀티플렉싱(Multiplexing)의 고속도로 비유</h4>
-            <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-              • <strong>HTTP/1.1 (1차선 도로)</strong>: 앞차가 고장 나서 멈추면 뒤차 100대가 꼼짝없이 멈춥니다 (HOL 블로킹).<br>
-              • <strong>HTTP/2 멀티플렉싱 (초고속 다차선 하이패스 터널)</strong>: <strong>단 1개의 TCP 연결</strong> 안에서 요청 A, 요청 B, 요청 C의 패킷을 잘게 쪼개어 번갈아가며 동시에 섞어 보낸 뒤, 수신 측에서 번호표대로 완벽히 재조립합니다. 따라서 요청 1개가 지연되어도 다른 요청들은 최고 속도로 통과합니다!
+              • <strong>JSON 텍스트 포맷 (45 바이트)</strong>: <code>{"orderId": "ORD-101", "amount": 50000}</code><br>
+              • <strong>Protobuf 바이너리 포맷 (단 7 바이트!)</strong>: <code>08 65 10 C0 A7 03</code> (85% 크기 절감 & 파싱 속도 10배)
             </p>
           </div>
         `,
@@ -256,88 +280,40 @@ PaymentResponse response = webClient.post()
           "[네트워크 전송] ➔ HTTP/2 단일 TCP 커넥션 상에서 이진(Binary) 프레임 멀티플렉싱 전송 (단 7바이트, 12ms)",
           "[Payment Service] ➔ 고속 바이너리 역직렬화 및 승인 ➔ [Order Service 로 결과 바이너리 스트림 반환]"
         ],
-        lang: "Protocol Buffer IDL (payment.proto) & Java gRPC Client",
-        code: `// [1단계: payment.proto 파일 정의]
+        lang: "Protocol Buffer IDL & Java gRPC Client",
+        code: `// [payment.proto 정의]
 syntax = "proto3";
-package com.ecommerce.payment;
-
 service PaymentService {
   rpc ProcessPayment (PaymentRequest) returns (PaymentReply);
 }
-
 message PaymentRequest {
-  string order_id = 1; // 필드명을 숫자로 매핑하여 초소형 바이너리로 압축
+  string order_id = 1;
   int64 amount = 2;
 }
 
-message PaymentReply {
-  bool success = 1;
-  string transaction_id = 2;
-}
-
-// ----------------------------------------------------
-// [2단계: Java gRPC 클라이언트 호출 코드]
-PaymentServiceGrpc.PaymentServiceBlockingStub stub = PaymentServiceGrpc.newBlockingStub(grpcChannel);
-
-// 마치 로컬 함수를 호출하듯 직관적이며, 내부적으로 HTTP/2 바이너리 통신 수행
-PaymentReply reply = stub.processPayment(
-    PaymentRequest.newBuilder()
-        .setOrderId("ORD-101")
-        .setAmount(50000L)
-        .build()
-);
-System.out.println("결제 성공 여부: " + reply.getSuccess());`
+// [Java gRPC 클라이언트 호출]
+PaymentReply reply = paymentStub.processPayment(
+    PaymentRequest.newBuilder().setOrderId("ORD-101").setAmount(50000L).build()
+);`
       },
       kafka: {
         title: "3. Apache Kafka (비동기 분산 이벤트 스트리밍)",
-        desc: "서비스 간 직접 호출(Point-to-Point)을 완전히 제거하고, 이벤트를 중앙 브로커(Topic)에 발행(Publish)한 뒤 관심 있는 서비스들이 구독(Subscribe)하여 각자의 속도로 처리하는 비동기 분산 플랫폼입니다.",
+        desc: "서비스 간 직접 호출을 완전히 제거하고, 이벤트를 중앙 토픽에 발행한 뒤 구독 서비스들이 비동기로 소비하는 분산 플랫폼입니다.",
         deepDive: `
           <div class="alert-box alert-success">
-            <h4 style="color:var(--accent-green); margin-bottom:0.5rem;">🌱 [초보자를 위한 개념] Kafka란 무엇인가요?</h4>
+            <h4 style="color:var(--accent-green); margin-bottom:0.5rem;">🌱 Kafka의 비동기 결합 해제(Decoupling)</h4>
             <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-              • <strong>전통적 메시지 큐(RabbitMQ 등)와의 차이</strong>: 일반 큐는 소비자가 메시지를 읽으면 큐에서 즉시 삭제됩니다. 하지만 Kafka는 <strong>분산 디스크에 이벤트 로그를 영구/장기 보관(Append-only Commit Log)</strong>하여 장애가 나도 과거 시점부터 다시 읽기(Replay)가 가능합니다.<br>
-              • <strong>핵심 구성요소</strong>:<br>
-              &nbsp;&nbsp;1) <strong>Producer(생산자)</strong>: 이벤트를 발행하는 서비스 (예: 주문 완료 이벤트 발행)<br>
-              &nbsp;&nbsp;2) <strong>Topic & Partition</strong>: 이벤트가 분류되어 저장되는 분산 큐 채널 (수평 확장 가능)<br>
-              &nbsp;&nbsp;3) <strong>Consumer Group(소비자)</strong>: 이벤트를 가져가서 처리하는 서비스 (예: 배송, 알림, 통계 서버)<br>
-              • <strong>비동기 결합 해제(Decoupling)</strong>: 주문 서버는 알림 서버나 배송 서버가 살아있는지, 느린지 알 필요 없이 이벤트만 Kafka에 던져놓고 1ms만에 사용자에게 "주문 완료" 응답을 줍니다!
+              결제 서비스가 1초가 걸리든 1분이 걸리든, 주문 서버는 토픽에 이벤트만 던져두고 <strong>1ms 만에 사용자에게 "주문 접수 완료" 응답을 반환</strong>하므로 스레드 풀 고갈이 원천 차단됩니다.
             </p>
           </div>
         `,
         seq: [
-          "[Order Service] ➔ (이벤트 발행: OrderCreatedEvent) ➔ [Kafka Broker: Topic 'orders.v1'] ➔ (0.5ms 즉시 응답 완료)",
-          "[Kafka Topic 'orders.v1'] ➔ 이벤트를 파티션 디스크에 영속 보관 (Commit Log)",
-          "[Payment Service (Consumer Group 1)] ➔ 자신의 속도로 메시지 읽어 카드 결제 진행",
-          "[Notification Service (Consumer Group 2)] ➔ 자신의 속도로 메시지 읽어 알림톡 발송",
-          "[Analytics Service (Consumer Group 3)] ➔ 자신의 속도로 메시지 읽어 통계 DB 적재"
+          "[Order Service] ➔ (이벤트 발행: OrderCreatedEvent) ➔ [Kafka Topic: 'orders.v1'] ➔ (0.5ms 즉시 반환)",
+          "[Payment Service Consumer] ➔ 자신의 속도로 파티션에서 이벤트를 가져가 결제 진행 (주문 서버 스레드 영향 0%)"
         ],
-        lang: "Java (Spring Kafka Producer & Consumer)",
-        code: `// [Java Spring Boot - Kafka Producer (주문 서비스)]
-@Service
-@RequiredArgsConstructor
-public class OrderService {
-    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
-
-    public void placeOrder(String orderId, Long userId, Long amount) {
-        OrderCreatedEvent event = new OrderCreatedEvent(orderId, userId, amount);
-        
-        // Topic("orders.v1")에 이벤트를 발행하고 즉시 반환 (Non-blocking)
-        kafkaTemplate.send("orders.v1", orderId, event);
-    }
-}
-
-// ----------------------------------------------------
-// [Java Spring Boot - Kafka Consumer (알림 서비스)]
-@Component
-@Slf4j
-public class NotificationConsumer {
-
-    @KafkaListener(topics = "orders.v1", groupId = "notification-group")
-    public void onOrderCreated(OrderCreatedEvent event) {
-        log.info("주문 알림톡 발송 시작 - 주문번호: {}, 금액: {}", event.orderId(), event.amount());
-        kakaoNotificationSender.send(event.userId(), "주문이 정상 완료되었습니다.");
-    }
-}`
+        lang: "Java Spring Kafka",
+        code: `// [Kafka 이벤트 발행 - 논블로킹]
+kafkaTemplate.send("orders.v1", orderId, new OrderCreatedEvent(orderId, userId, amount));`
       }
     };
 

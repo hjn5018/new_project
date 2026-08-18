@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EDA 깊이보기 & MQTT vs RabbitMQ vs Kafka 동작 원리</title>
+  <title>EDA 깊이보기 & MQTT vs RabbitMQ vs Kafka 동작 원리 및 4-Way Handshake</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -48,16 +48,48 @@
       padding: 1.75rem; margin-bottom: 2rem;
     }
     .card h2 { font-size: 1.35rem; color: #fff; margin-bottom: 1rem; }
-    .card h3 { font-size: 1.15rem; margin-bottom: 0.75rem; }
 
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem; }
+    /* Animated Visual Pipelines */
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
-    .box {
-      background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.25rem;
+    .arch-card {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;
     }
-    ul { padding-left: 1.2rem; color: var(--text-muted); font-size: 0.92rem; line-height: 1.65; }
-    li { margin-bottom: 0.4rem; }
+    .arch-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    
+    .anim-pipeline {
+      position: relative; height: 110px; background: rgba(30, 41, 59, 0.5);
+      border-radius: 8px; border: 1px dashed rgba(255,255,255,0.15);
+      padding: 0.6rem; margin: 0.75rem 0; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .flow-node {
+      font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 4px;
+      display: inline-block;
+    }
+    .pulse-dot {
+      width: 10px; height: 10px; border-radius: 50%; background: var(--accent-amber);
+      position: absolute; box-shadow: 0 0 8px var(--accent-amber);
+    }
+    .dot-mqtt { animation: moveMqtt 2.5s infinite linear; }
+    .dot-rmq { animation: moveRmq 2.5s infinite linear; }
+    .dot-kafka { animation: moveKafka 2.5s infinite linear; }
+
+    @keyframes moveMqtt {
+      0% { top: 20px; left: 10px; }
+      50% { top: 50px; left: 50%; }
+      100% { top: 80px; left: 85%; }
+    }
+    @keyframes moveRmq {
+      0% { top: 20px; left: 10px; }
+      40% { top: 50px; left: 45%; }
+      100% { top: 80px; left: 85%; }
+    }
+    @keyframes moveKafka {
+      0% { top: 20px; left: 10px; }
+      50% { top: 50px; left: 50%; }
+      100% { top: 80px; left: 85%; }
+    }
 
     .qos-card {
       background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border);
@@ -74,113 +106,106 @@
       color: #e2e8f0; margin-top: 0.6rem; border-left: 3px solid var(--accent-blue);
       line-height: 1.6;
     }
-    .arch-flow {
-      background: #0f172a; padding: 1rem; border-radius: 10px; border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; margin-top: 0.5rem;
+    .deep-qa-box {
+      background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; margin-top: 1.5rem;
     }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
     th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
-    @media (max-width: 800px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .grid-3 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="../jargons.html" class="back-nav">← 용어 사전으로 돌아가기</a>
     <div class="header-box">
-      <h1>📡 EDA & MQTT vs RabbitMQ vs Kafka 동작 원리 및 QoS 심층 분석</h1>
-      <p class="subtitle">3대 메시징 시스템의 시각적 동작 흐름과 MQTT QoS 레벨(주체, 대상, 4단계 핸드셰이크) 완벽 해설</p>
+      <h1>📡 EDA & MQTT vs RabbitMQ vs Kafka 동작 원리 및 4-Way Handshake</h1>
+      <p class="subtitle">3대 메시징 시스템의 시각적 애니메이션과 MQTT QoS 0/1/2 및 4-Way vs 3-Way Handshake 비교 완벽 해설</p>
     </div>
 
-    <!-- 1. MQTT vs RabbitMQ vs Kafka 시각적 동작 원리 -->
+    <!-- 1. MQTT vs RabbitMQ vs Kafka 시각적 동작 애니메이션 -->
     <div class="card">
-      <h2>📊 1. MQTT, RabbitMQ, Kafka 3대 메시징 시스템 동작 원리 시각화</h2>
+      <h2>📊 1. MQTT, RabbitMQ, Kafka 3대 메시징 시스템 시각적 패킷 흐름</h2>
       
       <div class="grid-3">
         <!-- MQTT -->
-        <div class="box" style="border-top:3px solid var(--accent-blue);">
-          <h3 style="color:var(--accent-blue);">1. MQTT (IoT 토픽 중계)</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted);">
-            브로커가 가벼운 계층형 토픽(<code>sensor/temp</code>)을 구독하는 수천 대의 단말기에 메시지를 즉시 브로드캐스팅.
-          </p>
-          <div class="arch-flow">
-            [센서 기기 (Pub)]<br>
-            &nbsp;&nbsp;⬇️ (Topic: home/temp)<br>
-            [MQTT Broker (EMQX/Mosquitto)]<br>
-            &nbsp;&nbsp;⬇️ (즉시 전달)<br>
-            [스마트폰 앱 (Sub)]
+        <div class="arch-card" style="border-top:3px solid var(--accent-blue);">
+          <div>
+            <div class="arch-title" style="color:var(--accent-blue);">1. MQTT (IoT 토픽 브로드캐스트)</div>
+            <p style="font-size:0.83rem; color:var(--text-muted);">센서가 가벼운 토픽으로 쏘면 브로커가 대기열 없이 구독 기기에 즉시 밀어줌.</p>
+          </div>
+          <div class="anim-pipeline">
+            <div style="display:flex; justify-content:space-between;">
+              <span class="flow-node" style="background:rgba(56,189,248,0.2); color:var(--accent-blue);">온도 센서 (Pub)</span>
+              <span class="flow-node" style="background:rgba(56,189,248,0.2); color:var(--accent-blue);">스마트폰 앱 (Sub)</span>
+            </div>
+            <div class="pulse-dot dot-mqtt"></div>
+            <div style="text-align:center; font-size:0.75rem; color:var(--accent-amber); font-family:'JetBrains Mono';">
+              [EMQX Broker 토픽 매칭]
+            </div>
           </div>
         </div>
 
         <!-- RabbitMQ -->
-        <div class="box" style="border-top:3px solid var(--accent-amber);">
-          <h3 style="color:var(--accent-amber);">2. RabbitMQ (Exchange 라우팅)</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted);">
-            Exchange가 라우팅 키(Routing Key) 규칙에 따라 메시지를 특정 큐(Queue)로 분기 배달하고 Consumer 확인(Ack) 시 삭제.
-          </p>
-          <div class="arch-flow">
-            [주문 서비스 (Producer)]<br>
-            &nbsp;&nbsp;⬇️ (Exchange: direct/fanout)<br>
-            [RabbitMQ Exchange]<br>
-            &nbsp;&nbsp;⬇️ (Binding Key 매핑)<br>
-            [알림 Queue] ➔ [Worker (Consumer)]
+        <div class="arch-card" style="border-top:3px solid var(--accent-amber);">
+          <div>
+            <div class="arch-title" style="color:var(--accent-amber);">2. RabbitMQ (Exchange ➔ Queue)</div>
+            <p style="font-size:0.83rem; color:var(--text-muted);">Exchange가 규칙(Routing Key)에 따라 알림 큐로 배달하고 Consumer가 처리 시 삭제.</p>
+          </div>
+          <div class="anim-pipeline">
+            <div style="display:flex; justify-content:space-between;">
+              <span class="flow-node" style="background:rgba(251,191,36,0.2); color:var(--accent-amber);">주문 서버 (Producer)</span>
+              <span class="flow-node" style="background:rgba(251,191,36,0.2); color:var(--accent-amber);">알림 Worker (Consumer)</span>
+            </div>
+            <div class="pulse-dot dot-rmq"></div>
+            <div style="text-align:center; font-size:0.75rem; color:var(--accent-amber); font-family:'JetBrains Mono';">
+              [Exchange ➔ Queue 바인딩]
+            </div>
           </div>
         </div>
 
         <!-- Kafka -->
-        <div class="box" style="border-top:3px solid var(--accent-purple);">
-          <h3 style="color:var(--accent-purple);">3. Kafka (디스크 분산 로그)</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted);">
-            디스크 파티션(Partition)에 이벤트를 순차 기록(Commit Log)하고, 소비자가 각자의 오프셋(Offset) 위치를 읽어감.
-          </p>
-          <div class="arch-flow">
-            [주문 서비스 (Producer)]<br>
-            &nbsp;&nbsp;⬇️ (send to partition)<br>
-            [Topic: orders [0][1][2]... (Disk)]<br>
-            &nbsp;&nbsp;⬇️ (독립적 Offset Read)<br>
-            [결제 Consumer], [배송 Consumer]
+        <div class="arch-card" style="border-top:3px solid var(--accent-purple);">
+          <div>
+            <div class="arch-title" style="color:var(--accent-purple);">3. Kafka (디스크 분산 Commit Log)</div>
+            <p style="font-size:0.83rem; color:var(--text-muted);">이벤트를 디스크 파티션에 영구 순차 기록하고, 여러 서비스가 독립적으로 읽어감.</p>
+          </div>
+          <div class="anim-pipeline">
+            <div style="display:flex; justify-content:space-between;">
+              <span class="flow-node" style="background:rgba(192,132,252,0.2); color:var(--accent-purple);">결제 서버 (Producer)</span>
+              <span class="flow-node" style="background:rgba(192,132,252,0.2); color:var(--accent-purple);">정산 / DW Consumer</span>
+            </div>
+            <div class="pulse-dot dot-kafka"></div>
+            <div style="text-align:center; font-size:0.75rem; color:var(--accent-purple); font-family:'JetBrains Mono';">
+              [Topic Partition Disk Append]
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 2. MQTT QoS 핵심 질문 해결: 주체, 대상, 3단계 레벨 -->
+    <!-- 2. MQTT QoS 3단계 레벨 분석 -->
     <div class="card">
-      <h2>📶 2. [핵심 질문 해결] MQTT QoS (Quality of Service) 완벽 가이드</h2>
-      
-      <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.25rem;">
-        <h4 style="color:var(--accent-amber); margin-bottom:0.5rem;">❓ [질문 1] QoS에서 Publish하는 주체는 Client인가요, Broker인가요?</h4>
-        <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-          👉 <strong>둘 다 Publish를 수행하며, 2개 구간 각각에 독립적으로 QoS가 적용됩니다!</strong><br>
-          1) <strong>송신자 Client ➔ Broker</strong> 구간 (Client가 Publish)<br>
-          2) <strong>Broker ➔ 수신자 Client</strong> 구간 (Broker가 Publish)<br>
-          예를 들어 센서가 Broker에 QoS 2로 안전하게 보내도, 스마트폰이 QoS 0으로 구독하고 있다면 최종 스마트폰 전달은 QoS 0으로 처리됩니다.
-        </p>
+      <h2>📶 2. MQTT QoS (Quality of Service) 3단계 레벨 상세 분석</h2>
+      <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6; margin-bottom:1.25rem;">
+        네트워크가 불안정한 IoT 환경에서 메시지가 누락되거나 중복 전송되는 것을 제어하기 위해 3단계 전송 품질을 제공합니다.
+      </p>
 
-        <h4 style="color:var(--accent-amber); margin:1rem 0 0.5rem 0;">❓ [질문 2] At most once / At least once / Exactly once에서 '무엇'이 대상인가요?</h4>
-        <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
-          👉 대상은 바로 <strong>"전송되는 데이터/메시지가 수신자에게 도달하는 횟수"</strong>입니다!<br>
-          • <strong>At most once (최대 1번)</strong>: 0번 또는 1번 도달 (유실될 수 있음)<br>
-          • <strong>At least once (최소 1번)</strong>: 1번 이상 도달 (유실은 없으나 중복 수신될 수 있음)<br>
-          • <strong>Exactly once (정확히 1번)</strong>: 무조건 정확히 딱 1번만 도달 (유실도 중복도 없음)
-        </p>
-      </div>
-
-      <!-- 3단계 QoS 상세 카드 -->
       <div class="grid-3">
         <!-- QoS 0 -->
         <div class="qos-card" style="border-top:3px solid var(--accent-blue);">
           <span class="qos-badge" style="background:rgba(56,189,248,0.2); color:var(--accent-blue);">QoS 0 : At most once (최대 1회)</span>
-          <h3 style="color:#fff; font-size:1.05rem;">Fire & Forget (확인 응답 없음)</h3>
+          <h3 style="color:#fff; font-size:1.05rem;">Fire & Forget (응답 없음)</h3>
           <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
-            메시지를 딱 1번 보내고 응답을 기다리지 않습니다. 네트워크가 끊기면 유실됩니다.
+            메시지를 딱 1번 전송하고 확인하지 않습니다. 네트워크 단절 시 유실될 수 있습니다.
           </p>
           <div class="flow-step">
             Client ➔ [PUBLISH] ➔ Broker<br>
             (수신 확인 없음, 최고 속도)
           </div>
           <p style="font-size:0.8rem; color:var(--accent-blue); margin-top:0.6rem;">
-            💡 <strong>예시</strong>: 1초마다 갱신되는 온습도 센서, 실시간 GPS 좌표 (이번 데이터가 유실되어도 1초 뒤 다음 데이터가 오므로 무방함).
+            💡 <strong>사용처</strong>: 1초마다 오는 센서 온도, 실시간 GPS 좌표 (이번 데이터가 유실되어도 다음 데이터가 곧 오므로 무방함).
           </p>
         </div>
 
@@ -189,7 +214,7 @@
           <span class="qos-badge" style="background:rgba(251,191,36,0.2); color:var(--accent-amber);">QoS 1 : At least once (최소 1회)</span>
           <h3 style="color:#fff; font-size:1.05rem;">ACK 수신 확인 (중복 허용)</h3>
           <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
-            브로커가 PUBACK을 줄 때까지 재전송합니다. <strong>유실은 없으나 중복 전송될 수 있습니다.</strong>
+            브로커가 PUBACK을 줄 때까지 재전송합니다. <strong>유실은 없으나 중복될 수 있습니다.</strong>
           </p>
           <div class="flow-step">
             1. Client ➔ [PUBLISH] ➔ Broker<br>
@@ -197,27 +222,54 @@
             (PUBACK 분실 시 재전송하여 2회 수신)
           </div>
           <p style="font-size:0.8rem; color:var(--accent-amber); margin-top:0.6rem;">
-            💡 <strong>[도어락 예시 쉽게 이해하기]</strong>: 스마트폰으로 "도어락 문 잠금" 명령을 보낼 때, ACK가 안 오면 2번 3번 보내더라도 문은 계속 '잠김' 상태이므로(멱등성), 중복 수신되어도 무방하지만 <strong>문은 반드시 잠겨야 하므로(최소 1회 보장)</strong> QoS 1이 적합합니다.
+            💡 <strong>[도어락 예시 쉽게 이해하기]</strong>: "문 잠금" 명령은 2번 3번 중복 전송되어도 문은 계속 '잠김' 상태(멱등성)이므로 안전하지만, <strong>문은 반드시 잠겨야(최소 1회 도달)</strong> 하므로 QoS 1이 최적입니다.
           </p>
         </div>
 
         <!-- QoS 2 -->
         <div class="qos-card" style="border-top:3px solid var(--accent-emerald);">
           <span class="qos-badge" style="background:rgba(52,211,153,0.2); color:var(--accent-emerald);">QoS 2 : Exactly once (정확히 1회)</span>
-          <h3 style="color:#fff; font-size:1.05rem;">4단계 핸드셰이크 (완벽 보장)</h3>
+          <h3 style="color:#fff; font-size:1.05rem;">4-Way Handshake (완벽 보장)</h3>
           <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
-            송신자와 수신자가 2중 확인을 거쳐 <strong>유실과 중복을 완벽히 0으로 차단</strong>합니다.
+            4단계 핸드셰이크로 <strong>유실과 중복을 100% 원천 차단</strong>합니다.
           </p>
           <div class="flow-step">
-            1. Client ➔ [PUBLISH] (메시지 보냄)<br>
-            2. Broker ➔ [PUBREC] (수신 및 임시보관)<br>
-            3. Client ➔ [PUBREL] (확정 처리 명령)<br>
-            4. Broker ➔ [PUBCOMP] (최종 완료 통보)
+            1. Client ➔ [PUBLISH] ➔ Broker<br>
+            2. Broker ➔ [PUBREC (수신/잠금)] ➔ Client<br>
+            3. Client ➔ [PUBREL (확정 명령)] ➔ Broker<br>
+            4. Broker ➔ [PUBCOMP (완료 통보)] ➔ Client
           </div>
           <p style="font-size:0.8rem; color:var(--accent-emerald); margin-top:0.6rem;">
-            💡 <strong>[QoS 2가 4단계인 이유]</strong>: "너 메시지 받았어? (1➔2단계: 안전하게 잠가둠) / 응 보관했어, 이제 확정해! (3➔4단계: 처리 후 완료)" 라는 2단계 트랜잭션 검증으로 중복 결제/투약 사고를 100% 방지합니다.
+            💡 <strong>사용처</strong>: 스마트 결제 단말기 결제 명령, 원격 의료 투약 (절대 중복 결제되거나 2회 투약되면 안 되는 중요 작업).
           </p>
         </div>
+      </div>
+
+      <!-- QoS 2 4-Way vs TCP 3-Way 비교 (질문 피드백 신규 추가) -->
+      <div class="deep-qa-box" style="border-left:4px solid var(--accent-emerald);">
+        <h4 style="color:var(--accent-emerald); margin-bottom:0.5rem;">❓ [핵심 비교] TCP 3-Way Handshake와 MQTT QoS 2 4-Way Handshake의 결정적 차이</h4>
+        <p style="font-size:0.9rem; color:var(--text); line-height:1.65;">
+          • <strong>TCP 3-Way Handshake (SYN ➔ SYN-ACK ➔ ACK)</strong>:<br>
+          목적은 데이터를 보내기 전에 <strong>"컴퓨터와 서버 간에 데이터를 보낼 연결 파이프(Socket Connection)를 뚫는 것"</strong>입니다. 데이터 메시지 자체의 중복 처리는 책임지지 않습니다.<br><br>
+          • <strong>MQTT QoS 2 4-Way Handshake (PUBLISH ➔ PUBREC ➔ PUBREL ➔ PUBCOMP)</strong>:<br>
+          이미 연결된 소켓 파이프 위에서, <strong>"단 1개의 비즈니스 메시지가 양쪽에서 중복 처리되지 않고 정확히 1번만 승인(2-Phase Commit 트랜잭션)되도록 보장"</strong>하기 위한 응용 계층 핸드셰이크입니다.<br>
+          1) <code>PUBREC</code>으로 수신자가 메시지를 임시 저장하고 식별자를 잠가둠(Lock) ➔ 2) 송신자가 확인 후 <code>PUBREL</code>로 확정 지시 ➔ 3) 수신자가 최종 처리 후 <code>PUBCOMP</code>로 종료.
+        </p>
+      </div>
+
+      <!-- 질문 1 & 질문 2 (하단 재배치 완료) -->
+      <div class="deep-qa-box" style="border-left:4px solid var(--accent-amber);">
+        <h4 style="color:var(--accent-amber); margin-bottom:0.5rem;">❓ [QoS 핵심 정리 1] QoS에서 Publish하는 주체는 Client인가요, Broker인가요?</h4>
+        <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
+          👉 <strong>둘 다 Publish를 수행하며, 2개 구간 각각에 독립적으로 QoS가 적용됩니다!</strong><br>
+          1) <strong>송신자 Client ➔ Broker</strong> 구간 (Client가 Publish)<br>
+          2) <strong>Broker ➔ 수신자 Client</strong> 구간 (Broker가 Publish)
+        </p>
+
+        <h4 style="color:var(--accent-amber); margin:1rem 0 0.5rem 0;">❓ [QoS 핵심 정리 2] At most once / At least once / Exactly once에서 '무엇'이 대상인가요?</h4>
+        <p style="font-size:0.9rem; color:var(--text); line-height:1.6;">
+          👉 대상은 바로 <strong>"전송되는 데이터/메시지가 수신자에게 도달하는 횟수"</strong>입니다. (최대 1번 도달 / 최소 1번 도달 / 정확히 1번 도달).
+        </p>
       </div>
     </div>
   </div>
