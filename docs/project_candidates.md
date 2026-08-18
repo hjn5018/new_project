@@ -67,6 +67,7 @@ sequenceDiagram
 - **핵심 검증 목표**:
   1. **동시성 정합성**: 동시 100~1,000개 요청이 재고 100개 상품에 인입될 때 정확히 0개로 마감되고 초과 판매(Overselling)가 0건임을 JUnit 5 멀티스레드(`ExecutorService`)로 증명.
   2. **순차 대기열**: Redis Sorted Set(`ZSET`)의 Score(Timestamp)를 활용하여 선착순 유저에게 실시간 대기 순번(`ZRANK`) 및 폴링 상태 제공.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](pocs/poc1_redis_concurrency/poc1_details.md) | [실행 계획서 (plan.md)](pocs/poc1_redis_concurrency/poc1_plan.md)
 
 ---
 
@@ -96,6 +97,7 @@ flowchart TD
 - **핵심 검증 목표**:
   1. **Kafka 고속 스트리밍**: 초당 수만 건의 이벤트 발행 시 비동기 디커플링을 통해 주문 메인 API 지연시간을 5ms 이하로 유지.
   2. **RabbitMQ DLQ 예외 격리**: 카카오톡/SMS 외부 통신 실패 시 재시도 3회(Exponential Backoff) 후 DLQ로 안전하게 격리되어 다른 정상 메시지 처리를 방해하지 않는지 검증.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](pocs/poc2_messaging_dual/poc2_details.md) | [실행 계획서 (plan.md)](pocs/poc2_messaging_dual/poc2_plan.md)
 
 ---
 
@@ -124,6 +126,7 @@ flowchart TD
 - **핵심 검증 목표**:
   1. **MongoDB 유연한 적재**: 스키마가 고정되지 않은 PG사별 결제 웹훅 원본 JSON과 멀티턴 챗봇 대화 이력을 가변 BSON 문서로 고속 저장 및 `$slice` 연산 검증.
   2. **VectorDB 시맨틱 검색**: "결제 취소하고 돈 언제 돌려줘?"와 "FAQ #101: 환불 처리 일정 안내"의 코사인 유사도를 계산하여 0.85 이상의 높은 정확도로 검색됨을 검증.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](pocs/poc3_nosql_vector/poc3_details.md) | [실행 계획서 (plan.md)](pocs/poc3_nosql_vector/poc3_plan.md)
 
 ---
 
@@ -151,6 +154,7 @@ flowchart TD
 - **핵심 검증 목표**:
   1. **Webhook 멱등성**: 네트워크 재전송으로 동일한 결제 Webhook이 3회 연속 들어와도 1회만 결제 승인/적립 로직이 실행되는지 증명.
   2. **대용량 청크 정산**: 10만 건의 결제 데이터에 대해 Chunk Size 1,000 단위로 OOM(Out Of Memory) 없이 1분 내에 정산 집계 및 CSV 생성을 완료.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](pocs/poc4_payment_batch/poc4_details.md) | [실행 계획서 (plan.md)](pocs/poc4_payment_batch/poc4_plan.md)
 
 ---
 
@@ -179,6 +183,7 @@ flowchart TB
 - **핵심 검증 목표**:
   1. **단일 명령 인프라 구축**: `docker compose up -d` 한 줄로 모든 미들웨어 및 앱이 100% 정상 기동.
   2. **분산 트레이싱 추적**: 단일 API 호출 시 [Gateway ➔ Service ➔ Redis ➔ Kafka ➔ DB] 전 구간의 Trace ID가 단절 없이 앤드투앤드로 추적되는지 Kibana/Tempo에서 확인.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](pocs/poc5_docker_observability/poc5_details.md) | [실행 계획서 (plan.md)](pocs/poc5_docker_observability/poc5_plan.md)
 
 ---
 
@@ -204,6 +209,7 @@ flowchart TB
 - **5대 사전 PoC와의 연계**:
   - **PoC 1 (대기열/락)** + **PoC 2 (Kafka/RabbitMQ)** + **PoC 3 (MongoDB/pgvector)** + **PoC 4 (PortOne/정산)** + **PoC 5 (Docker/관제)**가 **완벽히 100% 통합된 실무형 플래그십 프로젝트**.
 - **장점**: 대용량 트래픽, 동시성, 이벤트 스트리밍, 금융 결제, AI 통합 등 백엔드 핵심 JD 요구 역량을 100% 만족하는 최고의 포트폴리오.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](candidates/candidate1_flash_pay/candidate1_details.md) | [실행 계획서 (plan.md)](candidates/candidate1_flash_pay/candidate1_plan.md)
 
 ---
 
@@ -211,6 +217,7 @@ flowchart TB
 
 - **개념**: LangGraph AI 에이전트를 통해 상품 추천, 주문, 결제, 정산 과정을 자연어로 수행하며, 백엔드에서 비동기 메시지 파이프라인으로 안전하게 이벤트를 처리하는 시스템.
 - **필수 스택 포함**: NoSQL (MongoDB 대화 세션), VectorDB (ChromaDB 시맨틱 검색), Docker 컨테이너, Kafka (행동 로그), RabbitMQ (AI 작업 분배), TDD, PortOne 결제, Redis Pub/Sub.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](candidates/candidate2_ai_agent_commerce/candidate2_details.md) | [실행 계획서 (plan.md)](candidates/candidate2_ai_agent_commerce/candidate2_plan.md)
 
 ---
 
@@ -218,8 +225,10 @@ flowchart TB
 
 - **개념**: 펌뱅킹 및 전자 금융 거래 데이터를 Kafka/RabbitMQ로 스트리밍하여 실시간 이상 거래(FDS)를 감지하고, 장애 발생 시 서킷 브레이커와 DLQ로 시스템 안정성을 보장하는 관제 플랫폼.
 - **필수 스택 포함**: NoSQL (MongoDB 거래 내역), VectorDB (이상 거래 데이터 패턴 벡터), Docker, Kafka & RabbitMQ, TDD, PortOne/가상 결제, Redis.
+- 📄 **문서 바로가기**: [상세 설계서 (details.md)](candidates/candidate3_fintech_realtime_control/candidate3_details.md) | [실행 계획서 (plan.md)](candidates/candidate3_fintech_realtime_control/candidate3_plan.md)
 
 ---
 
 ## 🌐 인터랙티브 와이어프레임 & PoC 5종 웹 뷰어
 각 후보 프로젝트의 UI 와이어프레임 및 **5대 사전 PoC의 인터랙티브 시각 다이어그램, 실시간 대시보드 시뮬레이터, 검증 코드**는 **[project_candidates.html](project_candidates.html)** 페이지에서 직접 조작하고 확인할 수 있습니다.
+
