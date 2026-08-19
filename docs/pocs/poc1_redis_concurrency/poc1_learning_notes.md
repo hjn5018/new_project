@@ -278,3 +278,58 @@ public class RedissonConfig {
 ### C. Connection Pool & `MinimumIdleSize(5)`
 * **`setConnectionPoolSize(20)`**: 최대 20개의 연결선을 미리 수영장(Pool)처럼 만들어 두고 재사용하여 연결 생성 오버헤드 제거.
 * **`setConnectionMinimumIdleSize(5)`**: 주문이 없는 평상시에도 최소 5개의 연결선은 항상 연결된 상태(Idle)로 대기시켜, 첫 번째 주문이 들어왔을 때 지연 없이 0.001초 만에 즉시 락을 획득하도록 보장.
+
+---
+
+## 8. 분산 락(Distributed Lock) 심화 원리 & Redisson의 혁신
+
+### A. Redis vs Redisson vs Redis Insight 역할 구분
+```mermaid
+graph LR
+    subgraph 내_스프링_앱 ["1. 내 스프링 부트 앱 (Java)"]
+        Redisson["Redisson 라이브러리 (Java 클라이언트)<br>• build.gradle 의존성<br>• rLock.tryLock() 분산락 엔진"]
+    end
+
+    subgraph 도커_컨테이너 ["2. 도커 컨테이너 (Docker)"]
+        RedisServer["Redis 7.2 서버 엔진<br>• docker-compose 실행<br>• 인메모리 데이터/락 저장소"]
+    end
+
+    subgraph 내_모니터_화면 ["3. 내 컴퓨터 GUI 뷰어"]
+        Insight["Redis Insight<br>• 로컬 설치 GUI 프로그램<br>• 락/대기열 실시간 시각화"]
+    end
+
+    Redisson <===>|포트 6379로 분산락 신호 전송| RedisServer
+    Insight -.->|localhost:6379로 데이터 조회| RedisServer
+```
+
+### B. 스핀락(Spin Lock)의 어원과 문제점
+* **어원**: 락을 얻을 때까지 스레드가 잠들지(Sleep) 않고, `while (!getLock())` 반복문 안에서 팽이처럼 **맹렬하게 뱅글뱅글 돌면서(Spinning / Busy Waiting)** 기다리기 때문에 붙은 이름.
+* **Redis 분산 환경에서의 문제점**: 수천 개의 스레드가 1초에 수만 번씩 "비었어? 비었어?" 하고 네트워크 요청 패킷을 쏘아대어 Redis 서버가 과부하로 마비됨.
+
+### C. Redisson의 해결책: Pub/Sub 신호등 방식
+* 대기 중인 스레드들은 노크하지 않고 얌전히 착석하여 대기(Subscribe).
+* 앞사람이 작업을 마치고 락을 해제하면, Redis가 **"띵동! 다음 사람 들어오세요(Publish)"** 하고 신호를 줄 때만 락 획득을 시도하므로 Redis 부하가 0%에 수렴함.
+
+### D. `leaseTime` (임대 시간)과 데드락(Deadlock) 방지
+```mermaid
+graph TD
+    subgraph 사고_발생 ["1. 사고 발생"]
+        Person["스레드 A가 락을 획득하고 진입<br>(OrderService가 lock 획득)"]
+        Crash["작업 중 서버 다운 / 정전 / 무한루프 발생! 💀"]
+        Person --> Crash
+    end
+
+    subgraph 데드락_위기 ["2. 데드락 (Deadlock) 위기"]
+        LockLocked["락이 영원히 풀리지 않음 🔒<br>➔ 뒷사람 1,000명 영원히 주문 불가!"]
+        Crash --> LockLocked
+    end
+
+    subgraph Redisson_해결책 ["3. leaseTime (자동 폭파 타이머) 발동!"]
+        Timer["leaseTime (예: 2초) 타이머 카운트다운 ⏳"]
+        Explode["2초 경과 시 락 자동 폭파/해제! 💥<br>➔ 스레드 B가 안전하게 진입하여 서비스 정상화"]
+        LockLocked --> Timer --> Explode
+    end
+```
+* **정상 해제 (`unlock()`)**: 작업이 정상 완료된 후 `finally { lock.unlock(); }`으로 락을 정중하게 반납.
+* **`leaseTime`**: 락을 쥐고 있을 수 있는 **최대 유효시간(임대 시간)**.
+* **락 강제 폭파 (TTL 만료)**: 서버가 다운되어 `unlock()`을 못 부르더라도, `leaseTime`이 지나면 Redis가 락을 스스로 삭제하여 시스템 전체가 멈추는 **데드락(Deadlock)을 완벽하게 방어**.
