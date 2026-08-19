@@ -3,10 +3,23 @@
 Thumbs.db
 .idea/
 .vscode/
+*.iml
 
-# Build & Temp
+# Java & Gradle Build / Cache
+.gradle/
 build/
 target/
+out/
+bin/
+*.class
+
+# Logs & Temp
 *.tmp
 *.log
 node_modules/
+mermaid.md
+
+# Test & DB Data (H2/Redis Local Dump)
+*.mv.db
+*.trace.db
+dump.rdb

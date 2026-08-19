@@ -1,0 +1,37 @@
+# 1. 내장 톰캣 웹 서버 설정
+server:
+  port: 8080
+
+# 2. 스프링 기본 식별 정보
+spring:
+  application:
+    name: poc1-redis-concurrency
+
+  # A. Redis 접속 설정 (Docker로 띄울 Redis 7.2와 연동)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+
+  # B. 인메모리 H2 데이터베이스 설정 (별도 DB 설치 없이 메모리에서 즉시 실행)
+  datasource:
+    url: jdbc:h2:mem:poc1db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # C. H2 웹 콘솔 활성화 (브라우저에서 DB 테이블 및 데이터 직접 확인 가능)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # D. JPA & Hibernate ORM 설정 (자바 객체와 DB 테이블 매핑)
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 앱 시작 시 테이블 자동 생성, 종료 시 깔끔하게 삭제
+    show-sql: true          # 실행되는 SQL 쿼리를 터미널 콘솔에 출력
+    properties:
+      hibernate:
+        format_sql: true    # SQL 쿼리를 한 줄이 아닌 예쁜 들여쓰기로 포맷팅

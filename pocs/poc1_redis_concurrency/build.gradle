@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.poc'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 1. 웹 MVC & 내장 톰캣 서버
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 2. Redis 기본 연동 (Spring Data Redis)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // 3. Redisson 분산락 라이브러리
+    implementation 'org.redisson:redisson-spring-boot-starter:3.30.0'
+
+    // 4. JPA 및 H2 인메모리 데이터베이스 (상품/주문 데이터 저장)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.h2database:h2'
+
+    // 5. 롬복 (Lombok - Getter/Setter/생성자 자동 생성)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // 6. 단위/통합 테스트 도구 모음 (JUnit 5, AssertJ 등)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
