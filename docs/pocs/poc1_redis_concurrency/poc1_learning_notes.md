@@ -242,6 +242,24 @@ graph LR
 | **`@Repository`** | **영속성 계층 (Persistence/Data Layer)** | • 데이터베이스(H2/MySQL)와 직접 소통하여 데이터를 CRUD.<br>• DB 예외(SQLException)를 스프링 표준 예외로 자동 변환. | `ProductRepository`, `OrderRepository` |
 | **`@Configuration`** | **설정/인프라 계층 (Infrastructure)** | • 외부 라이브러리 객체를 수동으로 조립하여 `@Bean`으로 등록하는 공장. | `RedissonConfig`, `RedisConfig` |
 
+### C. `@Component` 메타 어노테이션 계층 구조와 `@Bean`과의 차이
+```mermaid
+graph TD
+    Root["최상위 뿌리 어노테이션: @Component<br>(스프링에게 '이 클래스를 Bean으로 만들어!'라고 알림)"]
+    
+    Root --> C["@Controller / @RestController<br>(@Component + 웹 요청 처리 기능 추가)"]
+    Root --> S["@Service<br>(@Component + 비즈니스 로직 계층 명시)"]
+    Root --> R["@Repository<br>(@Component + DB 예외 변환 기능 추가)"]
+    Root --> Conf["@Configuration<br>(@Component + @Bean 등록 공장 기능 추가)"]
+```
+
+| 구분 | **`@Component` 계열** (`@Service`, `@RestController` 등) | **`@Bean`** |
+| :--- | :--- | :--- |
+| **붙이는 위치** | **클래스(Class)** 위에 붙임 | **메서드(Method)** 위에 붙임 |
+| **대상 코드** | **내가 직접 작성한 소스코드** | **외부 라이브러리 객체** (내가 소스를 못 고치는 것) |
+| **등록 방식** | 스프링이 클래스를 보고 알아서 `new` 해서 등록 | 내가 메서드 안에서 `return Redisson.create(...)`로 직접 만들어 등록 |
+
+
 ---
 
 ## 7. Redisson 분산락 설정 (`RedissonConfig.java`)
@@ -281,7 +299,44 @@ public class RedissonConfig {
 
 ---
 
-## 8. 분산 락(Distributed Lock) 심화 원리 & Redisson의 혁신
+## 8. Redis 템플릿 설정 및 직렬화 (`RedisConfig.java`)
+
+```java
+@Configuration
+public class RedisConfig {
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
+
+        return template;
+    }
+}
+```
+
+### A. `RedisTemplate<String, Object>` 제네릭(Generic) 타입의 의미
+```mermaid
+graph LR
+    Template["RedisTemplate < String , Object >"]
+    
+    Template --> Key["1. Key 타입: String<br>(Redis의 키 이름은 무조건 문자열!<br>예: 'queue:event:101', 'lock:101')"]
+    Template --> Val["2. Value 타입: Object<br>(Redis에 저장될 값은 숫자, 문자, DTO 객체 등<br>자바의 모든 데이터(최상위 부모 Object) 허용)"]
+```
+
+### B. `StringRedisSerializer`를 사용하는 이유
+* 기본 직렬화기를 그대로 쓰면 Redis 내부에 `\xac\xed\x00\x05` 같은 자바 고유의 바이너리 외계어가 붙어서 저장됨.
+* `StringRedisSerializer`를 적용하면 사람이 읽을 수 있는 **깨끗한 UTF-8 텍스트 그대로 저장**되어 Redis CLI나 Redis Insight에서 직관적인 데이터 모니터링이 가능해짐.
+
+
+---
+
+## 9. 분산 락(Distributed Lock) 심화 원리 & Redisson의 혁신
 
 ### A. Redis vs Redisson vs Redis Insight 역할 구분
 ```mermaid
