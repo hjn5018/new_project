@@ -10,6 +10,8 @@
 3. [스프링 부트 환경 설정 (`application.yml`) & 디렉터리 구조](#3-스프링-부트-환경-설정-applicationyml--디렉터리-구조)
 4. [Docker & Redis 인프라 / 네트워크 원리](#4-docker--redis-인프라--네트워크-원리)
 5. [스프링 부트 메인 클래스 (`Poc1RedisConcurrencyApplication.java`)](#5-스프링-부트-메인-클래스-poc1redisconcurrencyapplicationjava)
+6. [스프링 핵심 철학 (Bean, IoC 컨테이너, 계층형 4대 어노테이션)](#6-스프링-핵심-철학-bean-ioc-컨테이너-계층형-4대-어노테이션)
+7. [Redisson 분산락 설정 (`RedissonConfig.java`)](#7-redisson-분산락-설정-redissonconfigjava)
 
 ---
 
@@ -175,3 +177,104 @@ public class Poc1RedisConcurrencyApplication {
 
 ### D. `SpringApplication.run(...)`
 * 자바 JVM 시작점(`main`)에서 스프링 컨테이너를 초기화하고 8080 포트의 내장 톰캣 웹 서버를 최종 기동함.
+
+---
+
+## 6. 스프링 핵심 철학 (Bean, IoC 컨테이너, 계층형 4대 어노테이션)
+
+### A. Bean(빈)과 IoC 컨테이너(제어의 역전)
+* **도커 컨테이너 vs 스프링 컨테이너 비교**:
+  - **도커 컨테이너 (OS/인프라 레벨)**: 프로그램 전체와 리눅스 OS 파일들을 통째로 격리하는 거대한 상자 (예: Redis 7.2 서버 자체).
+  - **스프링 컨테이너 (Java RAM 메모리 레벨)**: 자바 힙 메모리 안에서 자바 객체(Bean)들을 싱글톤으로 생성하고 조립(DI)하는 부품 상자.
+
+```mermaid
+graph TD
+    subgraph 내_컴퓨터 ["1. 내 실제 컴퓨터 (Windows 11)"]
+        subgraph 도커_컨테이너 ["2. 도커 컨테이너 (OS 레벨 격리 상자)"]
+            subgraph 자바_JVM_메모리 ["3. 자바 JVM 실행 메모리 (RAM)"]
+                subgraph 스프링_컨테이너 ["4. 스프링 컨테이너 (자바 객체 Bean 보관 상자)"]
+                    B1["OrderService (객체)"]
+                    B2["QueueController (객체)"]
+                    B3["RedissonClient (객체)"]
+                end
+            end
+        end
+    end
+```
+
+* **스프링 컨테이너 (IoC Container / ApplicationContext)**:
+  - 객체의 생성, 조립, 생명주기 관리, 소멸까지 스프링이 전권을 쥐고 대신 해주는 거대한 **'객체 보관함'**.
+  - **IoC (Inversion of Control, 제어의 역전)**: 과거에는 개발자가 직접 `new A()`, `new B()`를 관리했다면, 이제는 스프링이 객체를 대신 만들고 관리하므로 주도권(제어권)이 뒤바뀌었다는 의미.
+* **Bean (빈)**:
+  - 스프링 컨테이너 상자에 담겨서 관리되는 **싱글톤(Singleton) 자바 객체**.
+  - 서버 메모리에 단 1개만 생성되어 모든 요청이 공유하므로 메모리 절약 및 일관성 보장.
+
+```mermaid
+graph TD
+    subgraph Spring_IoC_Container ["스프링 IoC 컨테이너 (Bean 보관 상자)"]
+        B1["@RestController<br>QueueController (Bean)"]
+        B2["@Service<br>OrderService (Bean)"]
+        B3["@Repository<br>ProductRepository (Bean)"]
+        B4["@Bean<br>RedissonClient (Bean)"]
+        
+        B1 -.->|DI 의존성 주입| B2
+        B2 -.->|DI 의존성 주입| B3
+        B2 -.->|DI 의존성 주입| B4
+    end
+```
+
+### B. 3계층 아키텍처와 `@ComponentScan`의 4대 핵심 어노테이션
+스프링은 역할을 명확히 분리하기 위해 **웹 요청 ➔ 비즈니스 로직 ➔ 데이터베이스 영속성**의 3계층(3-Tier) 구조를 따릅니다:
+
+```mermaid
+graph LR
+    Client["클라이언트 (브라우저/k6)"] 
+    -->|1. HTTP 요청| Controller["1. 표현 계층 (@RestController)<br>URL 매핑, 파라미터 검증, JSON 응답"]
+    Controller -->|2. 업무 처리 위임| Service["2. 비즈니스 계층 (@Service)<br>분산락 tryLock, 재고 차감, 대기열 계산"]
+    Service -->|3. DB 접근| Repository["3. 영속성 계층 (@Repository)<br>DB 테이블 SQL 쿼리, JPA 엔티티 영속화"]
+    Repository --> DB[(MySQL / H2 DB)]
+```
+
+| 어노테이션 | 소속 계층 | 주요 역할 및 책임 | 예시 코드 |
+| :--- | :--- | :--- | :--- |
+| **`@RestController`** | **표현 계층 (Presentation Layer)** | • HTTP 요청(GET/POST)을 최초로 접수하는 창구.<br>• 파라미터를 검증하고 결과를 JSON 데이터로 반환. | `QueueController`, `OrderController` |
+| **`@Service`** | **비즈니스 계층 (Business/Domain Layer)** | • 애플리케이션의 핵심 비즈니스 로직(업무 규칙) 수행.<br>• **Redisson 분산 락 획득/해제**, 트랜잭션(`@Transactional`), 재고 계산. | `OrderService`, `QueueService` |
+| **`@Repository`** | **영속성 계층 (Persistence/Data Layer)** | • 데이터베이스(H2/MySQL)와 직접 소통하여 데이터를 CRUD.<br>• DB 예외(SQLException)를 스프링 표준 예외로 자동 변환. | `ProductRepository`, `OrderRepository` |
+| **`@Configuration`** | **설정/인프라 계층 (Infrastructure)** | • 외부 라이브러리 객체를 수동으로 조립하여 `@Bean`으로 등록하는 공장. | `RedissonConfig`, `RedisConfig` |
+
+---
+
+## 7. Redisson 분산락 설정 (`RedissonConfig.java`)
+
+```java
+@Configuration
+public class RedissonConfig {
+
+    @Value("${spring.data.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
+
+    @Bean
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        config.useSingleServer()
+                .setAddress("redis://" + redisHost + ":" + redisPort)
+                .setConnectionMinimumIdleSize(5)
+                .setConnectionPoolSize(20);
+
+        return Redisson.create(config);
+    }
+}
+```
+
+### A. `@Value("${...:기본값}")` (Property Placeholder)
+* `application.yml`에 적힌 `host`와 `port` 값을 자바 변수로 주입받음. 콜론(`:`) 뒤는 파일에 값이 없을 때 사용할 기본값(Fallback).
+
+### B. `setAddress("redis://localhost:6379")`
+* 웹의 `http://`처럼 Redis 전용 접속 스키마(`redis://`)를 붙여 단일 서버 주소를 설정.
+
+### C. Connection Pool & `MinimumIdleSize(5)`
+* **`setConnectionPoolSize(20)`**: 최대 20개의 연결선을 미리 수영장(Pool)처럼 만들어 두고 재사용하여 연결 생성 오버헤드 제거.
+* **`setConnectionMinimumIdleSize(5)`**: 주문이 없는 평상시에도 최소 5개의 연결선은 항상 연결된 상태(Idle)로 대기시켜, 첫 번째 주문이 들어왔을 때 지연 없이 0.001초 만에 즉시 락을 획득하도록 보장.
