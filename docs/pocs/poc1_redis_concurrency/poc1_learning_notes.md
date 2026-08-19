@@ -12,6 +12,10 @@
 5. [스프링 부트 메인 클래스 (`Poc1RedisConcurrencyApplication.java`)](#5-스프링-부트-메인-클래스-poc1redisconcurrencyapplicationjava)
 6. [스프링 핵심 철학 (Bean, IoC 컨테이너, 계층형 4대 어노테이션)](#6-스프링-핵심-철학-bean-ioc-컨테이너-계층형-4대-어노테이션)
 7. [Redisson 분산락 설정 (`RedissonConfig.java`)](#7-redisson-분산락-설정-redissonconfigjava)
+8. [Redis 템플릿 설정 및 직렬화 (`RedisConfig.java`)](#8-redis-템플릿-설정-및-직렬화-redisconfigjava)
+9. [분산 락 심화 원리 & Redisson의 혁신](#9-분산-락distributed-lock-심화-원리--redisson의-혁신)
+10. [Java IDE 정적 분석과 Null 안전성](#10-java-ide-정적-분석과-null-안전성-null-analysis)
+11. [JPA 도메인 엔티티 설계 핵심 원리](#11-jpa-도메인-엔티티entity-설계-핵심-원리-productjava)
 
 ---
 
@@ -37,12 +41,17 @@
 ### A. `settings.gradle`
 * Gradle이 프로젝트를 빌드할 때 가장 먼저 찾는 파일로, 최상위 루트 프로젝트의 고유 식별자(`rootProject.name`)를 선언함.
 
-### B. 도메인 역순 네이밍 규칙 (Reverse Domain Name)
+### B. 도메인 역순 네이밍 규칙 (Reverse Domain Name)과 패키지 폴더 구조
 * **이유**: 전 세계에서 이름이 겹치지 않는 **고유한 네임스페이스(Global Unique Namespace)**를 보장하기 위함.
 * **구조**: 도메인 전체를 뒤집는 것이 아니라 **[회사 도메인 뒤집기] + [세부 프로젝트 이름]**의 트리 계층 구조.
   - 예: `google.com` + `guava` ➔ `com.google.guava`
   - 예: `springframework.org` + `boot` ➔ `org.springframework.boot`
   - `www`는 단순 웹 호스트 접두사이므로 떼고 핵심 도메인만 사용함.
+* **왜 로컬 프로젝트 폴더 안에서도 `com/poc/...` 깊은 폴더를 유지할까?**:
+  1. **JAR 배포 시 로컬 폴더 증발**: 내 컴퓨터의 `pocs/poc1` 폴더는 JAR 압축 시 사라지고 `src/main/java` 아래의 내용만 배포됨.
+  2. **클래스 이름 충돌(Class Collision) 방지**: 만약 모든 라이브러리가 `Product.java`로 배포된다면 프로젝트에 합치는 순간 JVM이 충돌로 다운됨. `com.poc...Product`처럼 고유한 전체 경로(FQCN)를 가져야 수많은 라이브러리와 안전하게 공존함.
+  3. **JVM의 물리적 매핑 철칙**: 자바는 `package a.b.c;`로 선언된 클래스가 반드시 물리적 디렉터리 `a/b/c/`에 존재해야만 클래스로더가 읽을 수 있도록 강제함.
+
 
 ### C. JAR (Java Archive) 파일과 Fat JAR
 * 수많은 `.class` 바이트코드와 설정 파일을 하나로 묶은 자바 전용 압축팩.
@@ -388,3 +397,77 @@ graph TD
 * **정상 해제 (`unlock()`)**: 작업이 정상 완료된 후 `finally { lock.unlock(); }`으로 락을 정중하게 반납.
 * **`leaseTime`**: 락을 쥐고 있을 수 있는 **최대 유효시간(임대 시간)**.
 * **락 강제 폭파 (TTL 만료)**: 서버가 다운되어 `unlock()`을 못 부르더라도, `leaseTime`이 지나면 Redis가 락을 스스로 삭제하여 시스템 전체가 멈추는 **데드락(Deadlock)을 완벽하게 방어**.
+
+---
+
+## 10. Java IDE 정적 분석과 Null 안전성 (Null Analysis)
+
+### A. Null Annotation Types의 정체
+* **발견 배경**: `build.gradle`로 가져온 Spring Framework 라이브러리 내부(`org.springframework.lang`)에 `@NonNull`, `@Nullable`, `@NonNullApi` 등의 어노테이션이 광범위하게 사용되고 있음.
+* **IDE 알림의 의미**: IDE의 자바 언어 서버(Language Server)가 이 어노테이션들을 감지하여, "코드 작성 시점에 NullPointerException(NPE) 위험을 사전에 정적으로 분석하고 경고 밑줄을 띄워줄까?" 하고 제안하는 것 (`Enable Null Analysis`).
+* **실무 이점**: 런타임에 서버가 뻗을 수 있는 치명적인 NPE 버그를 컴파일/코딩 단계에서 사전에 예방할 수 있음.
+
+---
+
+## 11. JPA 도메인 엔티티(Entity) 설계 핵심 원리 (`Product.java`)
+
+```java
+@Entity
+@Table(name = "products")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private int stock;
+    private long price;
+
+    public Product(String name, int stock, long price) {
+        this.name = name;
+        this.stock = stock;
+        this.price = price;
+    }
+}
+```
+
+### A. 생성자를 Lombok 대신 직접 작성한 이유
+* `@AllArgsConstructor`를 쓰면 DB가 채번해야 하는 `id`까지 포함한 생성자가 만들어져, 개발자가 실수로 `id`를 수동 입력하여 기존 DB 레코드를 덮어쓰는 사고를 유발할 수 있음.
+* 필요한 비즈니스 필드(`name`, `stock`, `price`)만 받는 생성자를 직접 작성하여 **데이터 무결성과 ID 필드를 안전하게 보호**.
+
+### B. `@Table(name = "products")` 복수형 테이블 관례
+* DB 테이블은 여러 데이터 레코드의 '집합체'이므로 복수형(`products`, `orders`, `users`) 명명이 실무 표준 관례.
+* 어노테이션을 생략하면 클래스명 그대로 단수형(`product`) 테이블로 자동 매핑됨.
+
+### C. PK 생성 전략 비교: `IDENTITY` vs `SEQUENCE`
+```mermaid
+graph TD
+    subgraph IDENTITY_전략_MySQL_H2 ["1. IDENTITY 전략 (MySQL, H2)"]
+        I1["자바 객체 생성 (id = null)"]
+        I2["DB에 INSERT 쿼리를 실제로 날림! 🚀"]
+        I3["DB: '내가 1번으로 저장했어!' ➔ 그제서야 자바 객체에 id = 1 채워짐"]
+        I1 --> I2 --> I3
+    end
+
+    subgraph SEQUENCE_전략_Oracle ["2. SEQUENCE 전략 (Oracle)"]
+        S1["DB 시퀀스에서 번호표(NEXTVAL)만 쏙 뽑아옴! 🎫"]
+        S2["자바 객체에 id = 1 먼저 채워두고 메모리에 대기"]
+        S3["나중에 트랜잭션 끝날 때 INSERT 100건을 한 번에 모아서 발사!"]
+        S1 --> S2 --> S3
+    end
+```
+
+| 전략 | 번호 발급 주체 및 동작 방식 | INSERT 쿼리 시점 | 주로 쓰는 DB |
+| :--- | :--- | :--- | :--- |
+| **`IDENTITY`** | **자바에서 `id=null`로 INSERT를 먼저 날림**.<br>DB가 `AUTO_INCREMENT`로 번호를 매긴 뒤 반환해 줌. | `em.persist()` 호출 시 **즉시 INSERT 실행** (쓰기 지연 제한) | **MySQL, H2, PostgreSQL** |
+| **`SEQUENCE`** | **DB 시퀀스 자판기에서 번호표(`NEXTVAL`)를 먼저 가져옴**.<br>자바 객체에 ID를 먼저 채우고 1차 캐시에 보관. | 트랜잭션 커밋 시점에 모아서 **한 번에 INSERT (배치 최적화)** | **Oracle** |
+
+
+### D. 개발자는 안 쓰는데 `@NoArgsConstructor`가 반드시 필요한 이유
+* **데이터 생성 시 (`new Product(...)`)**: 개발자가 만든 비즈니스 생성자 사용.
+* **데이터 조회 시 (`findById(...)`)**: DB에서 데이터를 읽어와 자바 객체로 복원할 때, JPA는 **Java Reflection 기술을 사용해 '인자 없는 기본 생성자'로 껍데기 객체를 먼저 인스턴스화한 뒤 private 필드에 값을 주입**함.
+* 따라서 기본 생성자가 없으면 DB 조회 시 에러(`NoSuchMethodException`)가 발생함.
+* **`AccessLevel.PROTECTED`**: 외부 개발자가 `new Product()`로 불완전한 빈 껍데기 객체를 생성하지 못하게 컴파일 레벨에서 차단하면서, JPA 프록시/리플렉션 엔진의 접근은 허용하는 최적의 캡슐화 기법.
+
+
