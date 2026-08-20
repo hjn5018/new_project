@@ -16,6 +16,7 @@
 9. [분산 락 심화 원리 & Redisson의 혁신](#9-분산-락distributed-lock-심화-원리--redisson의-혁신)
 10. [Java IDE 정적 분석과 Null 안전성](#10-java-ide-정적-분석과-null-안전성-null-analysis)
 11. [JPA 도메인 엔티티 설계 핵심 원리](#11-jpa-도메인-엔티티entity-설계-핵심-원리-productjava)
+12. [Spring Data JPA 인터페이스 & 쿼리 메소드 원리](#12-spring-data-jpa-인터페이스--쿼리-메소드-원리-productrepositoryjava)
 
 ---
 
@@ -469,5 +470,39 @@ graph TD
 * **데이터 조회 시 (`findById(...)`)**: DB에서 데이터를 읽어와 자바 객체로 복원할 때, JPA는 **Java Reflection 기술을 사용해 '인자 없는 기본 생성자'로 껍데기 객체를 먼저 인스턴스화한 뒤 private 필드에 값을 주입**함.
 * 따라서 기본 생성자가 없으면 DB 조회 시 에러(`NoSuchMethodException`)가 발생함.
 * **`AccessLevel.PROTECTED`**: 외부 개발자가 `new Product()`로 불완전한 빈 껍데기 객체를 생성하지 못하게 컴파일 레벨에서 차단하면서, JPA 프록시/리플렉션 엔진의 접근은 허용하는 최적의 캡슐화 기법.
+
+---
+
+## 12. Spring Data JPA 인터페이스 & 쿼리 메소드 원리 (`ProductRepository.java`)
+
+```java
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    List<Product> findByStockLessThan(int stock);
+    boolean existsByName(String name);
+    long countByStock(int stock);
+}
+```
+
+### A. `jakarta.persistence.*` vs `org.springframework.data.jpa.*`
+* **`jakarta.persistence.*`**: 순수 자바 공식 표준 ORM 스펙에 정의된 어노테이션 (`@Entity`, `@Id`, `@Table`, `@GeneratedValue`). (과거 `javax.*`에서 이름 변경).
+* **`org.springframework.data.jpa.*`**: 스프링 팀이 위 표준 스펙을 개발자가 쉽게 쓰도록 제작한 편의 라이브러리 (`JpaRepository`, `Pageable`).
+
+### B. `JpaRepository<Product, Long>`에서 `Long`(ID 타입)이 필수인 이유
+* 엔티티마다 PK 타입(`Long`, `String`, `UUID` 등)이 다르므로, 두 번째 제네릭에 `Long`을 명시해야 스프링이 `Optional<Product> findById(Long id)`, `boolean existsById(Long id)`의 파라미터 타입을 결정하고 **완벽한 컴파일 타임 타입 안전성(Type-Safety)**을 보장함.
+
+### C. 메서드 이름 기반 쿼리 생성 (Query Method)의 3단 공식
+```mermaid
+graph LR
+    M["find + By + Stock + LessThan + (10)"]
+    -->|스프링이 단어를 분석하여 파싱| 
+    SQL["SELECT * FROM products WHERE stock < 10"]
+```
+* **동작 원리**: `find...By` + `[필드명]` + `[조건 키워드(LessThan, And, Containing 등)]`
+* **오타 검증 안전장치**: 존재하지 않는 필드명(`findByStocck`)을 적으면 서버 부팅 시점에 즉시 에러를 뿜어 런타임 SQL 에러를 사전에 100% 차단.
+
+### D. `existsByName`과 `SELECT (COUNT(*) > 0)` 비교 연산의 원리
+* `SELECT (COUNT(*) > 0) FROM products WHERE name = ?` : SQL의 SELECT 절에서 비교 연산식을 평가하여 DB가 즉시 `1 (true)` 또는 `0 (false)`을 계산하여 반환.
+* **최적화 (`EXISTS` / `LIMIT 1`)**: 모든 컬럼을 무겁게 읽어오는 `SELECT *` 대신, 첫 번째 매칭 데이터를 발견하는 즉시 조기 종료(Short-circuit)하여 `boolean`을 초고속으로 반환.
+
 
 
