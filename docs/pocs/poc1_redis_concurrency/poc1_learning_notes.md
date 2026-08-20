@@ -19,6 +19,8 @@
 12. [Spring Data JPA 인터페이스 & 쿼리 메소드 원리](#12-spring-data-jpa-인터페이스--쿼리-메소드-원리-productrepositoryjava)
 13. [주문 도메인 설계 & 객체지향 캡슐화](#13-주문-도메인-설계--객체지향-캡슐화-orderjava-orderstatusjava)
 14. [Spring Data JPA 주문 리포지토리](#14-spring-data-jpa-주문-리포지토리-orderrepositoryjava)
+15. [소프트웨어 개발 방법론 & Git 협업 표준](#15-소프트웨어-개발-방법론--git-협업-표준)
+16. [Redis 기초와 ZSET 기반 대기열 아키텍처](#16-redis-기초와-zset-기반-대기열-아키텍처-queueservicejava)
 
 ---
 
@@ -594,6 +596,68 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 ### A. `countByProductId`의 역할과 TDD 검증
 * **쿼리 메소드 자동 생성**: `countBy` + `ProductId` 키워드를 조합하여 스프링이 **`SELECT COUNT(*) FROM orders WHERE product_id = ?`** SQL을 자동으로 생성.
 * **동시성 테스트(TDD) 핵심 검증 도구**: 멀티스레드로 100건 동시 주문 요청을 보냈을 때, DB에 정확히 주문 레코드가 100개 성공적으로 적재되었는지 단 한 줄로 단언(Assertion) 검증할 때 사용됨.
+
+---
+
+## 15. 소프트웨어 개발 방법론 & Git 협업 표준
+
+### A. DDD(도메인 주도 설계) 기반 상향식(Bottom-Up) 개발 로드맵
+```mermaid
+graph TD
+    Step5["5단계. TDD & 부하 검증 (Test Layer)<br>• OrderConcurrencyTest (JUnit 100개 스레드 동시성 검증)<br>• k6 (1,000 VUsers 부하 테스트)"]
+    Step4["4단계. 웹 표현 계층 (Presentation Layer)<br>• QueueController, OrderController (REST API)"]
+    Step3["3단계. 비즈니스 서비스 계층 (Service Layer)<br>• QueueService, QueueWorker, OrderService (Redisson 분산락)"]
+    Step2["2단계. 핵심 도메인 모델 (Domain Layer - DDD)<br>• Product, Order, OrderStatus, Repository (완료)"]
+    Step1["1단계. 인프라 & 환경 설정 (Infrastructure Layer)<br>• docker-compose, RedissonConfig, RedisConfig (완료)"]
+
+    Step1 -->|"1단계 완료 후"| Step2 -->|"2단계 완료 후"| Step3 -->|"3단계 완료 후"| Step4 -->|"4단계 완료 후"| Step5
+```
+
+* **DDD (도메인 주도 설계)**: 기술(DB/웹)보다 비즈니스의 핵심 알맹이(상품 재고, 주문 상태)를 중심에 두고, `Product` 객체 내부에 `decreaseStock()` 비즈니스 메서드를 직접 캡슐화(Rich Domain Model).
+* **상향식 (Bottom-Up)**: 단단한 인프라와 데이터 모델 기초를 먼저 세우고 그 위에 비즈니스 로직과 API를 조립해 올리는 가장 안정적인 백엔드 개발 방식.
+
+### B. `.gitignore`와 캐시/설정 파일 격리 원칙
+* **`build/` & `.gradle/`**: 언제든 `./gradlew build`로 1초 만에 다시 만드는 컴파일 결과물이자 로컬 캐시. 저장소 용량 폭발 및 무한 머지 충돌을 막기 위해 **100% 무조건 ignore**.
+* **`.idea/` & `.vscode/`**: 개인 모니터 크기, 최근 탭, OS별 JDK 절대경로가 적힌 개인 설정 파일.
+* **팀 환경 통일 표준 대안**: IDE 파일을 올리는 대신 **`.editorconfig` (들여쓰기/인코딩 공통 강제)**, **Gradle Spotless 플러그인 (코드 포맷팅 자동화)**, **Docker (인프라 통일)**를 사용하는 것이 현대 백엔드의 표준.
+
+---
+
+## 16. Redis 기초와 ZSET 기반 대기열 아키텍처 (`QueueService.java`)
+
+```java
+@Service
+@RequiredArgsConstructor
+public class QueueService {
+    private final RedisTemplate<String, Object> redisTemplate;
+    // enterQueue, getQueueRank, allowUsers, isValidToken
+}
+```
+
+### A. Redis 5대 자료구조와 `opsFor...` 메서드 심층 비교
+| 도구 이름 | Redis 내부 구조 모양 | 중복 허용? | 순서 정렬? | 핵심 실무 쓰임새 |
+| :--- | :--- | :---: | :---: | :--- |
+| **`opsForValue()`** | **Key ➔ 1개의 Value** | ❌ (덮어씀) | ❌ | 기본 캐시, 5분 만료 입장권 토큰 (`TTL`), 초고속 조회수 카운터 |
+| **`opsForList()`** | **Key ➔ [값1, 값2, 값3...]** | ⭕ 허용 | ⭕ 들어온 순서 | 최근 본 상품 10개, 채팅 메시지 큐 (`LPUSH`, `RPOP`) |
+| **`opsForSet()`** | **Key ➔ {값1, 값2, 값3}** | ❌ 불가 | ❌ 없음 | 중복 없는 좋아요 누른 유저 목록, 투표 중복 방지 |
+| **`opsForZSet()`** | **Key ➔ {(값1,점수), (값2,점수)}** | ❌ 불가 | 🌟 **점수순 자동 정렬** | **선착순 가상 대기열 순번표**, 실시간 게임 랭킹 순위 |
+| **`opsForHash()`** | **Key ➔ {필드1:값, 필드2:값}** | ❌ (필드고유) | ❌ 없음 | 장바구니 품목 담기 (2단 미니 Map 구조) |
+
+### B. `opsForValue().increment()`의 3가지 동작 케이스
+* **Case 1 (숫자 문자열: `"1542"`)**: 정수로 변환하여 1을 더한 뒤 `1543` 저장 및 반환 (성공).
+* **Case 2 (일반 텍스트: `"ACTIVE"`)**: 정수 변환 불가로 `ERR value is not an integer` 에러 발생 및 자바 예외 투척 (실패).
+* **Case 3 (키가 없는 경우)**: `0`으로 자동 생성한 뒤 즉시 `1`을 만들어 반환.
+
+### C. ZSET (Sorted Set)의 어원과 Score의 유연성
+* **`Z`의 어원**: 창시자가 집합 명령어 접두사 `S`를 이미 다 써서, 3차원 축이자 끝을 상징하는 `Z`를 정렬 집합 접두사로 채택 (`ZADD`, `ZRANK`).
+* **Score의 유연성**: 반드시 타임스탬프일 필요 없이 모든 실수(double: 9500점, 350개 등)가 가능. 이번 PoC에서는 **"먼저 온 사람을 1등으로 줄세우기 위해"** 현재 시간을 Score로 활용.
+* **Key 네임스페이스 관례 (`:`)**: `도메인:리소스:ID` (예: `token:event101:userA`) 형태가 전 세계 표준이며, Redis Insight에서 폴더 트리 구조로 자동 렌더링됨.
+
+### D. User 엔티티 없이 `userId` 문자열만 사용하는 이유 (MSA 간접 참조)
+* **목표 집중 (PoC Scope)**: 본 PoC의 핵심은 회원/인증 시스템이 아닌 **"동시성 대기열(ZSET)과 분산 락(Redisson) 검증"**에 집중.
+* **MSA 표준 ID 간접 참조 (Loose Coupling)**: 주문/대기열 서비스는 무거운 `User` 엔티티 전체를 알 필요 없이, 식별자인 `userId`만 전달받아 처리하는 것이 대규모 분산 아키텍처의 표준 설계 패턴.
+
+
 
 
 
