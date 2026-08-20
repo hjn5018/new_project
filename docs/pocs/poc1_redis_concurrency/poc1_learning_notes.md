@@ -17,6 +17,7 @@
 10. [Java IDE 정적 분석과 Null 안전성](#10-java-ide-정적-분석과-null-안전성-null-analysis)
 11. [JPA 도메인 엔티티 설계 핵심 원리](#11-jpa-도메인-엔티티entity-설계-핵심-원리-productjava)
 12. [Spring Data JPA 인터페이스 & 쿼리 메소드 원리](#12-spring-data-jpa-인터페이스--쿼리-메소드-원리-productrepositoryjava)
+13. [주문 도메인 설계 & 객체지향 캡슐화](#13-주문-도메인-설계--객체지향-캡슐화-orderjava-orderstatusjava)
 
 ---
 
@@ -503,6 +504,43 @@ graph LR
 ### D. `existsByName`과 `SELECT (COUNT(*) > 0)` 비교 연산의 원리
 * `SELECT (COUNT(*) > 0) FROM products WHERE name = ?` : SQL의 SELECT 절에서 비교 연산식을 평가하여 DB가 즉시 `1 (true)` 또는 `0 (false)`을 계산하여 반환.
 * **최적화 (`EXISTS` / `LIMIT 1`)**: 모든 컬럼을 무겁게 읽어오는 `SELECT *` 대신, 첫 번째 매칭 데이터를 발견하는 즉시 조기 종료(Short-circuit)하여 `boolean`을 초고속으로 반환.
+
+---
+
+## 13. 주문 도메인 설계 & 객체지향 캡슐화 (`Order.java`, `OrderStatus.java`)
+
+```java
+@Entity
+@Table(name = "orders")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long userId;
+    private Long productId;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+    private LocalDateTime createdAt;
+}
+```
+
+### A. Java Enum의 특징 및 `@Enumerated(EnumType.STRING)`
+* **Enum의 본질**: 서로 연관된 상수(선택지)들의 타입 안전(Type-Safe)한 집합.
+* **`==` 동일성 비교**: Enum 상수는 JVM 내 단일 싱글톤 객체이므로 `.equals()` 대신 `==`로 초고속 비교 가능.
+* **`EnumType.STRING` 필수 이유**: 기본값인 `EnumType.ORDINAL`(0, 1, 2 숫자로 DB 저장)을 쓰면 Enum 순서 변경 시 DB 데이터가 오염됨. `EnumType.STRING`으로 문자열("COMPLETED", "FAILED") 그대로 저장해야 안전함.
+
+### B. `@Setter`를 배제하고 도메인 비즈니스 메서드를 쓰는 이유
+* **Setter 남발의 문제점**: 외부 어디서든 데이터를 무분별하게 조작할 수 있어 데이터 오염 및 변경 추적이 불가능함.
+* **비즈니스 메서드 캡슐화 (`decreaseStock`)**:
+  - `private` 변수는 외부 클래스에서 직접 수정을 막을 뿐, **자신 클래스 내부 메서드(`this.stock -= quantity`)에서는 자유롭게 직접 수정 가능**.
+  - 별도의 Setter나 리플렉션 없이도 객체 스스로 데이터 검증과 상태 변경을 완벽하게 통제함.
+
+### C. JPA 변경 감지 (Dirty Checking)
+* `product.decreaseStock(1)` 호출로 자바 엔티티 객체의 필드 값이 바뀌면, 트랜잭션 종료 시점에 JPA가 최초 조회 스냅샷과 비교하여 변경 사항을 감지하고 자동으로 **`UPDATE products SET stock = ? WHERE id = ?`** 쿼리를 실행함.
+
 
 
 
