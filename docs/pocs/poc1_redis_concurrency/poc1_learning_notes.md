@@ -18,6 +18,7 @@
 11. [JPA 도메인 엔티티 설계 핵심 원리](#11-jpa-도메인-엔티티entity-설계-핵심-원리-productjava)
 12. [Spring Data JPA 인터페이스 & 쿼리 메소드 원리](#12-spring-data-jpa-인터페이스--쿼리-메소드-원리-productrepositoryjava)
 13. [주문 도메인 설계 & 객체지향 캡슐화](#13-주문-도메인-설계--객체지향-캡슐화-orderjava-orderstatusjava)
+14. [Spring Data JPA 주문 리포지토리](#14-spring-data-jpa-주문-리포지토리-orderrepositoryjava)
 
 ---
 
@@ -35,6 +36,31 @@
 ### C. Docker vs Docker Compose
 * **Docker (`docker run`)**: 컨테이너를 1개씩 단독으로 실행 (단품 주문).
 * **Docker Compose (`docker compose up`)**: `docker-compose.yml` 파일 하나에 여러 컨테이너(Redis, DB, Kafka 등)를 묶어서 한 번에 실행하고 관리 (세트 메뉴 주문서).
+
+### D. Java vs Gradle vs Spring Boot vs IntelliJ 4자 관계
+```mermaid
+graph TD
+    subgraph 조종석_IDE ["0. IntelliJ IDEA / VS Code (통합 개발 환경)"]
+        UI["• 코드 자동완성 (Alt+Enter)<br>• 에러 실시간 감지<br>• Breakpoint 디버거 & Bean 다이어그램"]
+    end
+
+    subgraph 백엔드_3대_엔진 ["백엔드 3대 엔진"]
+        J["1. Java (언어 문법/재료)"]
+        G["2. Gradle (빌드 & 물류 매니저)"]
+        S["3. Spring Boot (완성형 프레임워크 세트장)"]
+    end
+
+    UI ==>|조작 및 연동| J
+    UI ==>|build.gradle 읽고 동기화 (Sync)| G
+    UI ==>|Bean 주입 관계 및 yml 분석| S
+```
+
+* **IntelliJ vs VS Code**:
+  - **IntelliJ IDEA**: Java/Spring 전용 풀옵션 Heavyweight IDE. 스프링 Bean 주입 관계 시각화(Diagrams), `application.yml` 양방향 인덱싱, 강력한 리팩토링 제공.
+  - **VS Code**: 초경량 에디터. 플러그인을 통해 가볍고 민첩하게 동작.
+* **Gradle Sync (IntelliJ 코끼리 버튼) vs Reload Project (VS Code)**:
+  - 둘 다 `build.gradle`의 새 라이브러리를 Maven Central에서 다운로드하여 IDE의 자바 언어 서버(Java Language Server) 클래스패스를 갱신하는 100% 동일한 작업.
+
 
 ---
 
@@ -269,6 +295,15 @@ graph TD
 | **붙이는 위치** | **클래스(Class)** 위에 붙임 | **메서드(Method)** 위에 붙임 |
 | **대상 코드** | **내가 직접 작성한 소스코드** | **외부 라이브러리 객체** (내가 소스를 못 고치는 것) |
 | **등록 방식** | 스프링이 클래스를 보고 알아서 `new` 해서 등록 | 내가 메서드 안에서 `return Redisson.create(...)`로 직접 만들어 등록 |
+
+### D. 4대 어노테이션의 고유 초능력(부가 기능)과 분리 이유
+| 어노테이션 | 고유 초능력 및 특수 기능 | 왜 이 구조로 쓰는가? |
+| :--- | :--- | :--- |
+| **`@RestController`** | • URL 라우팅 매핑<br>• 자바 반환 객체를 **JSON 문자열로 자동 변환(직렬화)** | HTTP 요청을 받고 JSON 응답을 자동 처리하기 위해 |
+| **`@Service`** | • **`@Transactional` 트랜잭션 경계 AOP**의 중심지<br>• 도메인 비즈니스 규칙 및 예외 처리 | 웹/DB 기술로부터 순수 비즈니스 로직을 보호하기 위해 |
+| **`@Repository`** | • **데이터베이스 예외 자동 번역기(Exception Translation)**<br>• DB 벤더(MySQL, Oracle)별 에러를 스프링 표준 예외(`DataAccessException`)로 변환 | DB 종속적인 에러를 표준화하여 서비스 계층에 전달하기 위해 |
+| **`@Configuration` + `@Bean`** | • **CGLIB 프록시 바이트코드 조작을 통한 100% 싱글톤 보장**<br>• 외부 서드파티 라이브러리 조립 공장 | **남이 만든 라이브러리 JAR 소스코드는 내가 열어서 `@Component`를 달 수 없으므로** 수동으로 조립/납품하기 위해 |
+
 
 
 ---
@@ -539,7 +574,27 @@ public class Order {
   - 별도의 Setter나 리플렉션 없이도 객체 스스로 데이터 검증과 상태 변경을 완벽하게 통제함.
 
 ### C. JPA 변경 감지 (Dirty Checking)
-* `product.decreaseStock(1)` 호출로 자바 엔티티 객체의 필드 값이 바뀌면, 트랜잭션 종료 시점에 JPA가 최초 조회 스냅샷과 비교하여 변경 사항을 감지하고 자동으로 **`UPDATE products SET stock = ? WHERE id = ?`** 쿼리를 실행함.
+* **어원**: 컴퓨터 공학에서 원본 대비 데이터가 수정된 상태를 'Dirty'라고 부름.
+* **동작 4단계**:
+  1. **조회 & 스냅샷 저장**: `findById`로 엔티티 조회 시 영속성 컨텍스트(1차 캐시)에 최초 스냅샷 보관.
+  2. **값 수정**: `product.decreaseStock(1)`로 자바 객체 필드 변경.
+  3. **트랜잭션 커밋 (Dirty Checking)**: `@Transactional` 종료 시 현재 객체 상태와 최초 스냅샷 1:1 비교.
+  4. **UPDATE 쿼리 자동 실행**: 변경된 필드에 대해 JPA가 알아서 `UPDATE products SET stock = ? WHERE id = ?` SQL을 생성하여 DB로 전송.
+
+---
+
+## 14. Spring Data JPA 주문 리포지토리 (`OrderRepository.java`)
+
+```java
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    long countByProductId(Long productId);
+}
+```
+
+### A. `countByProductId`의 역할과 TDD 검증
+* **쿼리 메소드 자동 생성**: `countBy` + `ProductId` 키워드를 조합하여 스프링이 **`SELECT COUNT(*) FROM orders WHERE product_id = ?`** SQL을 자동으로 생성.
+* **동시성 테스트(TDD) 핵심 검증 도구**: 멀티스레드로 100건 동시 주문 요청을 보냈을 때, DB에 정확히 주문 레코드가 100개 성공적으로 적재되었는지 단 한 줄로 단언(Assertion) 검증할 때 사용됨.
+
 
 
 
